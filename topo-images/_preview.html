@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="UTF-8"><title>拓扑元件图片预览</title>
+<style>
+  body { background: #0d1117; color: #c9d1d9; font-family: system-ui; padding: 20px; }
+  h1 { font-size: 18px; margin-bottom: 16px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 16px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px;
+    text-align: center; min-width: 200px; }
+  .card img { max-width: 300px; max-height: 250px; object-fit: contain; background: #0d1117; border-radius: 4px; }
+  .card .name { font-size: 11px; color: #8b949e; margin-top: 6px; word-break: break-all; }
+  .card .info { font-size: 10px; color: #58a6ff; margin-top: 2px; }
+</style>
+</head>
+<body>
+<h1>拓扑元件图片预览 (共7张唯一图片)</h1>
+<div class="grid" id="grid"></div>
+<script>
+const images = [
+  { file:'slide14_shape95.png',  size:'207KB', dim:'694×328', desc:'工业交换机 PoE (TinCAM)' },
+  { file:'slide14_shape102.png', size:'120KB', dim:'846×289', desc:'EMS控制器箱(带接口)' },
+  { file:'slide14_shape17.png',  size:'64KB',  dim:'217×376', desc:'储能柜 A (Blue Ozen)' },
+  { file:'slide14_shape18.png',  size:'61KB',  dim:'206×375', desc:'储能柜 B (变体)' },
+  { file:'slide14_shape32.png',  size:'19KB',  dim:'135×133', desc:'EMS触摸屏/监控屏' },
+  { file:'slide14_shape100.png', size:'9KB',   dim:'162×265', desc:'CT电流互感器 (ΔY)' },
+  { file:'slide14_shape3.png',   size:'0.5KB', dim:'17×101',  desc:'断路器/连接符号' },
+];
+images.forEach(img => {
+  document.getElementById('grid').innerHTML += '<div class="card">' +
+    '<img src="' + img.file + '" alt="' + img.desc + '">' +
+    '<div class="name">' + img.file + '</div>' +
+    '<div class="info">' + img.dim + ' / ' + img.size + '</div>' +
+    '<div style="margin-top:4px;font-weight:600">' + img.desc + '</div>' +
+    '</div>';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <g fill="none" stroke="#5A5A5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 横线（趴着的栏杆）-->
+    <line x1="4" y1="36" x2="60" y2="36" stroke-width="2.5"/>
+    <!-- 左耳 -->
+    <ellipse cx="16" cy="26" rx="6" ry="7"/>
+    <ellipse cx="16" cy="26" rx="2.8" ry="3.2" fill="#5A5A5A" stroke="none"/>
+    <!-- 右耳 -->
+    <ellipse cx="48" cy="26" rx="6" ry="7"/>
+    <ellipse cx="48" cy="26" rx="2.8" ry="3.2" fill="#5A5A5A" stroke="none"/>
+    <!-- 头轮廓 -->
+    <ellipse cx="32" cy="28" rx="19" ry="17"/>
+    <!-- 脸部区域 -->
+    <ellipse cx="32" cy="32" rx="13" ry="11"/>
+    <!-- 左手（搭在横线上）-->
+    <path d="M15 36c-1-2-4-3-6-2c-2 1-3 4-2 6c1 2 3 3 5 2c2-.5 3-3 3-6z"/>
+    <path d="M11 35c-1.5 0-3 .5-3.5 2" stroke-width="1.5"/>
+    <!-- 右手（搭在横线上）-->
+    <path d="M49 36c1-2 4-3 6-2c2 1 3 4 2 6c-1 2-3 3-5 2c-2-.5-3-3-3-6z"/>
+    <path d="M53 35c1.5 0 3 .5 3.5 2" stroke-width="1.5"/>
+    <!-- 左眼 -->
+    <circle cx="26" cy="32" r="2.8" fill="#5A5A5A" stroke="none"/>
+    <circle cx="25.2" cy="31.2" r="1" fill="white" stroke="none"/>
+    <!-- 右眼 -->
+    <circle cx="38" cy="32" r="2.8" fill="#5A5A5A" stroke="none"/>
+    <circle cx="37.2" cy="31.2" r="1" fill="white" stroke="none"/>
+    <!-- 微笑嘴 -->
+    <path d="M27 40 Q32 45 37 40" stroke-width="1.8"/>
+  </g>
+</svg>

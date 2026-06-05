@@ -1,0 +1,16 @@
+node_modules/
+dist/
+release/
+out/
+*.exe
+
+# Workspace metadata
+.codebuddy/
+.workbuddy/
+.playwright-cli/
+
+# Screenshots (root level)
+admin-avatar-added.png
+config-table-fixed.png
+index-avatar-added.png
+topo-components.png

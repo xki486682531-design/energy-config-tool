@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <g fill="none" stroke="#5A5A5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 星星闪光 -->
+    <path d="M53 14l2 4l4 2l-4 2l-2 4l-2-4l-4-2l4-2z" fill="#5A5A5A" stroke="none"/>
+    <!-- 小星点 -->
+    <circle cx="56" cy="22" r="1.2" fill="#5A5A5A" stroke="none"/>
+    <!-- 左耳 -->
+    <ellipse cx="14" cy="34" rx="6" ry="7"/>
+    <ellipse cx="14" cy="34" rx="2.8" ry="3.2" fill="#5A5A5A" stroke="none"/>
+    <!-- 右耳 -->
+    <ellipse cx="50" cy="34" rx="6" ry="7"/>
+    <ellipse cx="50" cy="34" rx="2.8" ry="3.2" fill="#5A5A5A" stroke="none"/>
+    <!-- 头轮廓 -->
+    <ellipse cx="32" cy="38" rx="20" ry="18"/>
+    <!-- 脸部区域 -->
+    <ellipse cx="32" cy="42" rx="14" ry="12"/>
+    <!-- 墨镜 -->
+    <path d="M18 39 L23 36 L41 36 L46 39 L46 43 L41 46 L23 46 L18 43 Z" fill="#5A5A5A" stroke="none"/>
+    <!-- 墨镜反光高光 -->
+    <path d="M21 39 L24 37" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M43 39 L40 37" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- 墨镜中梁 -->
+    <line x1="32" y1="37" x2="32" y2="42" stroke="#3A3A3A" stroke-width="1.2"/>
+    <!-- 墨镜腿 -->
+    <path d="M18 40 Q14 38 12 40" stroke-width="1.8"/>
+    <path d="M46 40 Q50 38 52 40" stroke-width="1.8"/>
+    <!-- 得意微笑 -->
+    <path d="M26 50 Q32 55 38 50" stroke-width="2"/>
+  </g>
+</svg>
