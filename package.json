@@ -1,0 +1,26 @@
+{
+  "name": "storage-tool",
+  "version": "1.0.0",
+  "description": "储能柜配置工具",
+  "main": "main.js",
+
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+
+  "build": {
+    "appId": "com.storage.tool",
+    "productName": "储能柜配置工具",
+
+    "win": {
+      "target": "nsis",
+      "icon": "logo.ico"
+    }
+  },
+
+  "devDependencies": {
+    "electron": "^42.2.0",
+    "electron-builder": "^26.0.12"
+  }
+}

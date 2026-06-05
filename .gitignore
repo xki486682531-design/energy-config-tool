@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+out/
+*.exe
+
+# WorkBuddy / Dev tools
+.codebuddy/
+.playwright-cli/
+.workbuddy/
+
+# Screenshots / debug images
+*-avatar-added.png
+config-table-fixed.png
+topo-components.png

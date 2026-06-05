@@ -1,0 +1,168 @@
+/* ═════════════════════════════════════════════════════════════
+   拓扑元件库管理中心 — Admin Styles
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 子标签栏 ── */
+.complib-sub-tabs{
+  display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;
+}
+.complib-sub-tab{
+  padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s cubic-bezier(.22,.61,.18,1);
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(224,236,248,.65);position:relative;overflow:hidden;
+}
+.complib-sub-tab::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  opacity:0;transition:opacity .2s;
+}
+.complib-sub-tab:hover::before{opacity:1;}
+.complib-sub-tab:hover{color:rgba(224,236,248,.9);transform:translateY(-1px);}
+.complib-sub-tab.active{
+  background:linear-gradient(90deg,rgba(41,128,185,.25),rgba(41,128,185,.08));
+  color:#64b4ff;border-color:rgba(100,180,255,.3);
+  box-shadow:inset 0 0 20px rgba(41,128,185,.08);
+}
+body.light .complib-sub-tab{background:rgba(255,255,255,.4);border-color:rgba(100,160,220,.15);color:rgba(26,58,92,.6);}
+body.light .complib-sub-tab:hover{background:rgba(255,255,255,.7);color:#1a3a5c;}
+body.light .complib-sub-tab.active{background:rgba(41,128,185,.12);color:#1F4E79;border-color:rgba(41,128,185,.3);}
+
+/* ── 工具栏 ── */
+.complib-toolbar{
+  display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;
+}
+.complib-search{
+  flex:1;min-width:140px;max-width:220px;padding:5px 10px;
+  border:1.5px solid rgba(255,255,255,.15);border-radius:10px;
+  background:rgba(255,255,255,.06);color:#e0ecf8;font-size:12px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.complib-search:focus{border-color:rgba(100,180,255,.6);box-shadow:0 0 0 3px rgba(100,180,255,.12);background:rgba(255,255,255,.1);}
+body.light .complib-search{border-color:#c8d8ea;background:rgba(255,255,255,.5);color:#1a1a1a;}
+body.light .complib-search:focus{border-color:#2980B9;box-shadow:0 0 0 3px rgba(41,128,185,.12);}
+.complib-filter{
+  padding:7px 12px;border-radius:10px;font-size:13px;
+  border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  color:#e0ecf8;cursor:pointer;
+}
+body.light .complib-filter{border-color:#c8d8ea;background:rgba(255,255,255,.5);color:#1a1a1a;}
+
+/* ── 统计栏 ── */
+.complib-stats{
+  font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px;
+}
+body.light .complib-stats{color:#718096;}
+
+/* ── 元件网格 ── */
+.complib-comp-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;
+}
+@media(max-width:640px){
+  .complib-comp-grid{grid-template-columns:1fr 1fr;}
+}
+
+/* ── 元件卡片 ── */
+.complib-card{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;overflow:hidden;transition:all .25s cubic-bezier(.22,.61,.18,1);
+  position:relative;display:flex;flex-direction:column;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.12);
+}
+.complib-card:hover{background:rgba(255,255,255,.09);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.complib-card.disabled{opacity:.5;}
+body.light .complib-card{background:rgba(255,255,255,.5);border-color:rgba(100,160,220,.12);box-shadow:inset 0 .5px 0 rgba(255,255,255,.4);}
+body.light .complib-card:hover{background:rgba(255,255,255,.8);}
+
+.complib-card-svg{
+  width:100%;height:60px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.15);border-bottom:1px solid rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.complib-card-svg svg{max-width:100%;max-height:52px;}
+.complib-card-svg-empty{color:rgba(255,255,255,.25);font-size:12px;}
+body.light .complib-card-svg{background:rgba(0,0,0,.04);}
+body.light .complib-card-svg-empty{color:rgba(0,0,0,.25);}
+
+.complib-card-body{padding:8px 10px;flex:1;display:flex;flex-direction:column;gap:3px;}
+.complib-card-name{font-size:12px;font-weight:700;color:#e0ecf8;}
+body.light .complib-card-name{color:#1a3a5c;}
+.complib-card-meta{font-size:10px;color:rgba(255,255,255,.4);}
+body.light .complib-card-meta{color:#94a3b8;}
+.complib-card-desc{font-size:10px;color:rgba(255,255,255,.5);line-height:1.4;}
+body.light .complib-card-desc{color:#64748b;}
+
+.complib-card-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.complib-card-actions .btn-sm{padding:5px 10px;font-size:11px;}
+
+.complib-card-status{
+  position:absolute;top:10px;right:10px;
+  padding:2px 10px;border-radius:8px;font-size:10px;font-weight:700;
+}
+.complib-card-status.enabled{background:rgba(39,174,96,.2);color:#7effc0;border:1px solid rgba(39,174,96,.3);}
+.complib-card-status.disabled{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);}
+body.light .complib-card-status.enabled{background:#d4edda;color:#155724;border-color:#c3e6cb;}
+body.light .complib-card-status.disabled{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;}
+
+/* ── 空状态 ── */
+.complib-empty{
+  text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);font-size:14px;
+}
+body.light .complib-empty{color:#94a3b8;}
+
+/* ── SVG 预览区（模态框内） ── */
+.complib-svg-preview{
+  width:140px;height:105px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);border-radius:10px;
+  overflow:hidden;flex-shrink:0;
+}
+.complib-svg-preview svg{max-width:130px;max-height:95px;}
+body.light .complib-svg-preview{background:rgba(0,0,0,.04);border-color:rgba(100,160,220,.15);}
+
+/* ── 连接点编辑器 ── */
+.complib-conn-points{
+  display:flex;flex-direction:column;gap:6px;padding:10px;
+  background:rgba(0,0,0,.12);border-radius:10px;
+}
+body.light .complib-conn-points{background:rgba(0,0,0,.03);}
+.complib-conn-row{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7);
+}
+body.light .complib-conn-row{color:#4a5568;}
+.complib-conn-row input[type=checkbox]{width:auto;accent-color:#64b4ff;}
+.complib-conn-row input[type=range]{height:4px;accent-color:#64b4ff;}
+.complib-conn-row input[type=number]{width:56px;padding:3px 6px;font-size:11px;
+  border:1px solid rgba(255,255,255,.12);border-radius:6px;background:rgba(255,255,255,.06);color:#e0ecf8;}
+body.light .complib-conn-row input[type=number]{border-color:#c8d8ea;background:#fff;color:#1a1a1a;}
+
+.complib-conn-custom{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-top:4px;}
+body.light .complib-conn-custom{border-top-color:#e2e8f0;}
+
+/* ── 分类树（分类管理标签） ── */
+.complib-cat-tree{display:flex;flex-direction:column;gap:12px;}
+.complib-cat-group{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;overflow:hidden;
+}
+body.light .complib-cat-group{background:rgba(255,255,255,.5);border-color:rgba(100,160,220,.12);}
+.complib-cat-parent{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:rgba(255,255,255,.04);font-weight:700;font-size:14px;color:#e0ecf8;
+}
+body.light .complib-cat-parent{background:rgba(255,255,255,.3);color:#1a3a5c;}
+.complib-cat-icon{font-size:18px;}
+.complib-cat-name{flex:1;}
+.complib-cat-children{padding:6px 16px 12px 36px;display:flex;flex-direction:column;gap:4px;}
+.complib-cat-child{
+  display:flex;align-items:center;gap:8px;padding:5px 10px;
+  background:rgba(255,255,255,.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,.65);
+}
+body.light .complib-cat-child{background:rgba(255,255,255,.3);color:#4a5568;}
+.complib-cat-child button{padding:3px 8px;font-size:11px;margin-left:auto;}
+
+/* ── 模态框覆盖：组件库专属 ── */
+#amodal-comp .amodal-box{max-height:88vh;overflow-y:auto;}
+#amodal-comp .amodal-box::-webkit-scrollbar{width:6px;}
+#amodal-comp .amodal-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px;}
+body.light #amodal-comp .amodal-box::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);}

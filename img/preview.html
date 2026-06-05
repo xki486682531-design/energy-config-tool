@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;gap:40px;background:#1a1a2e;font-family:system-ui;flex-direction:column}
+.row{display:flex;gap:40px;align-items:center}
+.card{text-align:center;background:rgba(255,255,255,.06);border-radius:20px;padding:28px;border:1px solid rgba(255,255,255,.1)}
+.card h3{color:#aaa;margin:14px 0 0;font-size:13px;font-weight:500;letter-spacing:.3px}
+.note{color:#666;font-size:12px;margin-top:40px}
+/* Dark testing */
+.card.dark{background:rgba(255,255,255,.92)}
+.card.dark h3{color:#333}
+.colors{display:flex;gap:24px}
+.color-chip{display:flex;flex-direction:column;align-items:center;gap:12px}
+.color-chip span{font-size:11px;color:#888}
+</style></head><body>
+<div class="row">
+  <div class="card"><img src="monkey-hide.svg" width="64" height="64"><h3>monkey-hide.svg</h3></div>
+  <div class="card dark"><img src="monkey-hide.svg" width="64" height="64"><h3>浅色背景</h3></div>
+</div>
+<div class="row">
+  <div class="card"><img src="monkey-show.svg" width="64" height="64"><h3>monkey-show.svg</h3></div>
+  <div class="card dark"><img src="monkey-show.svg" width="64" height="64"><h3>浅色背景</h3></div>
+</div>
+<div class="colors">
+  <div class="color-chip"><img src="monkey-show.svg" width="64" height="64" style="filter:brightness(0) saturate(100%) invert(47%) sepia(79%) saturate(378%) hue-rotate(314deg) brightness(96%) contrast(88%)"><span>CSS filter 变色</span></div>
+  <div class="color-chip"><img src="monkey-show.svg" width="64" height="64" style="filter:brightness(0) saturate(100%) invert(68%) sepia(26%) saturate(610%) hue-rotate(95deg) brightness(92%) contrast(88%)"><span>CSS filter 变色</span></div>
+</div>
+<p class="note">SVG 使用 currentColor，可通过 CSS color 属性或 filter 修改颜色</p>
+</body></html>

@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>储能柜配置系统 — 登录</title>
+  <link rel="stylesheet" href="liquid-glass.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    /* ── 登录页 CSS 变量 */
+    :root{
+      --text-primary:rgba(220,235,255,0.95);
+      --text-secondary:rgba(180,210,250,0.75);
+    }
+    body.light{
+      --text-primary:rgba(18,45,90,0.92);
+      --text-secondary:rgba(40,80,140,0.68);
+    }
+
+    /* 覆盖 liquid-glass.css 的 page-bg（登录页用深色渐变以更好衬托玻璃） */
+    body:not(.light){
+      --page-bg:linear-gradient(135deg,#0e1f38 0%,#0b1828 30%,#0f2240 60%,#0c1830 100%);
+    }
+    body.light{
+      --page-bg:linear-gradient(135deg,#d0e8f8 0%,#c4dff5 30%,#b8d6f2 60%,#cce2f6 100%);
+    }
+
+    body{
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",Arial,sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;position:relative;
+    }
+    #bg-layer{
+      position:fixed;inset:0;z-index:-1;
+      background:var(--page-bg);
+      background-attachment:fixed;
+      transition:background .8s ease;
+    }
+    #bg-layer.has-img{
+      background-image:var(--bg-img);
+      background-size:cover;
+      animation:none;
+    }
+
+    /* ── 浮动emoji背景 ── */
+    .particles{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden;}
+    .emoji-float{
+      position:absolute;font-size:28px;opacity:0;
+      pointer-events:auto;cursor:default;user-select:none;will-change:transform;
+      filter:drop-shadow(0 2px 6px rgba(0,0,0,.12));
+    }
+    .emoji-float.paused{
+      transition:filter .35s,opacity .25s,transform .25s cubic-bezier(.34,1.56,.64,1);
+      opacity:.9 !important;transform:scale(1.35);
+      filter:drop-shadow(0 0 14px rgba(255,220,80,.7)) drop-shadow(0 0 24px rgba(100,180,255,.4));
+      z-index:50;
+    }
+    .emoji-tip{
+      position:fixed;z-index:9999;padding:9px 15px;max-width:240px;
+      background:rgba(15,25,45,.88);backdrop-filter:blur(16px);
+      border:1px solid rgba(120,180,255,.3);border-radius:14px;
+      color:#d6eaff;font-size:13px;line-height:1.6;
+      box-shadow:0 4px 24px rgba(0,0,0,.35),0 0 16px rgba(80,160,255,.18);
+      pointer-events:none;animation:tipIn .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;
+    }
+    .emoji-tip::before{
+      content:'';position:absolute;bottom:-7px;left:var(--arrow-x,50%);
+      transform:translateX(-50%);border:7px solid transparent;
+      border-top-color:rgba(15,25,45,.88);border-bottom:none;
+    }
+    body.light .emoji-tip{background:rgba(255,255,255,.92);border-color:rgba(80,140,220,.3);color:#2a4a6b;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+    body.light .emoji-tip::before{border-top-color:rgba(255,255,255,.92);}
+    @keyframes tipIn{0%{opacity:0;transform:translateY(8px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
+
+    .particles{transition:opacity .8s ease;}
+    .particles.idle-blurred{opacity:0;pointer-events:none;}
+
+    /* ── 左下角看板娘 ── */
+    .mascot-wrapper {
+      position:fixed;left:14px;bottom:14px;z-index:300;
+      transform-origin:bottom left;
+      transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+      cursor:default;
+    }
+    .mascot-wrapper:hover { transform:scale(1.08); }
+    .mascot-wrapper:hover .mascot-bubble { opacity:1;transform:translateY(0);pointer-events:none; }
+    @media (max-width:768px) { .mascot-wrapper { left:6px;bottom:6px;transform:scale(.78);transform-origin:bottom left; } }
+
+    .mascot {
+      width:64px;height:78px;position:relative;
+    }
+
+    /* 身体 */
+    .mascot-body { position:absolute;bottom:0;left:50%;transform:translateX(-50%); }
+    .mascot-neck {
+      width:14px;height:8px;background:#f5d5b8;border-radius:0 0 5px 5px;
+      margin:0 auto;position:relative;z-index:2;
+    }
+    .mascot-torso {
+      width:30px;height:24px;background:linear-gradient(180deg,#7cb8e4 0%,#5a9ac8 100%);
+      border-radius:10px 10px 6px 6px;margin:0 auto;
+      box-shadow:inset 0 2px 6px rgba(255,255,255,.18);
+    }
+
+    /* 头部 */
+    .mascot-head {
+      width:58px;height:58px;position:absolute;top:0;left:3px;
+      border-radius:50%;
+    }
+    .mascot-face {
+      width:50px;height:44px;background:#ffe4c8;border-radius:50%;
+      position:absolute;bottom:2px;left:4px;z-index:3;
+      box-shadow:inset 0 -3px 6px rgba(0,0,0,.05);
+    }
+
+    /* 头发 */
+    .mascot-hair {
+      position:absolute;left:0;top:0;width:58px;height:58px;z-index:4;
+      background:radial-gradient(ellipse at 50% 35%,#3d3d4a 0%,#2a2a33 60%,#1e1e28 100%);
+      border-radius:50% 50% 40% 40%;
+      clip-path:polygon(0% 0%,100% 0%,100% 60%,92% 55%,85% 48%,80% 42%,70% 52%,60% 36%,50% 40%,40% 34%,30% 52%,20% 38%,12% 48%,5% 42%,0% 55%);
+    }
+    .back-hair {
+      z-index:1;clip-path:polygon(0% 0%,100% 0%,100% 70%,95% 76%,85% 82%,70% 78%,55% 84%,40% 78%,25% 84%,10% 78%,0% 72%);
+    }
+    .front-hair {
+      z-index:10;clip-path:polygon(0% 0%,100% 0%,100% 58%,92% 52%,88% 44%,80% 62%,70% 43%,62% 54%,54% 38%,46% 50%,38% 35%,30% 52%,22% 38%,14% 48%,6% 40%,0% 52%);
+    }
+
+    /* 呆毛 */
+    .ahoge {
+      position:absolute;top:-10px;left:32px;width:3px;height:18px;
+      background:#3d3d4a;border-radius:3px;z-index:12;
+      transform:rotate(-10deg);
+    }
+
+    /* 眼睛 */
+    .mascot-eye {
+      position:absolute;top:16px;z-index:5;
+      width:18px;height:20px;background:#fff;border-radius:50%;
+      box-shadow:inset 0 1px 3px rgba(0,0,0,.08);
+    }
+    .eye-left  { left:8px; }
+    .eye-right { right:8px; }
+    .eye-ball {
+      width:15px;height:15px;border-radius:50%;
+      position:absolute;top:50%;left:50%;
+      background:radial-gradient(circle at 35% 30%,#5b7db5 0%,#2c4468 70%,#1a2f4a 100%);
+      transform:translate(-50%,-50%);
+      transition:transform .08s linear;
+    }
+    .pupil {
+      width:7px;height:7px;background:#0d1420;border-radius:50%;
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    }
+    .pupil-highlight {
+      width:3.5px;height:3.5px;background:#fff;border-radius:50%;
+      position:absolute;top:3px;left:3px;
+    }
+
+    /* 嘴巴 */
+    .mascot-mouth {
+      position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:5;
+      width:7px;height:4px;background:#e88b8b;border-radius:0 0 7px 7px;
+    }
+
+    /* 腮红 */
+    .mascot-blush {
+      position:absolute;top:23px;width:8px;height:5px;
+      background:rgba(255,150,150,.45);border-radius:50%;z-index:4;
+      filter:blur(2px);
+    }
+    .blush-left  { left:3px; }
+    .blush-right { right:3px; }
+
+    /* 气泡 */
+    .mascot-bubble {
+      position:absolute;left:70px;top:-4px;
+      background:rgba(30,40,60,.88);backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      color:#d6eaff;font-size:12px;font-weight:500;
+      padding:8px 14px;border-radius:14px;white-space:nowrap;
+      border:1px solid rgba(120,180,255,.25);
+      box-shadow:0 3px 16px rgba(0,0,0,.3);
+      opacity:0;transform:translateY(6px);
+      transition:opacity .35s,transform .35s cubic-bezier(.34,1.56,.64,1);
+      pointer-events:none;
+      animation:none;
+    }
+    .mascot-bubble::before {
+      content:'';position:absolute;left:-6px;top:12px;
+      border:6px solid transparent;border-right-color:rgba(30,40,60,.88);border-left:none;
+    }
+    body.light .mascot-bubble {
+      background:rgba(255,255,255,.92);border-color:rgba(80,140,220,.3);color:#2a4a6b;
+    }
+    body.light .mascot-bubble::before { border-right-color:rgba(255,255,255,.92); }
+
+    .glass-wrap{
+      position:relative;z-index:10;
+      display:flex;flex-direction:column;align-items:center;gap:24px;
+      transition:transform .9s cubic-bezier(.32,.72,0,1),opacity .9s cubic-bezier(.32,.72,0,1),filter .9s cubic-bezier(.32,.72,0,1),border-radius .9s cubic-bezier(.32,.72,0,1);
+      animation:pageEnter .72s cubic-bezier(.22,.61,.18,1);
+    }
+    @keyframes pageEnter{0%{opacity:0;transform:scale(.9) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    /* ── 登录成功：水滴效果 ── */
+    .glass-wrap.login-success{
+      transform:scale(1);opacity:1;border-radius:24px;filter:blur(0);
+      animation:shrinkToDrop .65s cubic-bezier(.55,.06,.68,.19) forwards;
+      pointer-events:none;
+    }
+    @keyframes shrinkToDrop{
+      0%{transform:scale(1);border-radius:24px;opacity:1;filter:blur(0)}
+      100%{transform:scale(0.05);border-radius:46% 54% 48% 52%/56% 48% 52% 44%;opacity:.78;filter:blur(1.5px)}
+    }
+    .glass-wrap.falling{
+      animation:dropFall .9s cubic-bezier(.22,.61,.36,1) forwards !important;
+    }
+    @keyframes dropFall{
+      0%{transform:scale(0.05) translateY(0);border-radius:46% 54% 48% 52%/56% 48% 52% 44%;opacity:.78;filter:blur(1.5px)}
+      70%{transform:scale(0.04) translateY(calc(50vh + 200px));border-radius:48% 52% 45% 55%/54% 50% 50% 46%;opacity:.65;filter:blur(2px)}
+      100%{transform:scale(0.02) translateY(calc(50vh + 280px));border-radius:50%;opacity:0;filter:blur(4px)}
+    }
+
+    /* ── 水花飞溅 ── */
+    .splash-container{
+      position:fixed;bottom:10%;left:50%;transform:translateX(-50%);
+      z-index:400;pointer-events:none;width:0;height:0;
+    }
+    .splash-particle{
+      position:absolute;width:5px;height:5px;border-radius:50%;
+      background:rgba(120,210,255,.85);
+      animation:splashParticle 1s cubic-bezier(0,0,.18,1) forwards;
+      box-shadow:0 0 6px rgba(100,200,255,.6);
+    }
+    @keyframes splashParticle{
+      0%{opacity:1;transform:translate(0,0) scale(1)}
+      100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0.2)}
+    }
+    .splash-ring{
+      position:absolute;border:2px solid rgba(120,210,255,.5);
+      border-radius:50%;top:50%;left:50%;
+      animation:splashRing 1.4s cubic-bezier(0,0,.15,1) forwards;
+    }
+    @keyframes splashRing{
+      0%{width:0;height:0;margin-left:0;margin-top:0;opacity:1}
+      100%{width:350px;height:80px;margin-left:-175px;margin-top:-40px;opacity:0}
+    }
+    .splash-ring:nth-child(2){animation-delay:.12s;animation-duration:1.2s;border-color:rgba(160,230,255,.35)}
+    .splash-ring:nth-child(3){animation-delay:.24s;animation-duration:1s;border-color:rgba(100,200,255,.2)}
+
+    /* ── 吐槽气泡（猴子聊天气泡 · 锚定密码框右侧）── */
+    .central-err-msg{
+      position:absolute;top:122px;right:-18px;
+      z-index:500;padding:10px 16px;
+      background:rgba(255,255,255,0.12);
+      color:#FFD6D6;
+      border-radius:18px;font-size:13px;font-weight:500;
+      border:1px solid rgba(255,255,255,0.15);
+      box-shadow:0 8px 32px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.18);
+      pointer-events:none;white-space:nowrap;
+      animation:toastBubble 2s ease forwards;
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      letter-spacing:.3px;
+    }
+    /* 聊天气泡小尾巴 — 指向猴子 */
+    .central-err-msg::after{
+      content:'';position:absolute;left:-6px;top:50%;
+      transform:translateY(-50%);
+      width:0;height:0;
+      border-top:6px solid transparent;
+      border-bottom:6px solid transparent;
+      border-right:6px solid rgba(255,255,255,0.12);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+    }
+    body.light .central-err-msg{
+      color:#C0392B;
+      background:rgba(255,255,255,0.65);
+      border-color:rgba(0,0,0,0.08);
+      box-shadow:0 8px 32px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    body.light .central-err-msg::after{
+      border-right-color:rgba(255,255,255,0.65);
+    }
+    .central-err-msg{white-space:pre-line;max-width:220px;}
+    @keyframes toastBubble{
+      0%{opacity:0;transform:scale(.9) translateX(6px)}
+      10%{opacity:1;transform:scale(1) translateX(0)}
+      80%{opacity:1;transform:scale(1) translateX(0)}
+      100%{opacity:0;transform:scale(.9) translateX(6px)}
+    }
+
+    /* ── 密码框焦点提示 ── */
+    .pwd-hint{
+      position:absolute;bottom:-26px;left:2px;
+      font-size:11px;color:rgba(180,210,255,0.55);
+      white-space:nowrap;pointer-events:none;z-index:10;
+      animation:hintFadeIn .25s ease;
+      letter-spacing:.3px;
+    }
+    body.light .pwd-hint{color:rgba(40,80,140,0.5);}
+    @keyframes hintFadeIn{
+      0%{opacity:0;transform:translateY(-4px)}
+      100%{opacity:1;transform:translateY(0)}
+    }
+
+    /* ── 密码框抖动 ── */
+    input.input-shake{
+      animation:pwdShake .35s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes pwdShake{
+      0%,100%{transform:translateX(0)}
+      10%{transform:translateX(-4px)}
+      20%{transform:translateX(3px)}
+      30%{transform:translateX(-2px)}
+      40%{transform:translateX(1px)}
+      50%{transform:translateX(-1px)}
+      60%{transform:translateX(0)}
+    }
+
+    /* 登录卡片抖动 */
+    .glass-card.shake{
+      animation:cardShake .45s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes cardShake{
+      0%,100%{transform:translateX(0)}
+      10%{transform:translateX(-6px)}
+      20%{transform:translateX(5px)}
+      30%{transform:translateX(-4px)}
+      40%{transform:translateX(3px)}
+      50%{transform:translateX(-2px)}
+      60%{transform:translateX(1px)}
+      70%{transform:translateX(0)}
+    }
+
+    /* 猴子嘲讽态 */
+    .pwd-monkey.mock{
+      font-size:26px;
+      animation:monkeyMock .3s ease;
+    }
+    @keyframes monkeyMock{
+      0%{transform:translateY(-50%) scale(1.4)}
+      100%{transform:translateY(-50%) scale(1)}
+    }
+
+    /* Logo */
+    .glass-wrap.idle-blurred{filter:blur(18px);opacity:0.06;pointer-events:auto;}
+    .logo-area{text-align:center;color:var(--text-primary);transition:color .6s ease;}
+    .logo-icon{
+      font-size:52px;
+      filter:drop-shadow(0 0 20px rgba(100,180,255,.6)) drop-shadow(0 4px 12px rgba(0,0,0,.2));
+    }
+    .logo-title{
+      font-size:23px;font-weight:800;letter-spacing:2px;margin-top:10px;
+      text-shadow:0 2px 12px rgba(0,0,0,.3);
+    }
+    .logo-sub{font-size:13px;opacity:.65;margin-top:5px;letter-spacing:.5px;}
+
+    /* ── 液态玻璃登录卡片 ── */
+    .glass-card{
+      position:relative;width:380px;
+      background:rgba(255,255,255,0.12);
+      backdrop-filter:blur(40px) saturate(180%);
+      -webkit-backdrop-filter:blur(40px) saturate(180%);
+      border:1px solid rgba(255,255,255,0.25);
+      border-radius:24px;padding:36px 32px;
+      box-shadow:
+        0 24px 80px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.06);
+      color:var(--text-primary);
+      transition:all .6s ease;
+      /* 顶部高光条 */
+    }
+    .glass-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:1px;
+      background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.5) 30%,rgba(255,255,255,0.7) 50%,rgba(255,255,255,0.5) 70%,transparent 100%);
+      pointer-events:none;
+    }
+    body.light .glass-card{
+      background:rgba(255,255,255,0.38);
+      border-color:rgba(180,210,250,0.45);
+      box-shadow:0 16px 60px rgba(31,78,121,0.12),inset 0 1px 0 rgba(255,255,255,0.65);
+    }
+    .card-title{
+      font-size:18px;font-weight:700;margin-bottom:26px;text-align:center;
+      letter-spacing:1px;opacity:.92;
+    }
+
+    .form-item{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+    .form-item label{
+      font-size:13px;opacity:.78;letter-spacing:.5px;font-weight:600;color:var(--text-secondary);
+    }
+    .form-item input{
+      border:1.5px solid rgba(255,255,255,0.28);border-radius:16px;padding:12px 16px;
+      font-size:14px;font-family:inherit;color:var(--text-primary);
+      background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      outline:none;
+      box-shadow:0 2px 8px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.15);
+      transition:border-color .25s,box-shadow .25s,background .25s;
+    }
+    .form-item input::placeholder{color:rgba(200,220,255,0.38);}
+    body.light .form-item input{
+      background:rgba(255,255,255,0.45);
+      border-color:rgba(100,160,220,0.3);
+      color:rgba(18,45,90,0.88);
+    }
+    body.light .form-item input::placeholder{color:rgba(80,130,190,0.45);}
+    .form-item input:focus{
+      border-color:rgba(100,180,255,0.6);
+      box-shadow:0 0 0 4px rgba(100,180,255,0.14),0 2px 10px rgba(0,0,0,0.06);
+      background:rgba(255,255,255,0.16);
+    }
+    body.light .form-item input:focus{background:rgba(255,255,255,0.62);border-color:rgba(41,128,185,0.55);}
+    .input-err{border-color:rgba(255,100,100,0.65)!important;}
+
+    .form-item.pwd-item{margin-bottom:22px;}
+    .pwd-wrap{position:relative;display:flex;align-items:center;}
+    .pwd-wrap input{padding-right:46px;width:100%;}
+    .pwd-monkey{
+      position:absolute;right:12px;top:50%;
+      transform:translateY(-50%);cursor:pointer;
+      background:none!important;border:none!important;padding:0;margin:0;
+      font-size:22px;line-height:1;text-align:center;
+      opacity:.72;z-index:5;pointer-events:auto;
+      box-shadow:none!important;
+      filter:drop-shadow(0 0 4px rgba(0,0,0,0.15));
+      transition:opacity .22s ease,transform .18s cubic-bezier(.34,1.56,.64,1);
+      outline:none;-webkit-tap-highlight-color:transparent;
+      user-select:none;
+    }
+    .pwd-monkey:hover{opacity:1;transform:translateY(-50%) scale(1.08);}
+    .pwd-monkey:active{transform:translateY(-50%) scale(.88);}
+
+    /* 登录按钮 — 液态玻璃渐变 */
+    .btn-login{
+      width:100%;padding:14px;border:none;border-radius:50px;
+      background:linear-gradient(135deg,rgba(31,110,176,0.88),rgba(59,155,219,0.82),rgba(40,120,200,0.88));
+      background-size:200% 200%;
+      color:#fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:2px;
+      box-shadow:0 8px 32px rgba(31,110,176,0.45),inset 0 1px 0 rgba(255,255,255,0.3);
+      transition:all .35s cubic-bezier(.4,0,.2,1);
+      margin-top:12px;position:relative;overflow:hidden;
+    }
+    .btn-login::before{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,0) 30%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0) 70%);
+      transform:translateX(-100%);transition:transform .55s cubic-bezier(.4,0,.2,1);
+    }
+    .btn-login:hover{
+      transform:translateY(-3px);
+      box-shadow:0 14px 48px rgba(31,110,176,0.55),inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .btn-login:hover::before{transform:translateX(100%);}
+    .btn-login:active{transform:translateY(0) scale(0.97);box-shadow:0 4px 16px rgba(31,110,176,0.3);}
+    .btn-login.success{
+      background:linear-gradient(135deg,#34d399,#10b981,#059669);
+      box-shadow:0 8px 30px rgba(16,185,129,0.5),inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    /* 记住我 + 忘记密码 */
+    .form-extra{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;}
+    .remember-me{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
+    .remember-me input[type=checkbox]{display:none;}
+    .remember-me .check-box{
+      width:17px;height:17px;border-radius:5px;
+      border:1.5px solid rgba(255,255,255,0.3);
+      background:rgba(255,255,255,0.1);
+      display:flex;align-items:center;justify-content:center;
+      transition:.2s;flex-shrink:0;
+    }
+    .remember-me .check-box::after{content:'\2713';font-size:12px;opacity:0;transform:scale(0);transition:.15s;}
+    .remember-me input:checked+.check-box{
+      background:rgba(100,180,255,0.45);border-color:rgba(100,180,255,0.65);
+    }
+    .remember-me input:checked+.check-box::after{opacity:1;transform:scale(1);color:#fff;}
+    .remember-me label{font-size:13px;opacity:.78;cursor:pointer;}
+    .forgot-pw{font-size:13px;color:rgba(140,200,255,0.75);text-decoration:none;cursor:pointer;transition:.2s;}
+    .forgot-pw:hover{color:#64b4ff;text-decoration:underline;}
+    body.light .remember-me .check-box{border-color:rgba(60,100,160,0.4);background:rgba(255,255,255,0.35);}
+    body.light .remember-me input:checked+.check-box{background:rgba(41,128,185,0.5);border-color:rgba(41,128,185,0.65);}
+    body.light .forgot-pw{color:rgba(30,80,140,0.65);}
+    body.light .forgot-pw:hover{color:#1e508c;}
+
+    .err-bar{
+      position:absolute;bottom:148px;left:32px;right:32px;
+      padding:0 14px;max-height:0;
+      background:rgba(231,76,60,0.2);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,100,100,0.42);
+      border-radius:10px;font-size:13px;font-weight:600;
+      color:rgba(255,200,200,0.92);text-align:center;
+      opacity:0;overflow:hidden;pointer-events:none;
+      transition:opacity .3s ease,max-height .3s ease,padding .3s ease;
+    }
+    .err-bar.show{opacity:1;max-height:42px;padding:9px 14px;pointer-events:auto;}
+    body.light .err-bar{background:rgba(220,40,40,0.1);border-color:rgba(200,50,50,0.4);color:#b71c1c;}
+
+    /* ── 底部条 ── */
+    .bottom-bar{
+      position:fixed;bottom:0;left:0;right:0;z-index:50;
+      padding:12px 20px 16px;
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.12) 100%);
+      pointer-events:none;
+    }
+    .weather-row{
+      display:flex;align-items:center;gap:8px;
+      color:rgba(200,220,255,0.68);font-size:13px;letter-spacing:.3px;
+    }
+    .weather-row .w-icon{font-size:20px;}
+    .weather-row .w-sep{opacity:.3;margin:0 2px;}
+    body.light .weather-row{color:rgba(26,51,80,0.58);}
+    body.light .bottom-bar{background:linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.08) 100%);}
+    .funny-copy{
+      color:rgba(180,210,255,0.5);font-size:12.5px;
+      letter-spacing:.4px;text-align:center;transition:opacity .6s ease;max-width:70vw;
+    }
+    .funny-copy.fade{opacity:0;}
+    body.light .funny-copy{color:rgba(26,51,80,0.45);}
+
+    /* ── 右上角工具栏 ── */
+    .top-right-bar{position:fixed;top:20px;right:20px;z-index:100;width:40px;height:40px;}
+    .bar-trigger{
+      position:absolute;top:0;right:0;width:40px;height:40px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.22);
+      background:rgba(255,255,255,0.1);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      color:rgba(200,220,255,0.7);font-size:20px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:opacity .25s ease,transform .25s ease;
+      box-shadow:0 3px 14px rgba(0,0,0,0.18);
+      outline:none;user-select:none;z-index:2;
+    }
+    .top-right-bar:hover .bar-trigger{opacity:0;transform:scale(.6);pointer-events:none;}
+    .bar-buttons{
+      position:absolute;top:2px;right:2px;display:flex;gap:8px;
+      opacity:0;transform:translateX(42px) scale(.4);pointer-events:none;
+      transition:all .35s cubic-bezier(.34,1.56,.64,1);
+      transform-origin:right center;z-index:1;
+    }
+    .top-right-bar:hover .bar-buttons{opacity:1;transform:translateX(0) scale(1);pointer-events:auto;}
+    .bar-btn{
+      width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.2);
+      background:rgba(255,255,255,0.1);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      color:rgba(200,220,255,0.75);font-size:16px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .22s ease;
+      box-shadow:0 3px 12px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.12);
+      outline:none;user-select:none;white-space:nowrap;overflow:hidden;
+    }
+    .bar-btn:hover{
+      background:rgba(255,255,255,0.22);
+      transform:scale(1.12);
+      box-shadow:0 6px 20px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .bar-btn:active{transform:scale(.92);}
+    body.light .bar-trigger,.body.light .bar-btn{border-color:rgba(0,0,0,0.1);background:rgba(255,255,255,0.42);color:#3a5a7c;}
+    body.light .bar-btn:hover{background:rgba(255,255,255,0.68);}
+  </style>
+</head>
+<body class="dark">
+
+<!-- 背景层 -->
+<div id="bg-layer"></div>
+
+<!-- 粒子 -->
+<div class="particles" id="particles"></div>
+
+<!-- 主内容 -->
+<!-- 右上角展开式工具栏 -->
+<div class="top-right-bar">
+  <div class="bar-buttons">
+    <label class="bar-btn bg-upload-btn" title="上传自定义背景">
+      &#x1F5BC;
+      <input type="file" accept="image/*" style="display:none" onchange="uploadBg(this)"/>
+    </label>
+    <button class="bar-btn" onclick="resetBg()" title="恢复默认背景">&#x21BA;</button>
+    <button class="bar-btn" id="themeToggleBtn" onclick="toggleTheme()" title="切换日间/夜间模式">☀️</button>
+  </div>
+  <button class="bar-trigger" title="更多操作">&#x2699;</button>
+</div>
+
+<div class="glass-wrap" id="glassWrap">
+  <!-- Logo区 -->
+  <div class="logo-area">
+    <div class="logo-icon">&#x26A1;</div>
+    <div class="logo-title">储能柜配置系统</div>
+    <div class="logo-sub">Energy Storage Configuration Platform</div>
+  </div>
+
+  <!-- 登录卡片 -->
+  <div class="glass-card" id="loginCard">
+    <div class="card-title">账号登录</div>
+
+    <div class="form-item">
+      <label>用 户 名</label>
+      <input type="text" id="username" placeholder="请输入用户名" autocomplete="username" />
+    </div>
+    <div class="form-item pwd-item">
+      <label>密&#x3000;&#x3000;码</label>
+      <div class="pwd-wrap">
+        <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" />
+        <button class="pwd-monkey" id="pwdMonkey" type="button" title="查看密码">🙈</button>
+      </div>
+    </div>
+
+    <div class="form-extra">
+      <label class="remember-me" id="rememberLabel">
+        <input type="checkbox" id="rememberMe" />
+        <span class="check-box"></span>
+        <span>记住我</span>
+      </label>
+      <a class="forgot-pw" href="javascript:void(0)" onclick="alert('请联系管理员XZP重置密码')">忘记密码</a>
+    </div>
+
+    <div class="err-bar" id="err-bar">用户名或密码错误</div>
+    <button class="btn-login" id="loginBtn">登 录</button>
+  </div>
+
+  <!-- 设置栏（已移至右上角 top-right-bar） -->
+
+</div>
+
+<!-- 水花溅射层 -->
+<div class="splash-container" id="splashContainer"></div>
+
+<!-- 左下角看板娘 -->
+<div class="mascot-wrapper" id="mascotWrapper">
+  <div class="mascot" id="mascot">
+    <!-- 身体 -->
+    <div class="mascot-body">
+      <div class="mascot-neck"></div>
+      <div class="mascot-torso"></div>
+    </div>
+    <!-- 头部 -->
+    <div class="mascot-head">
+      <div class="mascot-hair back-hair"></div>
+      <div class="mascot-face">
+        <!-- 眼睛 -->
+        <div class="mascot-eye eye-left">
+          <div class="eye-ball" data-eye="left">
+            <div class="pupil"></div>
+            <div class="pupil-highlight"></div>
+          </div>
+        </div>
+        <div class="mascot-eye eye-right">
+          <div class="eye-ball" data-eye="right">
+            <div class="pupil"></div>
+            <div class="pupil-highlight"></div>
+          </div>
+        </div>
+        <!-- 嘴巴 -->
+        <div class="mascot-mouth"></div>
+        <!-- 腮红 -->
+        <div class="mascot-blush blush-left"></div>
+        <div class="mascot-blush blush-right"></div>
+      </div>
+      <!-- 刘海 -->
+      <div class="mascot-hair front-hair"></div>
+      <!-- 呆毛 -->
+      <div class="ahoge"></div>
+    </div>
+  </div>
+  <!-- 气泡 -->
+  <div class="mascot-bubble" id="mascotBubble">在看什么呢？</div>
+</div>
+
+<!-- 底部天气 + 搞怪文案 -->
+<div class="bottom-bar" id="bottomBar">
+  <div class="weather-row" id="weatherRow">
+    <span class="w-icon" id="wIcon">☁️</span>
+    <span id="wDesc">加载中…</span>
+    <span class="w-sep">|</span>
+    <span id="wExtra">--</span>
+  </div>
+  <div class="funny-copy" id="funnyCopy">⚡ 储能不储懒，登录不登天</div>
+</div>
+
+<script src="js/liquid-glass.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script>
+// ── 背景 & 主题持久化 ─────────────────────────────────────
+function applySettings() {
+  var s = STORAGE.get('settings') || {};
+  const theme = s.theme || 'dark';
+  const bgImg = localStorage.getItem('ess-bg-img');
+  const bgPos = localStorage.getItem('ess-bg-pos') || 'center';
+
+  document.body.className = theme;
+
+  // 按钮图标同步
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.innerHTML = theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+
+  const bgLayer = document.getElementById('bg-layer');
+  if (bgImg) {
+    bgLayer.style.backgroundImage = 'url(' + bgImg + ')';
+    bgLayer.style.backgroundSize  = 'cover';
+    bgLayer.style.backgroundPosition = bgPos;
+    bgLayer.classList.add('has-img');
+    document.documentElement.style.setProperty('--bg-pos', bgPos);
+  }
+}
+
+function toggleTheme() {
+  const current = document.body.className;
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.body.className = next;
+  var s = STORAGE.get('settings') || {};
+  s.theme = next;
+  STORAGE.set('settings', s);
+  // 更新按钮图标
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.innerHTML = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+}
+
+// ── 看板娘：眼睛跟随鼠标 ──────────────────────────────────
+(function initMascot() {
+  var eyes = document.querySelectorAll('.eye-ball');
+  var bubble = document.getElementById('mascotBubble');
+  var wrapper = document.getElementById('mascotWrapper');
+  if (!eyes.length) return;
+
+  // 随机气泡文案
+  var bubbleTexts = [
+    '在看什么呢？','别乱点哦~','密码想起来了没？',
+    '今天也要加油！','盯——','鼠标别晃了',
+    '你行不行啊？','输入密码要专心！','<(｀^′)>',
+    '认真点！','哼！','⚡ 登录成功了叫我'
+  ];
+  var lastBubbleTime = 0;
+
+  function trackMouse(e) {
+    var x = e.clientX, y = e.clientY;
+    eyes.forEach(function(eb) {
+      var rect = eb.getBoundingClientRect();
+      var cx = rect.left + rect.width/2;
+      var cy = rect.top + rect.height/2;
+      var dx = x - cx;
+      var dy = y - cy;
+      var maxMove = 4; // 瞳孔最大偏移(px)
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      var scale = Math.min(dist / 120, 1); // 距离120px可达满偏
+      var mx = (dx / (dist || 1)) * maxMove * scale;
+      var my = (dy / (dist || 1)) * maxMove * scale;
+      eb.style.transform = 'translate(calc(-50% + ' + mx.toFixed(1) + 'px), calc(-50% + ' + my.toFixed(1) + 'px))';
+    });
+
+    // 鼠标悬停1.5秒触发气泡
+    var now = Date.now();
+    if (now - lastBubbleTime > 4500 && bubble) {
+      var wRect = wrapper && wrapper.getBoundingClientRect();
+      if (wRect && x >= wRect.left - 20 && x <= wRect.right + 20 && y >= wRect.top - 10 && y <= wRect.bottom + 10) {
+        lastBubbleTime = now;
+        bubble.textContent = bubbleTexts[Math.floor(Math.random() * bubbleTexts.length)];
+      }
+    }
+  }
+
+  document.addEventListener('mousemove', trackMouse, { passive: true });
+
+  // 点击看板娘给反应
+  if (wrapper) {
+    wrapper.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (bubble) {
+        bubble.textContent = '呀！别戳我！';
+        bubble.style.opacity = '1';
+        bubble.style.transform = 'translateY(0)';
+        setTimeout(function() {
+          bubble.style.opacity = '0';
+          bubble.style.transform = 'translateY(6px)';
+        }, 2000);
+      }
+    });
+  }
+})();
+
+// ── 天气 + 搞怪文案 ──────────────────────────────────────
+(function initBottomBar() {
+  const wIcon  = document.getElementById('wIcon');
+  const wDesc  = document.getElementById('wDesc');
+  const wExtra = document.getElementById('wExtra');
+  const funny  = document.getElementById('funnyCopy');
+
+  // 搞怪文案库
+  const FUNNY_COPIES = [
+    '⚡ 储能不储懒，登录不登天',
+    '🔋 电量满格，人生也要满格',
+    '🦀 别摸鱼了，螃蟹都比你忙',
+    '💻 你的工位，你的主场',
+    '🌡️ 储能柜不烫，你摸鱼才烫',
+    '🤖 AI都比你勤快，赶紧登录',
+    '🍵 泡杯茶，登录先，今天稳赚',
+    '🎯 先登录再看天气，顺序不能乱',
+    '💡 一度电一份情，一个登录一颗心',
+    '🚀 登录即起飞，今天不摸鱼',
+    '🐸 青蛙都知道蹦跶，你快登录',
+    '🌻 太阳都上班了，你呢？',
+    '🫠 不登录就没饭吃——马斯克说的',
+    '📊 峰谷套利从登录开始',
+    '🧊 液冷储能不怕热，你怕啥？',
+    '🦥 树懒都比你登录快',
+    '☕ 咖啡都泡好了，就差登录',
+    '🐱 猫主子批准你今天上班',
+    '🎪 登录吧，今天有惊喜（可能）',
+    '⚙️ 系统已热好，就差你的指纹',
+    '🍕 登录完再点外卖，顺序要对',
+    '🏭 工厂都开机了，你还愣着',
+    '🌈 今天的储能收益从登录开始',
+    '🐉 龙年已过，登录不限年',
+    '🫧 再不登录，emoji要飘完了',
+    '🌊 浪潮退去才知道谁在裸泳，登录了才知道',
+    '🔥 储能不爆炸，登录不爆炸',
+    '🥶 制冷系统正常，请登录',
+    '🧠 脑机接口未连接，请手动登录',
+    '🛸 外星人都用储能柜了，你呢？',
+    '🎮 这不是游戏，但登录就通关',
+    '💸 一度电赚一分，登录赚一份',
+    '🍀 今日宜登录，忌摸鱼',
+    '🐝 勤劳的小蜜蜂都在登录',
+    '🦄 万中无一的登录奇才就是你',
+    '📡 信号满格，就差你的手指',
+    '🍜 登录前先吃碗面，今天有劲',
+    '⚓ 锚已抛，登录即启航',
+    '🌵 沙漠里的储能柜等你好久了',
+    '🍻 登录完请你喝电解质水',
+    // ── 新增：夸人 + 小技巧 ──
+    '👑 储能行业的天花板，登录吧王者',
+    '🧠 你这么聪明，密码肯定记得住',
+    '🎖️ 15年储能老兵，这气场拿捏了',
+    '💎 专业的人从不摸鱼，登录就开干',
+    '🏆 行业标杆就是你了，快快登录',
+    '⚡ 你的经验值已爆表，登录即变现',
+    '🌟 储能圈最亮的星，登录闪耀',
+    '🤝 配置如行云流水，一看就是老手',
+    '💪 今天也是元气满满的储能人',
+    '🔧 小技巧：首次登录自动创建管理员账号',
+    '💡 小技巧：登录后点 🌙 切换深色护眼模式',
+    '📱 小技巧：背景图可以自定义，拍张储能柜试试',
+    '🎯 小技巧：配置完记得导出 Excel 备份',
+    '🔄 小技巧：管理员后台可以随时修改产品库',
+    '🗄️ 小技巧：项目配置支持单台和多台两种模式'
+  ];
+
+  let copyIdx = 0;
+  function rotateCopy() {
+    if (!funny) return;
+    funny.classList.add('fade');
+    setTimeout(() => {
+      copyIdx = (copyIdx + 1) % FUNNY_COPIES.length;
+      funny.textContent = FUNNY_COPIES[copyIdx];
+      funny.classList.remove('fade');
+    }, 600);
+  }
+  setInterval(rotateCopy, 6000);
+
+  // 天气：wttr.in 实时数据（中文）
+  async function fetchWeather() {
+    try {
+      const resp = await fetch('https://wttr.in/?format=j1&lang=zh', { signal: AbortSignal.timeout(5000) });
+      const data = await resp.json();
+      const cur = data.current_condition[0];
+      const code = parseInt(cur.weatherCode) || 0;
+
+      // wttr.in weatherCode → emoji
+      const codeMap = {
+        113: '☀️', 116: '⛅', 119: '☁️', 122: '☁️',
+        143: '🌫️', 176: '🌦️', 179: '🌨️', 182: '🌨️',
+        185: '🌧️', 200: '⛈️', 227: '🌬️', 230: '❄️',
+        248: '🌫️', 260: '🌫️', 263: '🌧️', 266: '🌧️',
+        281: '🌧️', 284: '🌧️', 293: '🌧️', 296: '🌧️',
+        299: '🌧️', 302: '🌧️', 305: '🌧️', 308: '🌧️',
+        311: '🌧️', 314: '🌧️', 317: '🌧️', 320: '🌨️',
+        323: '🌨️', 326: '🌨️', 329: '❄️', 332: '❄️',
+        335: '❄️', 338: '❄️', 350: '🌧️', 353: '🌦️',
+        356: '🌧️', 359: '🌧️', 362: '🌨️', 365: '🌨️',
+        368: '🌨️', 371: '❄️', 374: '🌨️', 377: '🌧️',
+        386: '⛈️', 389: '⛈️', 392: '⛈️', 395: '❄️'
+      };
+      const emoji = codeMap[code] || '🌤️';
+
+      if (wIcon) wIcon.textContent = emoji;
+      if (wDesc) {
+        // 使用中文天气描述（lang_zh 或 手动翻译 weatherCode）
+        var zhDesc = '';
+        if (cur.lang_zh && cur.lang_zh.length) {
+          zhDesc = cur.lang_zh[0].value;
+        } else {
+          // fallback：手动翻译常见天气
+          var zhMap = {
+            'Clear':'晴','Sunny':'晴','Partly cloudy':'多云','Cloudy':'阴','Overcast':'阴',
+            'Mist':'薄雾','Fog':'雾','Freezing fog':'冻雾','Patchy rain possible':'局部阵雨',
+            'Patchy snow possible':'局部阵雪','Patchy sleet possible':'局部雨夹雪',
+            'Patchy freezing drizzle possible':'局部冻雨','Thundery outbreaks possible':'可能有雷暴',
+            'Blowing snow':'吹雪','Blizzard':'暴风雪','Light drizzle':'小雨','Light rain':'小雨',
+            'Moderate rain at times':'间歇中雨','Moderate rain':'中雨','Heavy rain at times':'间歇大雨',
+            'Heavy rain':'大雨','Light freezing rain':'小冻雨','Moderate or heavy freezing rain':'中到重冻雨',
+            'Light sleet':'小雨夹雪','Moderate or heavy sleet':'中到重雨夹雪',
+            'Light snow':'小雪','Patchy light snow':'局部小雪','Moderate snow':'中雪',
+            'Heavy snow':'大雪','Ice pellets':'冰粒','Light rain shower':'小阵雨',
+            'Moderate or heavy rain shower':'中到大阵雨','Torrential rain shower':'暴雨',
+            'Light sleet showers':'小雨夹雪阵雨','Moderate or heavy sleet showers':'中到重雨夹雪阵雨',
+            'Light snow showers':'小阵雪','Moderate or heavy snow showers':'中到大阵雪',
+            'Light showers of ice pellets':'小冰粒阵雨','Moderate or heavy showers of ice pellets':'中到大冰粒阵雨',
+            'Patchy light rain with thunder':'局部雷阵雨','Moderate or heavy rain with thunder':'中到重雷雨',
+            'Patchy light snow with thunder':'局部雷阵雪','Moderate or heavy snow with thunder':'中到重雷雪'
+          };
+          zhDesc = zhMap[cur.weatherDesc[0].value] || cur.weatherDesc[0].value;
+        }
+        // 城市名用中文（从nearest_area取，或default深圳）
+        var locName = '';
+        try {
+          locName = data.nearest_area[0].areaName[0].value;
+          // 常见城市英文→中文
+          var cityMap = {'Shenzhen':'深圳','Guangzhou':'广州','Beijing':'北京','Shanghai':'上海',
+            'Hangzhou':'杭州','Chengdu':'成都','Wuhan':'武汉','Nanjing':'南京','Chongqing':'重庆',
+            'Xian':'西安','Changsha':'长沙','Zhengzhou':'郑州','Jinan':'济南','Tianjin':'天津',
+            'Suzhou':'苏州','Dongguan':'东莞','Foshan':'佛山','Zhuhai':'珠海','Xiamen':'厦门',
+            'Qingdao':'青岛','Dalian':'大连','Kunming':'昆明','Guiyang':'贵阳','Fuzhou':'福州',
+            'Hefei':'合肥','Nanchang':'南昌','Taiyuan':'太原','Shijiazhuang':'石家庄',
+            'Shenyang':'沈阳','Changchun':'长春','Harbin':'哈尔滨'};
+          locName = cityMap[locName] || locName;
+        } catch(e) { locName = '深圳'; }
+        wDesc.textContent = locName + ' ' + cur.temp_C + '°C ' + zhDesc;
+      }
+      if (wExtra) {
+        wExtra.textContent = '💧湿度' + cur.humidity + '%  💨风速' + cur.windspeedKmph + '公里/时';
+      }
+    } catch (_) {
+      if (wDesc) wDesc.textContent = '深圳 --°C 天气加载中…';
+      if (wExtra) wExtra.textContent = '--';
+    }
+  }
+  fetchWeather();
+  // 每 30 分钟刷新一次天气
+  setInterval(fetchWeather, 30 * 60 * 1000);
+})();
+
+// ── 智能人脸检测裁剪 ──────────────────────────────────────
+function detectFaceRegion(canvas) {
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imgData.data;
+  const w = canvas.width, h = canvas.height;
+  let skinPixels = [];
+
+  // 每隔 3 像素采样（性能优化）
+  for (let y = 0; y < h; y += 3) {
+    for (let x = 0; x < w; x += 3) {
+      const i = (y * w + x) * 4;
+      const r = d[i], g = d[i+1], b = d[i+2];
+      // 肤色检测：RGB 范围 + 红>蓝规则（适用于亚洲人/白种人肤色）
+      if (r > 95 && g > 40 && b > 20 &&
+          Math.max(r,g,b) - Math.min(r,g,b) > 15 &&
+          Math.abs(r - g) > 15 && r > b) {
+        skinPixels.push({x, y});
+      }
+    }
+  }
+
+  if (skinPixels.length < 30) return null; // 肤色像素不够 → 不是人物照
+
+  // 计算肤色区域的质心（加权）
+  let sumX = 0, sumY = 0;
+  skinPixels.forEach(p => { sumX += p.x; sumY += p.y; });
+  const cx = sumX / skinPixels.length / w;
+  const cy = sumY / skinPixels.length / h;
+
+  // 人脸通常在图片上半部分，微调 Y 轴往上偏移
+  const faceY = Math.max(0.15, Math.min(0.65, cy - 0.08));
+
+  return { x: (cx * 100).toFixed(1) + '%', y: (faceY * 100).toFixed(1) + '%' };
+}
+
+function uploadBg(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 1400;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      canvas.width  = img.width  * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // 人脸检测
+      const facePos = detectFaceRegion(canvas);
+      if (facePos) {
+        localStorage.setItem('ess-bg-pos', facePos.x + ' ' + facePos.y);
+      } else {
+        localStorage.setItem('ess-bg-pos', 'center');
+      }
+
+      // 存入 localStorage
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      localStorage.setItem('ess-bg-img', dataUrl);
+
+      // 应用背景
+      const bgLayer = document.getElementById('bg-layer');
+      bgLayer.style.backgroundImage = `url(${dataUrl})`;
+      bgLayer.style.backgroundSize  = 'cover';
+      bgLayer.style.backgroundPosition = facePos ? (facePos.x + ' ' + facePos.y) : 'center';
+      bgLayer.classList.add('has-img');
+      document.documentElement.style.setProperty('--bg-pos', facePos ? (facePos.x + ' ' + facePos.y) : 'center');
+
+      // 停止呼吸动画（有图片时）
+      bgLayer.style.animation = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetBg() {
+  localStorage.removeItem('ess-bg-img');
+  localStorage.setItem('ess-bg-pos', 'center');
+  const bgLayer = document.getElementById('bg-layer');
+  bgLayer.style.backgroundImage = '';
+  bgLayer.style.backgroundPosition = 'center';
+  bgLayer.classList.remove('has-img');
+  bgLayer.style.animation = '';
+  document.documentElement.style.setProperty('--bg-pos', 'center');
+}
+
+// ── emoji 浮动背景 ──────────────────────────────────────────
+const FLOAT_EMOJIS = [
+  // —— 搞怪/日常 ——
+  { e:'🐱', tips:['🐱 喵星人发来贺电','🐱 猫：你配你的，我睡我的'] },
+  { e:'🐶', tips:['🐶 汪！方案好了吗','🐶 狗勾表示很赞'] },
+  { e:'🐸', tips:['🐸 青蛙凝视着你','🐸 呱呱，今天摸鱼了吗'] },
+  { e:'🦆', tips:['🦆 嘎嘎嘎嘎嘎','🦆 鸭子也来围观配置'] },
+  { e:'🐔', tips:['🐔 鸡你太美','🐔 咕咕day'] },
+  { e:'🐷', tips:['🐷 猪突猛进！','🐷 哼哼，方案真香'] },
+  { e:'🦊', tips:['🦊 狐狸精附体','🦊 狡猾的配置方案'] },
+  { e:'🐼', tips:['🐼 国宝级配置师','🐼 熊猫：我负责可爱'] },
+  { e:'🐨', tips:['🐨 考拉：慢慢来','🐨 不着急，睡一觉再说'] },
+  { e:'🦄', tips:['🦄 不存在的完美方案','🦄 独角兽级配置'] },
+  { e:'🐙', tips:['🐙 八爪鱼式多任务处理','🐙 触手可及的配置'] },
+  { e:'🦀', tips:['🦀 横行霸道','🦀 螃蟹：横着走怎么了'] },
+  { e:'🐠', tips:['🐠 小鱼吐泡泡','🐠 摸鱼中…勿cue'] },
+  { e:'🦖', tips:['🦖 霸王龙：吼！！！','🦖 谁也别想挡住我配置'] },
+  { e:'🐣', tips:['🐣 萌新上线','🐣 破壳而出的小配置师'] },
+  // —— 食物/饮品 ——
+  { e:'🍕', tips:['🍕 加班了，来块披萨','🍕 披萨配方案，绝了'] },
+  { e:'🍔', tips:['🍔 汉堡包，一口闷','🍔 吃完继续配'] },
+  { e:'🍟', tips:['🍟 薯条，嘎嘣脆','🍟 边吃边配'] },
+  { e:'🍩', tips:['🍩 甜甜圈，甜到心坎','🍩 方案甜甜的'] },
+  { e:'🍉', tips:['🍉 吃瓜群众路过','🍉 西瓜在手，快乐我有'] },
+  { e:'🍺', tips:['🍺 干杯！','🍺 方案过了开一瓶'] },
+  { e:'🍵', tips:['🍵 喝茶养生','🍵 佛系配置，不急不躁'] },
+  { e:'🧋', tips:['🧋 奶茶续命','🧋 没有奶茶配不了的方案'] },
+  { e:'🍜', tips:['🍜 来碗拉面','🍜 吃饱了才有力气配'] },
+  { e:'🌮', tips:['🌮 Taco Tuesday','🌮 卷起来卷起来'] },
+  { e:'🍣', tips:['🍣 寿司刺客','🍣 一口一个参数'] },
+  { e:'🥟', tips:['🥟 饺子就酒越喝越有','🥟 包饺子一样包方案'] },
+  // —— 搞怪表情 ——
+  { e:'🤡', tips:['🤡 小丑竟是我自己','🤡 马戏团今日演出：配置方案'] },
+  { e:'👻', tips:['👻 幽灵：boo~','👻 幽灵配置师在线飘过'] },
+  { e:'👽', tips:['👽 外星人也来配置','👽 来自M78星云的方案'] },
+  { e:'🤖', tips:['🤖 机器人代劳','🤖 beep boop 配置中'] },
+  { e:'💩', tips:['💩 今天的方案像…','💩 别担心，会变好的'] },
+  { e:'🦧', tips:['🦧 猩猩点灯','🦧 🦍💎🙌'] },
+  { e:'🐒', tips:['🐒 猴哥猴哥','🐒 猴急啥呢'] },
+  { e:'🦥', tips:['🦥 树懒速度配置中…','🦥 别催…已经在…配…了…'] },
+  // —— 搞怪物体 ——
+  { e:'🧦', tips:['🧦 臭袜子的味道','🧦 方案发霉了没'] },
+  { e:'👟', tips:['👟 跑路专用鞋','👟 方案炸了快跑'] },
+  { e:'🧻', tips:['🧻 纸巾备好了','🧻 方案感人到流泪'] },
+  { e:'🪥', tips:['🪥 刷个牙冷静一下','🪥 清新口气，清新方案'] },
+  { e:'🧸', tips:['🧸 抱抱熊','🧸 方案错了也没关系'] },
+  { e:'🎈', tips:['🎈 放飞自我','🎈 轻飘飘的方案'] },
+  { e:'🎪', tips:['🎪 马戏团开演','🎪 精彩纷呈'] },
+  { e:'🎲', tips:['🎲 命运的骰子','🎲 掷出你的配置'] },
+  { e:'🎮', tips:['🎮 游戏手柄','🎮 配置像打游戏一样简单'] },
+  { e:'🎧', tips:['🎧 戴上耳机','🎧 沉浸式配置'] },
+  { e:'🎸', tips:['🎸 Rock & Roll','🎸 弹着吉他做配置'] },
+  { e:'🎺', tips:['🎺 嘟嘟嘟嘟嘟','🎺 吹响配置的号角'] },
+  { e:'🔔', tips:['🔔 叮咚！方案到了','🔔 提醒：记得导出Excel'] },
+  // —— 搞怪标志 ——
+  { e:'🚲', tips:['🚲 骑单车来的配置师','🚲 低碳出行，高碳配置'] },
+  { e:'🏖️', tips:['🏖️ 想去海边','🏖️ 配完方案去度假'] },
+  { e:'🌋', tips:['🌋 火山爆发式灵感','🌋 创意喷涌而出'] },
+  { e:'🪐', tips:['🪐 土星环：好看吗','🪐 配置也有光环'] },
+  { e:'🌈', tips:['🌈 彩虹屁时间','🌈 这个方案绝美'] },
+  { e:'⚡', tips:['⚡ 闪电出击','⚡ 秒配方案'] },
+  { e:'💣', tips:['💣 炸弹来了','💣 方案炸了…重来'] },
+  { e:'🕳️', tips:['🕳️ 掉进坑里了','🕳️ 这个需求是个坑'] },
+  { e:'🧲', tips:['🧲 吸引力法则','🧲 好方案吸引好客户'] },
+  // —— 储能/工作（保留少量） ——
+  { e:'🔋', tips:['🔋 SOC 87%，状态良好','🔋 满电出发'] },
+  { e:'📱', tips:['📱 远程监控中','📱 一切尽在掌握'] },
+  { e:'💻', tips:['💻 配置工具已就绪','💻 键盘敲出好方案'] },
+  { e:'📊', tips:['📊 数据会说话','📊 一键导出Excel'] },
+  { e:'🎯', tips:['🎯 方案命中率100%','🎯 精准配置'] },
+  { e:'🚀', tips:['🚀 起飞！！！','🚀 储能市场冲冲冲'] },
+  { e:'💡', tips:['💡 灵感来了','💡 峰谷套利好时机'] },
+  { e:'💎', tips:['💎 钻石级方案','💎 高品质配置'] },
+  { e:'⭐', tips:['⭐ 五星好评','⭐ 星光不负储能人'] },
+  { e:'🍀', tips:['🍀 好运连连','🍀 四叶草保佑方案一次过'] },
+  { e:'🌙', tips:['🌙 夜深了还在配','🌙 月圆之夜方案成'] },
+  { e:'☀️', tips:['☀️ 阳光明媚好心情','☀️ 又是元气满满的一天'] },
+];
+
+
+let activeTip = null;
+let hoveredEl = null;
+const BASE_COUNT = 25;
+const MAX_COUNT = 120;
+let emojiContainer = null;
+let multiplyTimer = null;
+let reducingEmojis = false;
+let mouseOnPage = false;
+
+// 洗牌队列：避免同款emoji同时出现在不同位置
+let _emojiPool = [];
+function _refillPool() { _emojiPool = [...Array(FLOAT_EMOJIS.length).keys()]; _shuffleArr(_emojiPool); }
+function _shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+function _nextEmojiCfg() {
+  if (!_emojiPool.length) _refillPool();
+  return FLOAT_EMOJIS[_emojiPool.pop()];
+}
+_refillPool();
+
+function showTip(el, lines) {
+  if (activeTip) { activeTip.remove(); activeTip = null; }
+
+  const tip = document.createElement('div');
+  tip.className = 'emoji-tip';
+  tip.textContent = el._cfg.e + ' ' + lines[Math.floor(Math.random() * lines.length)];
+  document.body.appendChild(tip);
+  activeTip = tip;
+
+  const rect = el.getBoundingClientRect();
+  const tipH = tip.offsetHeight;
+  const tipW = tip.offsetWidth || 240;
+  const emojiCX = rect.left + rect.width / 2;  // emoji 中心 X
+
+  let left = emojiCX - tipW / 2;
+  let top  = rect.top - tipH - 8;
+  if (left + tipW > window.innerWidth - 6) left = window.innerWidth - tipW - 6;
+  if (left < 6) left = 6;
+  if (top < 6) top = rect.bottom + 8;
+
+  // 箭头对准 emoji 中心（clamp 在 10px ~ tipW-10px 之间）
+  const arrowX = Math.max(10, Math.min(tipW - 10, emojiCX - left));
+  tip.style.setProperty('--arrow-x', arrowX + 'px');
+
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+
+  return tip;
+}
+
+function hideTip() {
+  if (activeTip) {
+    activeTip.style.opacity = '0';
+    activeTip.style.transition = 'opacity .15s';
+    var tip = activeTip;
+    activeTip = null;
+    setTimeout(function() { if(tip.parentNode) tip.remove(); }, 160);
+  }
+}
+
+function pauseEmoji(el, cfg) {
+  if (hoveredEl && hoveredEl !== el) resumeEmoji(hoveredEl);
+  if (el.classList.contains('paused')) return;
+  el.classList.add('paused');
+  el._paused = true;
+  hoveredEl = el;
+  showTip(el, cfg.tips);
+}
+
+function resumeEmoji(el) {
+  if (!el) return;
+  el.classList.remove('paused');
+  el._paused = false;
+  if (hoveredEl === el) hoveredEl = null;
+  hideTip();
+}
+
+function createOneEmoji() {
+  const cfg = _nextEmojiCfg();
+  const el = document.createElement('span');
+  el.className = 'emoji-float';
+  el.textContent = cfg.e;
+  const startX = Math.random() * 100;
+  const size   = 13 + Math.random() * 16;
+  const dur    = 25 + Math.random() * 70;  // 25~95秒，各不相同
+  const moveX  = (Math.random() - .5) * 120;
+  el.style.left = startX + 'vw';
+  el.style.bottom = -size + 'px';
+  el.style.fontSize = size + 'px';
+  el._cfg    = cfg;
+  el._moveX  = moveX;
+  el._dur    = dur * 1000;
+  el._size   = size;
+  el._phase  = Math.random() * Math.PI * 2;
+  el._startTime = null;
+  el._paused = false;
+  el._bornAt = performance.now();
+  el._deadUntil = null;
+  el.addEventListener('mouseenter', () => { pauseEmoji(el, cfg); });
+  el.addEventListener('mouseleave', () => { resumeEmoji(el); });
+  emojiContainer.appendChild(el);
+  return el;
+}
+
+function startMultiplying() {
+  if (multiplyTimer || !emojiContainer) return;
+  multiplyTimer = setInterval(() => {
+    if (!emojiContainer) { clearInterval(multiplyTimer); multiplyTimer = null; return; }
+    if (emojiContainer.children.length >= MAX_COUNT) return; // 暂停创建但不清timer，降回去继续补
+    createOneEmoji();
+  }, 160);
+}
+
+function stopMultiplyingAndReduce() {
+  if (multiplyTimer) { clearInterval(multiplyTimer); multiplyTimer = null; }
+  reduceEmojis();
+}
+
+function reduceEmojis() {
+  if (reducingEmojis || !emojiContainer) return;
+  reducingEmojis = true;
+  function removeOne() {
+    if (!emojiContainer || emojiContainer.children.length <= BASE_COUNT) {
+      reducingEmojis = false; return;
+    }
+    // 优先删消隐等待中的（顶部不可见），再删暂停的，最后才删飞行中的
+    var candidates = Array.from(emojiContainer.children);
+    var dead = candidates.filter(function(c) { return c._deadUntil && !c._paused; });
+    var paused = candidates.filter(function(c) { return c._paused; });
+    var flying = candidates.filter(function(c) { return !c._deadUntil && !c._paused; });
+    var target = dead[0] || paused[0] || flying[0];
+    if (target) {
+      target.remove();
+      setTimeout(removeOne, 90);
+    } else {
+      reducingEmojis = false;
+    }
+  }
+  removeOne();
+}
+
+function spawnParticles() {
+  emojiContainer = document.getElementById('particles');
+  const count = Math.min(BASE_COUNT, Math.floor(window.innerWidth / 55));
+  // 初始批次错峰发射，不至于全部同时从底部冒出
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => { createOneEmoji(); }, i * (250 + Math.random() * 400));
+  }
+
+  function animate(ts) {
+    if (!animate.running) return;
+    const items = Array.from(emojiContainer.children);
+    // 自愈：粒子数不足时补种（BASE_COUNT兜底）
+    if (items.length < BASE_COUNT) {
+      var need = BASE_COUNT - items.length;
+      for (var si = 0; si < need; si++) { createOneEmoji(); }
+    }
+    items.length > 0 && Array.from(emojiContainer.children).forEach(el => {
+      if (el._paused) return;
+
+      var elapsed = ts - (el._bornAt || 0);
+
+      // 周期结束 → 直接回底部重生，不停留
+      // 休眠恢复（elapsed >> dur）也走这里，天然处理
+      if (elapsed >= el._dur) {
+        el._bornAt = ts;
+        el._phase = Math.random() * Math.PI * 2;
+        el._dur = (25 + Math.random() * 70) * 1000;
+        elapsed = 0;
+      }
+
+      var progress = elapsed / el._dur;
+      var y = -(window.innerHeight + el._size * 2) * progress;
+      var x = el._moveX * Math.sin(progress * Math.PI * 2 + el._phase) * 0.3;
+      el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+
+      // 底部 3% 快速淡入(0.12→0.55)，顶部 15% 淡出
+      var opacity;
+      if (progress < 0.03) opacity = 0.12 + progress / 0.03 * 0.43;
+      else if (progress > 0.85) opacity = (1 - progress) / 0.15 * 0.55;
+      else opacity = 0.55;
+      el.style.opacity = String(opacity);
+    });
+    requestAnimationFrame(animate);
+  }
+  animate.running = true;
+  requestAnimationFrame(animate);
+
+  window._stopEmojiAnim = () => { animate.running = false; };
+  window._startEmojiAnim = () => {
+    if (!animate.running) {
+      animate.running = true;
+      requestAnimationFrame(animate);
+    }
+  };
+
+  // 定期健康检查：确保emoji不会死光（每30秒）
+  setInterval(function() {
+    if (!emojiContainer || !animate.running) return;
+    var cnt = emojiContainer.children.length;
+    if (cnt < BASE_COUNT) {
+      var need = BASE_COUNT - cnt;
+      for (var i = 0; i < need; i++) { createOneEmoji(); }
+    }
+    // 如果动画停了但emoji还在，重启动画
+    if (!animate.running && cnt > 0) {
+      animate.running = true;
+      requestAnimationFrame(animate);
+    }
+  }, 30000);
+}
+
+// 鼠标进入页面 → emoji 越来越多，直到堆满
+document.documentElement.addEventListener('mouseenter', () => {
+  mouseOnPage = true;
+  startMultiplying();
+});
+// 鼠标离开页面 → emoji 慢慢恢复正常
+document.documentElement.addEventListener('mouseleave', () => {
+  mouseOnPage = false;
+  stopMultiplyingAndReduce();
+});
+
+// ── 登录逻辑 ────────────────────────────────────────────────
+let loginFailCount = 0;
+let errTimer = null;
+let lockUntil = 0;    // 锁定结束时间戳
+let lockCycles = 0;   // 已触发过的锁周期数
+let cdInterval = null;
+
+function isLocked() { return Date.now() < lockUntil; }
+
+function startCooldown() {
+  lockCycles++;
+  var secs = 5 * lockCycles; // 5, 10, 15, 20...
+  lockUntil = Date.now() + secs * 1000;
+  var btn = document.getElementById('loginBtn');
+  var pw  = document.getElementById('password');
+
+  btn.disabled = true; pw.disabled = true;
+  updateCdBtn(btn, secs);
+
+  cdInterval = setInterval(function() {
+    var remain = Math.ceil((lockUntil - Date.now()) / 1000);
+    if (remain <= 0) {
+      clearInterval(cdInterval); cdInterval = null;
+      btn.textContent = '登 录'; btn.disabled = false;
+      pw.disabled = false; pw.focus();
+      _showCentralErr('好了，再给你 ' + (5 * lockCycles) + ' 秒…试试看？');
+    } else {
+      updateCdBtn(btn, remain);
+    }
+  }, 300);
+}
+
+function updateCdBtn(btn, secs) {
+  btn.textContent = '⏳ ' + secs + 's 后再试';
+}
+
+// ── 水花效果 ────────────────────────────────────────────────
+function _splashRipple() {
+  var container = document.getElementById('splashContainer');
+  if (!container) return;
+
+  // 涟漪环
+  container.innerHTML = '';
+  for (var ri = 0; ri < 3; ri++) {
+    var ring = document.createElement('div');
+    ring.className = 'splash-ring';
+    container.appendChild(ring);
+    (function(r) { setTimeout(function() { r.remove(); }, 1800); })(ring);
+  }
+
+  // 飞溅粒子（30个）
+  for (var i = 0; i < 30; i++) {
+    var p = document.createElement('div');
+    p.className = 'splash-particle';
+    var angle = Math.random() * Math.PI * 2;
+    var dist = 40 + Math.random() * 180;
+    p.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--sy', -(30 + Math.random() * 150) + 'px');
+    p.style.animationDelay = Math.random() * .2 + 's';
+    p.style.width = (3 + Math.random() * 6) + 'px';
+    p.style.height = p.style.width;
+    p.style.background = Math.random() > .5
+      ? 'rgba(120,210,255,.85)'
+      : 'rgba(180,240,255,.75)';
+    container.appendChild(p);
+    setTimeout(function() { p.remove(); }, 1200);
+  }
+}
+
+// ── 中央错误提示 ────────────────────────────────────────────
+function _showCentralErr(text) {
+  var el = document.createElement('div');
+  el.className = 'central-err-msg';
+  el.textContent = text;
+  var card = document.getElementById('loginCard');
+  if (card) { card.appendChild(el); }
+  else { document.body.appendChild(el); }
+  setTimeout(function() { el.remove(); }, 2200);
+}
+
+// ── 吐槽文案库（分级）───────────────────────────────────────
+var _lastRoast = '';
+function _randomRoast(pool) {
+  var available = pool.filter(function(m) { return m !== _lastRoast; });
+  if (!available.length) available = pool;
+  var picked = available[Math.floor(Math.random() * available.length)];
+  _lastRoast = picked;
+  return picked;
+}
+
+var ROAST_POOLS = {
+  1: [
+    '密码都能忘？储能还配得明白？',
+    '你是在登录，不是在抽奖。',
+    '方向错了，而且很坚定。',
+    '密码找不到，方案能找到吗？',
+    '你负责配置，我负责害怕。'
+  ],
+  2: [
+    '猴哥觉得问题不在系统。',
+    '这密码是现编的吧？',
+    'SOC都比你稳定。',
+    '键盘表示：这锅我不背。',
+    '看得出来，你很有自己的想法。'
+  ],
+  3: [
+    '密码都搞不定，还想搞储能？',
+    'EMS看了都沉默。',
+    '你负责的柜子，应该没接反吧？',
+    '储能系统都没你顽强。',
+    '再试下去，猴哥要报警了。'
+  ],
+  5: [
+    '建议先找回密码，再拯救新能源。',
+    '密码找不到，梦想倒是挺大。',
+    '猴哥已经联系项目经理了。',
+    '你是不是在压力测试系统？',
+    '系统状态正常，问题可能出在驾驶员。'
+  ],
+  success: [
+    '居然对了？',
+    '猴哥差点报警。',
+    '认证成功，刚才那几次当没看见。',
+    '欢迎回来，真不容易。',
+    '密码终于想起来了？'
+  ]
+};
+
+// 非1/2/3/5次失败的通用吐槽
+var ROAST_DEFAULT = [
+  '你是在用脸滚键盘吗？',
+  '系统已记录：第' + (function(){return '';})() + '次错误尝试。',
+  '你是不是把密码写在便利贴上了？',
+  '这密码比你的人生还难猜。',
+  '猴哥表示累了，不想吐槽了。',
+  '储能柜都比你记得住密码。',
+  '你是来配储能还是来纠错的？',
+  '系统建议：先喝杯水冷静一下。'
+];
+
+function _getFailRoast(count) {
+  if (ROAST_POOLS[count]) return _randomRoast(ROAST_POOLS[count]);
+  // 第4次及6次以上 → 动态拼接次数再随机
+  var msgs = ROAST_DEFAULT.slice();
+  msgs[1] = '系统已记录：第' + count + '次错误尝试。';
+  return _randomRoast(msgs);
+}
+
+// ── 猴子嘲讽态 ──────────────────────────────────────────────
+var _monkeyTimer = null;
+var MONKEY_MOCKS = ['🤨','🙄','😏'];
+function _mockMonkey() {
+  var monkey = document.getElementById('pwdMonkey');
+  if (!monkey) return;
+  if (_monkeyTimer) clearTimeout(_monkeyTimer);
+  var prevEmoji = monkey.textContent;
+  monkey.textContent = MONKEY_MOCKS[Math.floor(Math.random() * MONKEY_MOCKS.length)];
+  monkey.classList.add('mock');
+  _monkeyTimer = setTimeout(function() {
+    monkey.textContent = prevEmoji;
+    monkey.classList.remove('mock');
+    _monkeyTimer = null;
+  }, 2000);
+}
+
+// ── 卡片抖动 ────────────────────────────────────────────────
+function _shakeCard() {
+  var card = document.getElementById('loginCard');
+  if (!card) return;
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+}
+
+// ── 登录执行 ────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('loginBtn');
+
+  // 冷却中，阻止登录
+  if (isLocked()) {
+    _showCentralErr('急什么，等着！');
+    return;
+  }
+
+  if (errTimer) { clearTimeout(errTimer); errTimer = null; }
+  btn.textContent = '登录中…'; btn.disabled = true;
+
+  const result = await AUTH.login(username, password);
+
+  if (result.ok) {
+    // ★ 登录成功 — 先检查是否需要吐槽
+    var prevFails = loginFailCount;
+    loginFailCount = 0; lockUntil = 0; lockCycles = 0;
+    if (cdInterval) { clearInterval(cdInterval); cdInterval = null; }
+    var rememberCheck = document.getElementById('rememberMe');
+    if (rememberCheck.checked) {
+      localStorage.setItem('ess-remember-user', username);
+    } else {
+      localStorage.removeItem('ess-remember-user');
+    }
+    localStorage.setItem('ess-logged-in', '1');
+    btn.classList.add('success');
+    btn.textContent = '\u2713 成功';
+
+    // 之前输错超过3次 → 毒舌吐槽
+    if (prevFails > 3) {
+      _showCentralErr(_randomRoast(ROAST_POOLS.success));
+    }
+
+    var glassWrap = document.getElementById('glassWrap');
+
+    // 阶段1：缩小成水滴 (650ms)
+    glassWrap.classList.add('login-success');
+
+    // 阶段2：水滴坠落 (900ms)
+    setTimeout(function() {
+      glassWrap.classList.add('falling');
+    }, 650);
+
+    // 阶段3：水花飞溅 (在坠落中后段触发)
+    setTimeout(function() {
+      _splashRipple();
+      document.body.style.transition = 'opacity .5s ease';
+      document.body.style.opacity = '0';
+    }, 1200);
+
+    // 阶段4：跳转首页
+    setTimeout(function() {
+      window.location.href = 'index.html';
+    }, 1800);
+
+  } else {
+    // ★ 登录失败 — 毒舌吐槽
+    loginFailCount++;
+    btn.textContent = '登 录'; btn.disabled = false;
+    document.getElementById('password').value = '';
+
+    // 动画：卡片抖动 + 猴子嘲讽
+    _shakeCard();
+    _mockMonkey();
+
+    // 分级吐槽文案
+    _showCentralErr(_getFailRoast(loginFailCount));
+
+    // 每5次失败触发冷却
+    if (loginFailCount % 5 === 0) {
+      startCooldown();
+    }
+  }
+}
+
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+
+// ── 密码显隐切换 ────────────────────────────────────────────
+(function() {
+  const monkey = document.getElementById('pwdMonkey');
+  const pwd    = document.getElementById('password');
+  let isWatching = false;
+
+  monkey.addEventListener('click', () => {
+    if (isWatching) {
+      pwd.type = 'password';
+      isWatching = false;
+      monkey.textContent = '🙈';
+      monkey.title = '点击查看密码';
+    } else {
+      pwd.type = 'text';
+      isWatching = true;
+      monkey.textContent = '🐵';
+      monkey.title = '点击隐藏密码';
+    }
+  });
+})();
+
+// ── 密码输入规则校验 ────────────────────────────────────────
+(function() {
+  const pwd = document.getElementById('password');
+  const monkey = document.getElementById('pwdMonkey');
+  if (!pwd) return;
+
+  // 允许的字符
+  const ALLOWED_RE = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:,.\/?\\|~`]$/;
+
+  // 中文字符检测（含中文标点、全角）
+  const CJK_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef]/;
+
+  let isComposing = false;
+  let hintEl = null;
+
+  // ── 中文吐槽文案池 ──
+  const CN_ROASTS = [
+    '🐒 说人话，我看不懂中文密码。',
+    '密码只支持英文、数字和符号。',
+    '这不是微信昵称输入框。',
+    '密码里就别夹带中文了。',
+    '猴哥拒绝接收火星文。',
+    '请输入英文密码。',
+    '建议切换为英文输入法。',
+    '🐒 密码都用中文了？\n你是来登录还是来写作文的？'
+  ];
+  let _lastCnRoast = '';
+
+  function _randomCnRoast() {
+    const available = CN_ROASTS.filter(function(m) { return m !== _lastCnRoast; });
+    const picked = available[Math.floor(Math.random() * available.length)];
+    _lastCnRoast = picked;
+    return picked;
+  }
+
+  // ── 过滤非法字符 ──
+  function _filterPassword() {
+    const val = pwd.value;
+    let filtered = '';
+    for (let i = 0; i < val.length; i++) {
+      if (ALLOWED_RE.test(val[i])) filtered += val[i];
+    }
+    if (filtered !== val) {
+      pwd.value = filtered;
+      return true;
+    }
+    return false;
+  }
+
+  // ── 检测中文 ──
+  function _hasCJK(val) {
+    return CJK_RE.test(val);
+  }
+
+  // ── 输入框抖动 ──
+  function _shakeInput() {
+    pwd.classList.remove('input-shake');
+    void pwd.offsetWidth;
+    pwd.classList.add('input-shake');
+  }
+
+  // ── 猴子无语表情 ──
+  let _cnMonkeyTimer = null;
+  function _mockMonkeyCn() {
+    if (!monkey) return;
+    if (_cnMonkeyTimer) clearTimeout(_cnMonkeyTimer);
+    const prevEmoji = monkey.textContent;
+    monkey.textContent = '😑';
+    monkey.classList.add('mock');
+    _cnMonkeyTimer = setTimeout(function() {
+      monkey.textContent = prevEmoji;
+      monkey.classList.remove('mock');
+      _cnMonkeyTimer = null;
+    }, 2000);
+  }
+
+  // ── IME 组合输入 ──
+  pwd.addEventListener('compositionstart', function() {
+    isComposing = true;
+  });
+
+  pwd.addEventListener('compositionend', function() {
+    isComposing = false;
+    const hadCJK = _hasCJK(pwd.value);
+    const filtered = _filterPassword();
+    if (hadCJK || filtered) {
+      _shakeInput();
+      _mockMonkeyCn();
+      _showCentralErr(_randomCnRoast());
+    }
+  });
+
+  // ── 普通输入 ──
+  pwd.addEventListener('input', function() {
+    if (isComposing) return;
+    const hadCJK = _hasCJK(pwd.value);
+    const filtered = _filterPassword();
+    if (hadCJK || filtered) {
+      _shakeInput();
+      _mockMonkeyCn();
+      _showCentralErr(_randomCnRoast());
+    }
+  });
+
+  // ── 粘贴拦截 ──
+  pwd.addEventListener('paste', function() {
+    setTimeout(function() {
+      const hadCJK = _hasCJK(pwd.value);
+      const filtered = _filterPassword();
+      if (hadCJK || filtered) {
+        _shakeInput();
+        _mockMonkeyCn();
+        _showCentralErr(_randomCnRoast());
+      }
+    }, 0);
+  });
+
+  // ── 阻止拖拽文本 ──
+  pwd.addEventListener('drop', function(e) {
+    e.preventDefault();
+  });
+
+  // ── 焦点提示 ──
+  pwd.addEventListener('focus', function() {
+    if (hintEl) { hintEl.remove(); hintEl = null; }
+    hintEl = document.createElement('div');
+    hintEl.className = 'pwd-hint';
+    hintEl.textContent = 'A-Z  a-z  0-9  英文符号';
+    pwd.parentElement.appendChild(hintEl);
+  });
+
+  pwd.addEventListener('blur', function() {
+    if (hintEl) { hintEl.remove(); hintEl = null; }
+  });
+})();
+
+// ── 记住我 ───────────────────────────────────────────────────
+(function() {
+  const savedUser = localStorage.getItem('ess-remember-user');
+  if (savedUser) {
+    document.getElementById('username').value = savedUser;
+    document.getElementById('rememberMe').checked = true;
+  }
+})();
+
+// ── 初始化 ───────────────────────────────────────────────────
+STORAGE.init().then(() => AUTH.initDefaultUsers()).then(() => {
+  applySettings();
+  spawnParticles();
+  initIdleBlur();
+});
+
+// ── 空闲模糊效果 ────────────────────────────────────────────
+function initIdleBlur() {
+  const IDLE_TIME = 5 * 60 * 1000;
+  const glassWrap = document.getElementById('glassWrap');
+  const particles = document.getElementById('particles');
+  let idleTimer = null;
+  let isBlurred = false;
+
+  function applyBlur() {
+    if (isBlurred) return;
+    isBlurred = true;
+    glassWrap.classList.add('idle-blurred');
+    if (particles) particles.classList.add('idle-blurred');
+    stopMultiplyingAndReduce();
+    glassWrap.style.pointerEvents = 'auto';
+  }
+  function removeBlur() {
+    if (!isBlurred) return;
+    isBlurred = false;
+    glassWrap.classList.remove('idle-blurred');
+    if (particles) {
+      particles.classList.remove('idle-blurred');
+      particles.style.opacity = '';  // 彻底清除残留
+    }
+    // 确保动画在跑
+    if (window._startEmojiAnim) window._startEmojiAnim();
+    if (mouseOnPage) startMultiplying();
+    glassWrap.style.pointerEvents = '';
+  }
+  function resetIdle() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (isBlurred) removeBlur();
+    idleTimer = setTimeout(applyBlur, IDLE_TIME);
+  }
+  ['mousemove','mousedown','keydown','scroll','touchstart','click','wheel'].forEach(evt => {
+    document.addEventListener(evt, resetIdle, { passive: true });
+    glassWrap.addEventListener(evt, resetIdle, { passive: true });
+  });
+  resetIdle();
+}
+</script>
+</body>
+</html>

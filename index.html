@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>储能柜项目配置表生成</title>
+  <link rel="stylesheet" href="liquid-glass.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",Arial,sans-serif;
+      min-height:100vh;padding-bottom:60px;
+      position:relative;
+      animation:bodyFadeIn .6s ease both;
+    }
+    @keyframes bodyFadeIn{
+      0%{opacity:0;}
+      100%{opacity:1;}
+    }
+    @keyframes contentScaleIn{
+      0%{transform:scale(1.05);}
+      100%{transform:scale(1);}
+    }
+
+    /* ── 顶栏 ── */
+    header{
+      position:sticky;top:0;z-index:800;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 28px;height:58px;
+      transition:all .4s ease;
+    }
+    header { background:rgba(255,255,255,0.10);backdrop-filter:blur(32px) saturate(130%);-webkit-backdrop-filter:blur(32px) saturate(130%);border-bottom:0.5px solid rgba(0,0,0,0.06);box-shadow:0 1px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5); }
+    body.dark header{background:rgba(28,28,32,0.45);border-bottom:0.5px solid rgba(255,255,255,0.06);box-shadow:0 1px 12px rgba(0,0,0,0.2),inset 0 0.5px 0 rgba(255,255,255,0.08);}
+
+    .header-left{display:flex;align-items:center;gap:12px;}
+    .header-left h1{font-size:17px;font-weight:700;color:var(--text-primary);cursor:pointer;transition:color .25s ease;}
+    .header-left h1:hover{color:var(--primary,#3B9BDB);}
+    .header-text p{font-size:12px;color:var(--text-secondary);margin-top:1px;}
+
+    .header-right{display:flex;align-items:center;gap:10px;}
+    .user-badge{
+      display:flex;align-items:center;gap:8px;
+      padding:4px 14px 4px 4px;border-radius:24px;
+      background:rgba(255,255,255,0.09);
+      border:0.5px solid rgba(0,0,0,0.04);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      color:var(--text-primary);font-size:13px;font-weight:600;
+      box-shadow:0 2px 8px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      transition:all .3s ease;
+    }
+    body.dark .user-badge{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.08);box-shadow:0 2px 8px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.08);}
+    .user-avatar{
+      width:28px;height:28px;border-radius:50%;
+      background:linear-gradient(135deg,rgba(59,155,219,0.9),rgba(31,110,176,0.85));
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-size:13px;font-weight:700;
+      border:2px solid rgba(255,255,255,0.4);
+      box-shadow:0 2px 8px rgba(31,110,176,0.3);
+    }
+
+    .hdr-btn{
+      width:36px;height:36px;border-radius:12px;
+      border:0.5px solid rgba(0,0,0,0.05);
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(20px);
+      cursor:pointer;font-size:16px;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .22s ease;
+      color:var(--text-primary);
+      box-shadow:0 2px 6px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+    }
+    body.dark .hdr-btn{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .hdr-btn:hover{background:rgba(255,255,255,0.16);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6);}
+    body.dark .hdr-btn:hover{background:rgba(28,28,32,0.52);box-shadow:0 6px 16px rgba(0,0,0,0.25),inset 0 0.5px 0 rgba(255,255,255,0.1);}
+    .hdr-btn:active{transform:translateY(0) scale(0.95);}
+
+
+    .theme-toggle{
+      width:36px;height:36px;border-radius:12px;
+      border:0.5px solid rgba(0,0,0,0.05);
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(20px);
+      cursor:pointer;font-size:16px;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .22s ease;
+      color:#e67e22;
+      box-shadow:0 2px 6px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+    }
+    body.dark .theme-toggle{color:#f0c040;background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .theme-toggle:hover{transform:translateY(-2px) rotate(15deg);box-shadow:0 6px 16px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6);}
+    .theme-toggle:active{transform:translateY(0) scale(0.95);}
+
+    /* ── 卡片通用 ── */
+    .card,.info-card{
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(28px) saturate(130%);
+      -webkit-backdrop-filter:blur(28px) saturate(130%);
+      border:0.5px solid rgba(0,0,0,0.04);
+      border-radius:16px;padding:20px;
+      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      transition:all .35s ease;
+    }
+    body.dark .card,body.dark .info-card{
+      background:rgba(28,28,32,0.38);
+      border:0.5px solid rgba(255,255,255,0.06);
+      box-shadow:0 2px 12px rgba(0,0,0,0.18),inset 0 0.5px 0 rgba(255,255,255,0.08);
+    }
+    .card:hover,.info-card:hover{
+      background:rgba(255,255,255,0.15);
+      border-color:rgba(0,0,0,0.06);
+      box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6);
+    }
+    body.dark .card:hover,body.dark .info-card:hover{
+      background:rgba(28,28,32,0.5);
+      border-color:rgba(255,255,255,0.1);
+      box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.12);
+    }
+
+    /* ── 通用表单 ── */
+    input[type="text"],input[type="number"],select,textarea{
+      padding:10px 14px;
+      border:1.5px solid rgba(255,255,255,0.38);
+      border-radius:16px;font-size:14px;font-family:inherit;
+      background:rgba(255,255,255,0.25);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      color:var(--text-primary);
+      transition:border-color .25s ease,box-shadow .25s ease,background .25s ease;
+      outline:none;
+      box-shadow:0 2px 8px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    body.dark input[type="text"],body.dark input[type="number"],body.dark select,body.dark textarea{
+      background:rgba(15,28,55,0.42);color:rgba(220,235,255,0.9);
+      border-color:rgba(80,140,210,0.25);
+    }
+    input:focus,select:focus,textarea:focus{
+      border-color:rgba(59,155,219,0.6);
+      box-shadow:0 0 0 3px rgba(59,155,219,0.15),0 4px 16px rgba(59,155,219,0.1);
+      background:rgba(255,255,255,0.35);
+    }
+    body.dark input:focus,body.dark select:focus,body.dark textarea:focus{
+      background:rgba(15,28,55,0.58);
+      border-color:rgba(91,163,219,0.5);
+    }
+
+    .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+    .btn-primary,.btn-secondary{
+      padding:10px 24px;border-radius:12px;font-size:14px;font-weight:600;
+      border:none;cursor:pointer;font-family:inherit;
+      position:relative;overflow:hidden;
+      transition:all .22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,rgba(31,110,176,0.88),rgba(59,155,219,0.82));
+      color:#fff;
+      border:1px solid rgba(100,180,240,0.35);
+      box-shadow:0 6px 20px rgba(31,110,176,0.32),inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .btn-primary:hover{
+      background:linear-gradient(135deg,rgba(31,110,176,0.96),rgba(59,155,219,0.92));
+      box-shadow:0 10px 32px rgba(31,110,176,0.42),inset 0 1px 0 rgba(255,255,255,0.4);
+      transform:translateY(-2px);
+    }
+    .btn-primary:active{transform:translateY(0) scale(0.97);}
+    .btn-secondary{
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.35);
+      color:var(--text-primary);
+      box-shadow:0 2px 10px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    body.dark .btn-secondary{background:rgba(20,35,65,0.4);border-color:rgba(80,140,210,0.22);}
+    .btn-secondary:hover{background:rgba(255,255,255,0.32);border-color:rgba(255,255,255,0.55);transform:translateY(-2px);}
+    body.dark .btn-secondary:hover{background:rgba(59,155,219,0.15);}
+    .btn-secondary:active{transform:translateY(0) scale(0.97);}
+
+    /* ── 步骤指示器 ── */
+    .step-indicator{display:flex;align-items:center;gap:0;margin-bottom:24px;}
+    .step-dot{
+      width:30px;height:30px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;flex-shrink:0;
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(10px);
+      border:1.5px solid rgba(255,255,255,0.32);
+      color:var(--text-secondary);
+      box-shadow:0 2px 8px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.4);
+      transition:all .4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    body.dark .step-dot{background:rgba(18,32,62,0.45);border-color:rgba(80,140,210,0.2);}
+    .step-dot.active{
+      background:linear-gradient(135deg,rgba(31,110,176,0.9),rgba(59,155,219,0.85));
+      border-color:rgba(100,180,240,0.4);
+      color:#fff;transform:scale(1.18);
+      box-shadow:0 4px 16px rgba(31,110,176,0.35),inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .step-dot.done{
+      background:rgba(39,174,96,0.22);
+      border-color:rgba(39,174,96,0.35);
+      color:#27ae60;
+    }
+    body.dark .step-dot.done{background:rgba(39,174,96,0.18);border-color:rgba(46,213,115,0.3);color:#2ecc71;}
+    .step-line{
+      width:48px;height:3px;
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(4px);
+      border-radius:3px;margin:0 2px;
+      transition:background .4s ease;
+    }
+    body.dark .step-line{background:rgba(80,140,210,0.15);}
+    .step-line.done{background:rgba(39,174,96,0.5);}
+
+    /* ── 需求表 ── */
+    .req-tip{
+      font-size:13px;color:rgba(31,80,140,0.85);
+      background:rgba(59,155,219,0.1);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(59,155,219,0.2);
+      padding:8px 14px;border-radius:10px;margin-bottom:16px;
+    }
+    body.dark .req-tip{color:rgba(140,190,240,0.85);background:rgba(31,110,176,0.12);border-color:rgba(59,155,219,0.18);}
+    .req-section-title{
+      font-size:13px;font-weight:700;
+      color:rgba(180,80,20,0.85);
+      background:rgba(240,160,60,0.1);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(240,160,60,0.15);
+      padding:6px 12px;border-radius:8px;margin:12px 0 8px;
+    }
+    body.dark .req-section-title{color:rgba(240,175,80,0.9);background:rgba(240,160,64,0.1);border-color:rgba(240,160,64,0.18);}
+    .req-hint{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .req-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px;}
+    @media(max-width:768px){.req-grid{grid-template-columns:1fr;}}
+    .req-grid .form-item{display:flex;flex-direction:column;gap:6px;}
+    .req-grid .form-item label{font-size:13px;font-weight:600;color:var(--text-secondary);white-space:nowrap;}
+    .req-grid .form-item input,.req-grid .form-item select,.req-grid .form-item textarea{width:100%;}
+    .req-grid .form-item[style*="grid-column: span 2"]{grid-column:span 2;}
+    @media(max-width:768px){.req-grid .form-item[style*="grid-column: span 2"]{grid-column:span 1;}}
+    .req-title-name{color:var(--text-primary);font-weight:700;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:768px){.form-grid{grid-template-columns:1fr;}}
+    .form-group{display:flex;flex-direction:column;gap:4px;}
+    .form-group label{font-size:13px;font-weight:600;color:var(--text-secondary);}
+    .radio-group{display:flex;gap:16px;flex-wrap:wrap;}
+    .radio-label{cursor:pointer;display:flex;align-items:center;gap:4px;font-size:14px;color:var(--text-primary);}
+    .radio-label input[type="radio"]{accent-color:#1f6eb0;}
+    .input-with-unit{display:flex;align-items:center;gap:6px;}
+    .input-with-unit input{flex:1;}
+    .unit{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+
+    /* ── 配置卡片 ── */
+    .category-grid{display:flex;flex-direction:column;gap:10px;}
+    .cat-card{
+      background:rgba(255,255,255,0.18);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,0.3);
+      border-radius:24px;overflow:hidden;
+      transition:all .3s cubic-bezier(0.22,0.61,0.18,1);
+      box-shadow:0 2px 12px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    body.dark .cat-card{background:rgba(14,26,52,0.42);border-color:rgba(80,140,210,0.15);}
+    .cat-card:hover,.cat-card.expanded{
+      background:rgba(255,255,255,0.28);
+      border-color:rgba(59,155,219,0.38);
+      box-shadow:0 8px 28px rgba(59,155,219,0.1),inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+    body.dark .cat-card:hover,body.dark .cat-card.expanded{
+      background:rgba(14,26,52,0.58);border-color:rgba(91,163,219,0.3);
+    }
+    .cat-header{
+      display:flex;align-items:center;gap:10px;
+      padding:13px 16px;cursor:pointer;user-select:none;
+      font-weight:600;font-size:14px;color:var(--text-primary);
+      transition:background .25s ease;
+    }
+    .cat-header:hover{background:rgba(59,155,219,0.06);}
+    .cat-icon{font-size:18px;}
+    .cat-name{flex:1;}
+    .cat-badge{
+      font-size:11px;
+      background:rgba(59,155,219,0.15);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(59,155,219,0.22);
+      color:#1f6eb0;
+      padding:2px 10px;border-radius:10px;font-weight:600;
+    }
+    body.dark .cat-badge{background:rgba(31,110,176,0.2);color:#5ba3db;border-color:rgba(91,163,219,0.25);}
+    .cat-arrow{font-size:11px;color:var(--text-muted);transition:transform .28s ease;}
+    .cat-card.expanded .cat-arrow{transform:rotate(90deg);}
+    .cat-body{border-top:1px solid rgba(255,255,255,0.18);}
+    body.dark .cat-body{border-top-color:rgba(80,140,210,0.1);}
+
+    .product-row{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.12);
+      transition:background .2s ease;
+    }
+    body.dark .product-row{border-bottom-color:rgba(80,140,210,0.08);}
+    .product-row:last-child{border-bottom:none;}
+    .product-row:hover{background:rgba(59,155,219,0.05);}
+    .product-row.selected{background:rgba(59,155,219,0.08);}
+    .prod-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+    .prod-icon{font-size:18px;}
+    .prod-detail{min-width:0;}
+    .prod-name{font-size:14px;font-weight:600;color:var(--text-primary);}
+    .prod-spec{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .prod-price{font-size:13px;font-weight:600;color:#1f6eb0;white-space:nowrap;}
+    .prod-actions{display:flex;align-items:center;gap:6px;}
+    .qty-input{
+      width:50px;padding:5px 6px;
+      border:1px solid rgba(255,255,255,0.32);
+      border-radius:8px;text-align:center;font-size:13px;
+      background:rgba(255,255,255,0.22);
+      backdrop-filter:blur(8px);
+      color:var(--text-primary);
+      transition:border-color .2s,box-shadow .2s;
+    }
+    body.dark .qty-input{border-color:rgba(80,140,210,0.2);background:rgba(15,28,55,0.4);}
+    .qty-input:focus{border-color:rgba(59,155,219,0.5);box-shadow:0 0 0 2px rgba(59,155,219,0.1);}
+    .btn-add,.btn-remove{padding:4px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s ease;}
+    .btn-add{
+      background:linear-gradient(135deg,rgba(31,110,176,0.85),rgba(59,155,219,0.8));
+      color:#fff;border:1px solid rgba(100,180,240,0.3);
+      box-shadow:0 3px 10px rgba(31,110,176,0.25);
+    }
+    .btn-add:hover{box-shadow:0 5px 16px rgba(31,110,176,0.38);transform:translateY(-1px);}
+    .btn-remove{
+      background:transparent;color:#e74c3c;
+      border:1px solid rgba(231,76,60,0.35);
+    }
+    .btn-remove:hover{background:rgba(231,76,60,0.85);color:#fff;box-shadow:0 4px 14px rgba(231,76,60,0.3);}
+
+    /* ── 确认页 ── */
+    .config-review{display:flex;flex-direction:column;gap:12px;}
+    .review-section{
+      border:1px solid rgba(255,255,255,0.28);
+      border-radius:24px;overflow:hidden;
+      background:rgba(255,255,255,0.15);
+      backdrop-filter:blur(14px);
+    }
+    body.dark .review-section{background:rgba(14,26,52,0.38);border-color:rgba(80,140,210,0.15);}
+    .review-cat{
+      background:rgba(59,155,219,0.12);
+      backdrop-filter:blur(8px);
+      padding:10px 16px;font-weight:700;font-size:14px;
+      color:#1f6eb0;
+      border-bottom:1px solid rgba(59,155,219,0.15);
+    }
+    body.dark .review-cat{background:rgba(31,110,176,0.15);color:#5ba3db;}
+    .review-row{display:flex;align-items:center;gap:12px;padding:8px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);}
+    body.dark .review-row{border-bottom-color:rgba(80,140,210,0.08);}
+    .review-row:last-child{border-bottom:none;}
+    .review-name{flex:1;font-weight:500;}
+    .review-spec{color:var(--text-muted);font-size:12px;}
+    .review-qty{color:var(--text-secondary);}
+    .review-subtotal{font-weight:700;color:#1f6eb0;min-width:90px;text-align:right;}
+    .total-bar{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 20px;margin-top:16px;
+      background:rgba(59,155,219,0.12);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(59,155,219,0.2);
+      border-radius:14px;
+      font-size:16px;font-weight:700;color:#1f6eb0;
+      box-shadow:0 4px 16px rgba(59,155,219,0.08),inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    body.dark .total-bar{background:rgba(31,110,176,0.15);color:#5ba3db;border-color:rgba(59,155,219,0.2);}
+    .total-price{font-size:24px;}
+
+    /* ── 弹窗 ── */
+    .cmodal-overlay{
+      display:none;position:fixed;inset:0;z-index:9990;
+      background:rgba(10,20,40,0.42);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      justify-content:center;align-items:flex-start;padding-top:10vh;
+    }
+    .cmodal-overlay.show{display:flex;}
+    .cmodal-box{
+      background:rgba(240,248,255,0.72);
+      backdrop-filter:blur(40px) saturate(200%);
+      -webkit-backdrop-filter:blur(40px) saturate(200%);
+      border:1px solid rgba(255,255,255,0.55);
+      border-radius:20px;padding:26px 28px;
+      max-width:560px;width:90vw;max-height:80vh;overflow-y:auto;
+      box-shadow:0 24px 80px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.7);
+      animation:modalIn .42s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    body.dark .cmodal-box{
+      background:rgba(12,22,48,0.82);
+      border-color:rgba(80,140,210,0.22);
+      box-shadow:0 24px 80px rgba(0,0,0,0.45),inset 0 1px 0 rgba(80,140,210,0.1);
+    }
+    @keyframes modalIn{0%{opacity:0;transform:scale(0.88) translateY(24px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+    .cmodal-title{font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:4px;}
+    .cmodal-desc{font-size:13px;color:var(--text-secondary);margin-bottom:16px;}
+    .cmodal-item{
+      display:flex;align-items:center;gap:12px;padding:11px 14px;
+      border:1px solid rgba(255,255,255,0.28);
+      border-radius:12px;margin-bottom:8px;
+      cursor:pointer;transition:all .2s ease;
+      background:rgba(255,255,255,0.18);
+      backdrop-filter:blur(10px);
+    }
+    body.dark .cmodal-item{background:rgba(18,32,62,0.4);border-color:rgba(80,140,210,0.16);}
+    .cmodal-item:hover{background:rgba(59,155,219,0.1);border-color:rgba(59,155,219,0.35);}
+    .cmodal-item.selected{
+      background:rgba(59,155,219,0.15);
+      border-color:rgba(31,110,176,0.4);
+      box-shadow:0 2px 10px rgba(59,155,219,0.12);
+    }
+    body.dark .cmodal-item.selected{background:rgba(31,110,176,0.18);border-color:rgba(91,163,219,0.35);}
+    .cmodal-item-label{flex:1;font-size:14px;font-weight:600;color:var(--text-primary);}
+    .cmodal-item-desc{font-size:12px;color:var(--text-muted);}
+    .cmodal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+    .btn-warn{
+      background:linear-gradient(135deg,rgba(231,76,60,0.85),rgba(255,90,75,0.8));
+      color:#fff;padding:9px 22px;border-radius:10px;
+      border:1px solid rgba(255,120,100,0.35);
+      font-size:14px;cursor:pointer;font-weight:600;
+      box-shadow:0 4px 14px rgba(231,76,60,0.28);
+      transition:all .22s ease;
+    }
+    .btn-warn:hover{box-shadow:0 8px 24px rgba(231,76,60,0.4);transform:translateY(-2px);}
+    .btn-warn:active{transform:translateY(0) scale(0.97);}
+    .btn-mute{
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(10px);
+      color:var(--text-primary);padding:9px 22px;border-radius:10px;
+      border:1px solid rgba(255,255,255,0.32);
+      font-size:14px;cursor:pointer;font-weight:600;
+      transition:all .22s ease;
+    }
+    body.dark .btn-mute{background:rgba(20,35,65,0.4);border-color:rgba(80,140,210,0.2);}
+    .btn-mute:hover{background:rgba(255,255,255,0.32);transform:translateY(-2px);}
+    .btn-mute:active{transform:translateY(0) scale(0.97);}
+
+    /* ── 响应式 ── */
+    @media (max-width:768px){
+      header{padding:0 16px;}
+      .header-left h1{font-size:15px;}
+      .header-text p{display:none;}
+      .btn-row{flex-direction:column;gap:8px;}
+      .btn-primary,.btn-secondary{width:100%;text-align:center;}
+      input[type="text"],select,textarea{font-size:13px;padding:8px 10px;}
+      .req-tip{font-size:12px;}
+      .req-section-title{font-size:12px;}
+      .req-hint{font-size:12px;}
+    }
+    @media (max-width:400px){
+      .cmodal-box{width:95vw;padding:20px 16px;max-height:92vh;}
+      .cmodal-title{font-size:16px;}
+      .cmodal-desc{font-size:12px;}
+      .cmodal-item{padding:8px 10px;}
+      .cmodal-item-label{font-size:13px;}
+      .cmodal-btns{flex-direction:column;gap:8px;}
+    }
+
+    /* ════ 左侧菜单栏 + 页面布局 ════ */
+    .app-layout{display:flex;min-height:100vh;}
+    .sidebar{
+      position:fixed;top:0;left:0;height:100vh;width:220px;
+      overflow:hidden;z-index:900;
+      background:rgba(255,255,255,0.07);
+      backdrop-filter:blur(50px) saturate(140%);
+      -webkit-backdrop-filter:blur(50px) saturate(140%);
+      border-right:0.5px solid rgba(0,0,0,0.05);
+      padding:20px 0;
+      display:flex;flex-direction:column;
+      transition:width .38s cubic-bezier(.34,1.56,.64,1),
+                 background .5s ease,border-color .5s ease;
+      box-shadow:2px 0 20px rgba(0,0,0,0.04),inset 1px 0 0 rgba(255,255,255,0.3);
+      will-change:width;
+    }
+    body.dark .sidebar{
+      background:rgba(28,28,32,0.4);
+      border-right:0.5px solid rgba(255,255,255,0.06);
+      box-shadow:2px 0 20px rgba(0,0,0,0.25),inset 1px 0 0 rgba(255,255,255,0.04);
+    }
+    .sidebar.collapsed{width:64px;}
+    .sidebar.collapsed .sidebar-logo{justify-content:center;padding:0 8px 12px;}
+    .sidebar.collapsed .slogo-text{display:none;}
+    .sidebar.collapsed .sidebar-nav .nav-item{justify-content:center;padding:12px;margin:2px 6px;width:calc(100% - 12px);}
+    .sidebar.collapsed .sidebar-nav .nav-item .nav-label{display:none;}
+    .sidebar-logo{
+      display:flex;align-items:center;gap:10px;
+      padding:0 20px 14px;
+      border-bottom:0.5px solid rgba(0,0,0,0.05);
+      margin-bottom:8px;
+    }
+    body.dark .sidebar-logo{border-bottom-color:rgba(255,255,255,0.06);}
+    .slogo-icon{
+      font-size:24px;flex-shrink:0;
+      cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+      user-select:none;
+      filter:drop-shadow(0 2px 8px rgba(59,155,219,0.3));
+    }
+    .slogo-icon:hover{transform:scale(1.18) rotate(10deg);}
+    .slogo-icon:active{transform:scale(.92);}
+    .slogo-text{font-size:16px;font-weight:800;color:var(--text-primary);white-space:nowrap;overflow:hidden;}
+    .sidebar-nav{flex:1;padding:0 10px;overflow-y:auto;overflow-x:hidden;}
+    .sidebar-nav .nav-item{
+      display:flex;align-items:center;gap:10px;
+      width:100%;padding:12px 14px;margin:3px 0;border-radius:12px;
+      border:none;background:transparent;
+      color:var(--text-secondary);font-size:14px;font-weight:500;
+      cursor:pointer;
+      text-align:left;font-family:inherit;
+      position:relative;overflow:hidden;
+      transition:all .22s ease;
+    }
+    .sidebar-nav .nav-item:hover{
+      background:rgba(255,255,255,0.18);
+      color:var(--text-primary);
+      transform:translateX(3px);
+      box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    }
+    body.dark .sidebar-nav .nav-item:hover{background:rgba(59,155,219,0.12);}
+    .sidebar-nav .nav-item.active{
+      background:rgba(31,110,176,0.18);
+      color:#1f6eb0;font-weight:700;
+      box-shadow:inset 3px 0 0 rgba(59,155,219,0.9),0 2px 12px rgba(31,110,176,0.1);
+    }
+    body.dark .sidebar-nav .nav-item.active{
+      background:rgba(31,110,176,0.25);color:#5ba3db;
+      box-shadow:inset 3px 0 0 rgba(91,163,219,0.9);
+    }
+    .nav-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+
+    /* 侧边栏用户头像 */
+    .sidebar-profile{
+      padding:14px 16px;
+      border-top:1px solid rgba(255,255,255,0.18);
+      display:flex;align-items:center;gap:10px;
+      margin-top:auto;
+    }
+    body.dark .sidebar-profile{border-top-color:rgba(80,130,200,0.12);}
+    .sidebar.collapsed .sidebar-profile{justify-content:center;padding:10px 6px;}
+    .sidebar.collapsed .sidebar-profile .sidebar-user-info{display:none;}
+    .sidebar-avatar{
+      width:36px;height:36px;border-radius:50%;flex-shrink:0;
+      object-fit:cover;
+      border:2px solid rgba(255,255,255,0.38);
+      box-shadow:0 3px 12px rgba(31,110,176,0.3),inset 0 1px 0 rgba(255,255,255,0.3);
+      transition:transform .22s,box-shadow .22s;
+      background:linear-gradient(135deg,#e8ecf1,#d5dbe3);
+    }
+    body.dark .sidebar-avatar{background:linear-gradient(135deg,#3a3d44,#2d3038);border-color:rgba(255,255,255,0.15);box-shadow:0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1);}
+    .sidebar-avatar:hover{transform:scale(1.1);box-shadow:0 5px 18px rgba(59,155,219,0.4);}
+    .sidebar-avatar[src=""]{display:none;}
+    .sidebar-user-info{display:flex;flex-direction:column;min-width:0;}
+    .sidebar-username{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sidebar-role{font-size:11px;color:var(--text-muted);margin-top:1px;}
+
+    .content-area{margin-left:220px;transition:margin-left .38s cubic-bezier(.34,1.56,.64,1);will-change:margin-left;flex:1;animation:contentScaleIn .7s cubic-bezier(.22,.61,.18,1) both;}
+    .sidebar.collapsed ~ .content-area{margin-left:64px;}
+    .page{display:none;}
+    .page.active{display:block;animation:pageIn .45s cubic-bezier(.22,.61,.18,1);}
+    @keyframes pageIn{
+      0%{opacity:0;transform:translateY(22px) scale(0.98);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+    [data-reveal]{opacity:0;transform:translateY(36px);transition:opacity .45s cubic-bezier(.22,.61,.18,1),transform .45s cubic-bezier(.22,.61,.18,1);}
+    [data-reveal].revealed{opacity:1;transform:translateY(0);}
+    [data-reveal].exiting{transition:none;pointer-events:none;}
+
+    /* ── 退出动画（纯 opacity+transform，无 blur/无 filter） ── */
+    [data-reveal].exit-blur{animation:rvExitFade .4s ease-in forwards;}
+    @keyframes rvExitFade{
+      0%{opacity:1;transform:translateY(0);}
+      100%{opacity:0;transform:translateY(-24px);}
+    }
+    [data-reveal].exit-fade-up{animation:rvExitFadeUp .38s ease-in forwards;}
+    @keyframes rvExitFadeUp{
+      0%{opacity:1;transform:translateY(0) scale(1);}
+      100%{opacity:0;transform:translateY(-30px) scale(.96);}
+    }
+    [data-reveal].exit-shrink{animation:rvExitShrink .35s ease-in forwards;}
+    @keyframes rvExitShrink{
+      0%{opacity:1;transform:translateY(0) scale(1);}
+      100%{opacity:0;transform:translateY(-6px) scale(.8);}
+    }
+    [data-reveal].exit-slide-l{animation:rvExitSlideL .4s cubic-bezier(.55,0,.68,.19) forwards;}
+    @keyframes rvExitSlideL{
+      0%{opacity:1;transform:translateX(0) translateY(0);}
+      100%{opacity:0;transform:translateX(-50px) translateY(-12px);}
+    }
+    [data-reveal].exit-slide-r{animation:rvExitSlideR .4s cubic-bezier(.55,0,.68,.19) forwards;}
+    @keyframes rvExitSlideR{
+      0%{opacity:1;transform:translateX(0) translateY(0);}
+      100%{opacity:0;transform:translateX(50px) translateY(-12px);}
+    }
+    [data-reveal].exit-float{animation:rvExitFloat .45s ease-in forwards;}
+    @keyframes rvExitFloat{
+      0%{opacity:1;transform:translateY(0) scale(1);}
+      100%{opacity:0;transform:translateY(-32px) scale(.9);}
+    }
+
+    /* 快速搜索 */
+    .search-page{padding:20px 48px 60px;min-height:calc(100vh - 160px);}
+    .search-page.active{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .search-page.has-results{justify-content:flex-start;min-height:auto;padding:20px 48px 60px;}
+    .search-wrapper{width:100%;max-width:620px;transition:transform .5s cubic-bezier(.22,.61,.18,1);}
+    .search-box{
+      position:relative;
+      display:flex;align-items:center;gap:0;width:100%;
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(30px) saturate(130%);
+      -webkit-backdrop-filter:blur(30px) saturate(130%);
+      border:0.5px solid rgba(0,0,0,0.04);
+      border-radius:18px;padding:4px 4px 4px 18px;
+      transition:all .3s ease;
+      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+    }
+    body.dark .search-box{background:rgba(28,28,32,0.42);border-color:rgba(255,255,255,0.06);}
+    .search-box:focus-within{
+      background:rgba(255,255,255,0.16);
+      border-color:rgba(0,0,0,0.08);
+      box-shadow:var(--mx,0) var(--my,0) 20px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6),0 0 0 3px rgba(59,155,219,0.06);
+    }
+    body.dark .search-box:focus-within{background:rgba(28,28,32,0.55);border-color:rgba(255,255,255,0.12);box-shadow:var(--mx,0) var(--my,0) 20px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1),0 0 0 3px rgba(59,155,219,0.06);}
+    .search-box input{flex:1;padding:10px 6px;border:none;background:transparent;font-size:16px;outline:none;color:var(--text-primary);box-shadow:none;}
+    .search-box input::placeholder{color:transparent;}
+    /* 搜索提示浮层 —— 代替 placeholder 实现丝滑切换动画 */
+    .search-hint-overlay{
+      position:absolute;left:22px;top:50%;transform:translateY(-50%);
+      font-size:16px;color:rgba(100,130,170,0.55);font-weight:400;
+      pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 80px);
+      transition:opacity .3s ease,transform .3s ease;
+      opacity:1;
+    }
+    .search-hint-overlay.hiding{opacity:0;transform:translateY(calc(-50% - 8px));}
+    .search-hint-overlay.hidden{opacity:0;pointer-events:none;}
+    body.dark .search-hint-overlay{color:rgba(140,185,230,0.45);}
+    .search-icon-btn{
+      width:44px;height:44px;border-radius:14px;flex-shrink:0;
+      border:1px solid rgba(59,155,219,0.25);
+      background:rgba(59,155,219,0.14);
+      backdrop-filter:blur(8px);
+      cursor:pointer;font-size:18px;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .22s ease;color:#3b9bdb;
+      box-shadow:0 2px 8px rgba(59,155,219,0.1);
+    }
+    .search-icon-btn:hover{
+      background:rgba(59,155,219,0.24);
+      box-shadow:0 4px 14px rgba(59,155,219,0.2);
+      transform:scale(1.05);
+    }
+    .search-icon-btn:active{transform:scale(0.94);}
+    body.dark .search-icon-btn{background:rgba(91,163,219,0.15);color:#5ba3db;}
+    .search-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:center;}
+    .search-filters label{
+      display:flex;align-items:center;gap:5px;
+      padding:5px 14px;border-radius:20px;
+      font-size:13px;font-weight:500;color:var(--text-secondary);
+      background:rgba(255,255,255,0.18);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.28);
+      cursor:pointer;
+      transition:all .2s ease;user-select:none;
+    }
+    body.dark .search-filters label{color:rgba(140,180,230,0.7);background:rgba(20,35,65,0.35);border-color:rgba(80,140,210,0.18);}
+    .search-filters label:hover{background:rgba(59,155,219,0.12);border-color:rgba(59,155,219,0.28);}
+    .search-filters input[type="checkbox"]{accent-color:#1f6eb0;width:14px;height:14px;}
+    .search-filters label:has(input:checked){
+      background:rgba(31,110,176,0.15);
+      border-color:rgba(59,155,219,0.35);
+      color:#1f6eb0;font-weight:600;
+    }
+    body.dark .search-filters label:has(input:checked){background:rgba(31,110,176,0.22);color:#5ba3db;}
+    .search-stats{text-align:center;color:var(--text-muted);margin:18px 0 16px;font-size:13px;display:none;}
+    .result-list{display:flex;flex-direction:column;gap:10px;max-width:900px;margin:0 auto;width:100%;}
+    .result-item{
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,0.32);
+      border-radius:24px;padding:16px 20px;
+      display:flex;align-items:center;gap:14px;
+      transition:all .22s ease;
+    }
+    body.dark .result-item{background:rgba(15,26,52,0.42);border-color:rgba(80,140,210,0.16);}
+    .result-item:hover{
+      background:rgba(255,255,255,0.32);
+      border-color:rgba(59,155,219,0.35);
+      transform:translateY(-2px);
+      box-shadow:0 8px 28px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    body.dark .result-item:hover{background:rgba(15,26,52,0.58);border-color:rgba(91,163,219,0.28);}
+    .result-icon{font-size:24px;flex-shrink:0;}
+    .result-body{flex:1;min-width:0;}
+    .result-title{font-size:14px;font-weight:700;color:var(--text-primary);}
+    .result-code{font-size:12px;color:#1f6eb0;font-weight:600;margin-top:2px;}
+    .result-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .result-category{
+      font-size:11px;
+      background:rgba(59,155,219,0.14);
+      border:1px solid rgba(59,155,219,0.22);
+      color:#1f6eb0;padding:3px 10px;border-radius:10px;font-weight:600;flex-shrink:0;
+      backdrop-filter:blur(8px);
+    }
+    body.dark .result-category{background:rgba(31,110,176,0.2);color:#5ba3db;border-color:rgba(91,163,219,0.25);}
+    .result-empty{text-align:center;color:var(--text-muted);padding:40px;font-size:15px;}
+
+    /* 配置页 */
+    .config-page main{max-width:none;margin:20px 24px 40px;display:flex;flex-direction:column;gap:20px;}
+
+    /* 首页 */
+    .home-page{padding:40px 48px 60px;}
+    .home-hero{text-align:center;padding:48px 20px 36px;}
+    .hero-icon{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 4px 16px rgba(59,155,219,0.35));}
+    .home-hero h2{font-size:32px;font-weight:800;color:var(--text-primary);margin-bottom:12px;}
+    .hero-desc{font-size:15px;color:var(--text-secondary);max-width:620px;margin:0 auto;line-height:1.7;}
+
+    /* 天气 + 励志文案条 */
+    .home-weather-quote{display:flex;gap:12px;max-width:760px;margin:0 auto 20px;flex-wrap:wrap;justify-content:center;}
+    .weather-bar{
+      display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:14px;
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border:0.5px solid rgba(0,0,0,0.04);
+      box-shadow:0 2px 10px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      font-size:14px;color:var(--text-secondary);white-space:nowrap;
+    }
+    body.dark .weather-bar{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);color:rgba(200,210,230,0.7);box-shadow:0 2px 10px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .weather-icon{font-size:20px;}
+    .weather-info{font-weight:500;}
+    .quote-bar{
+      display:flex;align-items:center;padding:9px 18px;border-radius:14px;
+      background:rgba(255,255,255,0.09);
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border:0.5px solid rgba(0,0,0,0.04);
+      box-shadow:0 2px 10px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      font-size:14px;color:var(--text-secondary);font-style:italic;
+      white-space:nowrap;transition:opacity .5s ease;
+    }
+    body.dark .quote-bar{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 10px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .quote-text{opacity:1;transition:opacity .4s ease;}
+    .quote-text.fade{opacity:0;}
+
+    .home-stats{display:flex;gap:16px;max-width:700px;margin:0 auto 48px;justify-content:center;flex-wrap:wrap;}
+    .stat-card{
+      background:rgba(255,255,255,0.10);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      border:0.5px solid rgba(0,0,0,0.04);
+      border-radius:24px;padding:24px 32px;text-align:center;
+      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      transition:all .35s cubic-bezier(0.34,1.56,0.64,1);flex:1;min-width:140px;
+    }
+    body.dark .stat-card{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.18),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .stat-card:hover{transform:translateY(-5px) scale(1.02);box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6);}
+    body.dark .stat-card:hover{box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1);}
+    .stat-num{font-size:36px;font-weight:800;color:#1f6eb0;}
+    body.dark .stat-num{color:#5ba3db;}
+    .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
+
+    .home-section{margin-bottom:40px;}
+    .home-section-title{font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:20px;}
+    .feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+    .feature-card{
+      background:rgba(255,255,255,0.10);
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border:0.5px solid rgba(0,0,0,0.04);
+      border-radius:24px;padding:24px;
+      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      transition:all .35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    body.dark .feature-card{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.18),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .feature-card:hover{
+      transform:translateY(-4px);
+      background:rgba(255,255,255,0.15);
+      border-color:rgba(0,0,0,0.06);
+      box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6);
+    }
+    body.dark .feature-card:hover{
+      background:rgba(28,28,32,0.52);
+      border-color:rgba(255,255,255,0.1);
+      box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1);
+    }
+    .fc-icon{font-size:32px;margin-bottom:12px;}
+    .feature-card h4{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px;}
+    .feature-card p{font-size:13px;color:var(--text-secondary);line-height:1.6;}
+
+    .step-list{display:flex;flex-direction:column;gap:14px;max-width:800px;}
+    .step-item{display:flex;gap:16px;align-items:flex-start;}
+    .step-badge{
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,rgba(59,155,219,0.88),rgba(31,110,176,0.85));
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:800;flex-shrink:0;
+      border:2px solid rgba(255,255,255,0.35);
+      box-shadow:0 4px 14px rgba(31,110,176,0.28),inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .step-body{flex:1;min-width:0;}
+    .step-body h4{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;}
+    .step-body p{font-size:13px;color:var(--text-secondary);line-height:1.6;}
+
+    /* ── 操作小技巧轮播 ── */
+    .tips-section{max-width:760px;margin:0 auto 24px;}
+    .tips-bar{
+      display:flex;align-items:center;gap:10px;padding:13px 18px;
+      border-radius:14px;
+      background:rgba(59,155,219,0.1);
+      backdrop-filter:blur(16px);
+      border:1px solid rgba(59,155,219,0.2);
+      min-height:50px;
+      box-shadow:0 3px 14px rgba(59,155,219,0.08),inset 0 1px 0 rgba(255,255,255,0.3);
+      transition:background .5s ease;
+    }
+    body.dark .tips-bar{background:rgba(31,110,176,0.12);border-color:rgba(59,155,219,0.16);}
+    .tips-icon{font-size:22px;flex-shrink:0;}
+    .tips-text{font-size:13.5px;color:rgba(30,70,120,0.85);line-height:1.5;flex:1;}
+    body.dark .tips-text{color:rgba(140,190,235,0.85);}
+    .tips-tag{
+      font-size:11px;padding:3px 10px;border-radius:20px;
+      background:rgba(59,155,219,0.22);
+      border:1px solid rgba(59,155,219,0.3);
+      color:#1f6eb0;white-space:nowrap;flex-shrink:0;font-weight:600;
+    }
+    body.dark .tips-tag{background:rgba(91,163,219,0.2);color:#5ba3db;}
+    .back-to-top{
+      position:fixed;right:28px;bottom:36px;z-index:200;
+      width:56px;height:56px;border-radius:50%;
+      background:rgba(255,255,255,0.10);
+      backdrop-filter:blur(28px) saturate(130%);
+      -webkit-backdrop-filter:blur(28px) saturate(130%);
+      border:0.5px solid rgba(0,0,0,0.05);
+      box-shadow:0 3px 16px rgba(0,0,0,0.05),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      cursor:pointer;outline:none;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;transform:translateY(24px) scale(.85);pointer-events:none;
+      transition:opacity .4s cubic-bezier(.22,.61,.18,1),transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease,background .3s ease;
+      overflow:visible;
+    }
+    body.dark .back-to-top{background:rgba(28,28,32,0.42);border-color:rgba(255,255,255,0.06);box-shadow:0 3px 16px rgba(0,0,0,0.2),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    /* 高光环 */
+    .back-to-top::before{
+      content:'';position:absolute;inset:2px;border-radius:50%;
+      border:0.5px solid rgba(255,255,255,0.3);
+      pointer-events:none;transition:opacity .3s ease;
+    }
+    .back-to-top::after{
+      content:'';position:absolute;top:3px;left:25%;right:25%;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
+      pointer-events:none;opacity:.6;transition:opacity .3s ease;
+    }
+    .back-to-top.visible{opacity:.92;transform:translateY(0) scale(1);pointer-events:auto;}
+    /* hover: 点火状态 */
+    .back-to-top.visible:hover{
+      opacity:1;transform:translateY(-2px) scale(1.06);
+      background:rgba(255,255,255,0.16);
+      box-shadow:0 10px 32px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6),0 0 20px rgba(255,140,0,0.15);
+    }
+    body.dark .back-to-top.visible:hover{background:rgba(28,28,32,0.55);box-shadow:0 10px 32px rgba(0,0,0,0.35),inset 0 0.5px 0 rgba(255,255,255,0.1),0 0 20px rgba(255,140,0,0.15);}
+    /* 发射状态 */
+    .back-to-top.launching{
+      animation:rocketLaunch .8s cubic-bezier(.12,.8,.32,1) forwards;
+      pointer-events:none;
+    }
+    @keyframes rocketLaunch{
+      0%{transform:translateY(0) scale(1);opacity:1;}
+      30%{transform:translateY(-16px) scale(1.06);opacity:1;}
+      100%{transform:translateY(-300px) scale(.4);opacity:0;}
+    }
+    /* 火箭 SVG 容器 */
+    .rocket-svg{width:30px;height:34px;position:relative;z-index:2;transition:transform .25s ease;}
+    .back-to-top.visible:hover .rocket-svg{animation:rocketHover .25s ease-in-out infinite alternate;}
+    @keyframes rocketHover{
+      0%{transform:translateY(0);}
+      100%{transform:translateY(-3px);}
+    }
+    .rocket-body{fill:url(#rocketBodyGrad);}
+    .rocket-window{fill:#fff;opacity:.85;}
+    .rocket-fin{fill:url(#rocketFinGrad);}
+    /* 火焰 */
+    .rocket-flame{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:16px;height:22px;z-index:1;opacity:0;transition:opacity .3s ease,transform .3s ease;}
+    .back-to-top.visible .rocket-flame{opacity:.7;}
+    /* 点火：火焰爆发 */
+    .back-to-top.visible:hover .rocket-flame{
+      opacity:1;animation:flameIgnite .15s ease-in-out infinite alternate;
+    }
+    @keyframes flameIgnite{
+      0%{transform:translateX(-50%) scaleY(1.2);opacity:.9;}
+      100%{transform:translateX(-50%) scaleY(1.8) translateY(2px);opacity:1;}
+    }
+    /* 发射：火焰喷发 */
+    .back-to-top.launching .rocket-flame{
+      opacity:1;animation:flameBlast .12s ease-in-out;
+    }
+    @keyframes flameBlast{
+      0%{transform:translateX(-50%) scaleY(2.5);opacity:1;}
+      100%{transform:translateX(-50%) scaleY(.3);opacity:.2;}
+    }
+    /* 粒子尾迹 */
+    .rocket-particles{position:absolute;bottom:2px;left:50%;width:4px;height:4px;border-radius:50%;z-index:0;opacity:0;pointer-events:none;}
+    .back-to-top.launching .rocket-particles{animation:particleBurst .6s ease-out forwards;}
+    @keyframes particleBurst{
+      0%{opacity:1;box-shadow:
+        0 0 6px 3px rgba(255,120,0,.6),
+        -6px 8px 0 rgba(255,100,0,.4),
+        6px 10px 0 rgba(255,140,0,.4),
+        -3px 14px 0 rgba(255,80,0,.3),
+        3px 16px 0 rgba(255,160,0,.3),
+        -8px 6px 0 rgba(255,160,30,.3),
+        8px 8px 0 rgba(255,180,40,.3);
+      }
+      100%{opacity:0;transform:translateY(40px);box-shadow:
+        0 0 12px 6px rgba(255,120,0,0),
+        -12px 20px 0 rgba(255,100,0,0),
+        12px 22px 0 rgba(255,140,0,0),
+        -6px 28px 0 rgba(255,80,0,0),
+        6px 32px 0 rgba(255,160,0,0),
+        -16px 18px 0 rgba(255,160,30,0),
+        16px 20px 0 rgba(255,180,40,0);
+      }
+    }
+    @media (max-width:900px){
+      .back-to-top{right:16px;bottom:24px;width:48px;height:48px;}
+      .rocket-svg{width:26px;height:30px;}
+      .rocket-flame{width:14px;height:18px;bottom:-15px;}
+    }
+
+    /* ── 拓扑方案页 ── */
+    .topology-page{max-width:1100px;margin:0 auto;padding:32px 28px 80px;}
+    .topo-hero{
+      text-align:center;padding:36px 20px 28px;
+      background:linear-gradient(135deg,rgba(59,155,219,0.08) 0%,rgba(59,155,219,0.03) 100%);
+      border-radius:16px;margin-bottom:28px;
+    }
+    .topo-hero h2{font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:8px;}
+    .topo-hero p{font-size:14px;color:var(--text-muted);}
+    .topo-card{
+      background:rgba(255,255,255,0.10);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+      border:0.5px solid rgba(0,0,0,0.04);border-radius:14px;margin-bottom:20px;
+      overflow:hidden;transition:all .3s ease;
+      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+    }
+    body.dark .topo-card{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    .topo-card:hover{box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6);}
+    body.dark .topo-card:hover{box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1);}
+    .topo-card-header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:18px 22px;cursor:pointer;user-select:none;
+      transition:background .25s ease;
+    }
+    .topo-card-header:hover{background:rgba(59,155,219,0.05);}
+    .topo-card-header>div{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .topo-card-header h3{font-size:15px;font-weight:600;color:var(--text-primary);flex:1;line-height:1.4;}
+    .topo-badge{
+      display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;
+    }
+    .topo-badge.green{background:linear-gradient(135deg,#27AE60,#1a7a40);}
+    .topo-badge.blue{background:linear-gradient(135deg,#3B9BDB,#1a6da0);}
+    .topo-badge.orange{background:linear-gradient(135deg,#E67E22,#b85e1a);}
+    .topo-badge.purple{background:linear-gradient(135deg,#8E44AD,#5e2a7d);}
+    .topo-badge.teal{background:linear-gradient(135deg,#1ABC9C,#12806c);}
+    .topo-code{font-size:11px;color:var(--text-muted);font-family:monospace;}
+    .topo-arrow{font-size:14px;color:var(--text-muted);transition:transform .35s ease;flex-shrink:0;}
+    .topo-card.collapsed .topo-arrow{transform:rotate(-90deg);}
+    .topo-card-body{
+      padding:0 22px 22px;overflow:hidden;
+      transition:max-height .4s ease,padding .4s ease;max-height:2000px;
+    }
+    .topo-card.collapsed .topo-card-body{max-height:0;padding-top:0;padding-bottom:0;}
+    .topo-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+    .topo-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    .topo-desc{
+      background:rgba(59,155,219,0.04);border-radius:10px;padding:16px;
+      border:1px solid rgba(59,155,219,0.08);
+    }
+    body.dark .topo-desc{background:rgba(59,155,219,0.06);border-color:rgba(59,155,219,0.1);}
+    .topo-desc h4{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;}
+    .topo-desc p{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px;}
+    .topo-desc strong{color:var(--text-primary);}
+    .topo-desc small{font-size:11px;color:var(--text-muted);}
+    .topo-sub{font-size:14px;font-weight:600;color:var(--text-primary);margin:20px 0 10px;}
+    .topo-table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0 0;
+      border-radius:8px;overflow:hidden;border:1px solid rgba(59,155,219,0.1);}
+    .topo-table th{
+      background:rgba(59,155,219,0.1);padding:9px 10px;text-align:left;font-weight:600;
+      color:var(--text-primary);font-size:12px;white-space:nowrap;
+    }
+    .topo-table td{
+      padding:8px 10px;border-top:1px solid rgba(59,155,219,0.06);color:var(--text-secondary);
+      vertical-align:top;
+    }
+    .topo-table tr:hover td{background:rgba(59,155,219,0.04);}
+    body.dark .topo-table{border-color:rgba(59,155,219,0.12);}
+    body.dark .topo-table th{background:rgba(59,155,219,0.15);}
+    body.dark .topo-table td{border-color:rgba(59,155,219,0.08);}
+    .topo-table .desc-cell{max-width:320px;word-break:break-all;}
+    .topo-note{
+      margin-top:14px;padding:12px 16px;background:rgba(243,156,18,0.08);
+      border-left:3px solid #E67E22;border-radius:0 8px 8px 0;
+      font-size:13px;color:var(--text-secondary);line-height:1.6;
+    }
+    body.dark .topo-note{background:rgba(243,156,18,0.06);}
+    .topo-note strong{color:#E67E22;}
+    .topo-code-block{
+      background:rgba(0,0,0,0.04);border-radius:8px;padding:12px 14px;margin-top:8px;
+      font-family:'Consolas','Monaco','Courier New',monospace;font-size:12px;line-height:1.7;
+      overflow-x:auto;color:var(--text-primary);
+    }
+    body.dark .topo-code-block{background:rgba(255,255,255,0.05);}
+    .topo-diagram{
+      margin:18px 0 0;padding:16px 20px;
+      background:rgba(59,155,219,0.03);border-radius:12px;
+      border:1px solid rgba(59,155,219,0.06);
+      overflow-x:auto;
+    }
+    body.dark .topo-diagram{background:rgba(59,155,219,0.04);border-color:rgba(59,155,219,0.08);}
+    body.dark .topo-diagram svg text.fill-primary{fill:#e8e8ec;}
+    body.dark .topo-diagram svg text.fill-secondary{fill:#a0a0b0;}
+    body.dark .topo-diagram svg text.fill-muted{fill:#707080;}
+    .topo-diagram svg text.fill-primary{fill:#1a1a2e;}
+    .topo-diagram svg text.fill-secondary{fill:#555;}
+    .topo-diagram svg text.fill-muted{fill:#888;}
+    .topo-diagram svg{display:block;width:100%;height:auto;max-height:460px;}
+    .topo-diagram svg text{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;}
+    .topo-diagram svg .grid-line{stroke:rgba(0,0,0,0.15);stroke-width:3;stroke-linecap:round;}
+    body.dark .topo-diagram svg .grid-line{stroke:rgba(255,255,255,0.25);}
+    .topo-diagram svg .busbar{stroke:rgba(0,0,0,0.5);stroke-width:4;stroke-linecap:round;}
+    body.dark .topo-diagram svg .busbar{stroke:rgba(255,255,255,0.4);}
+    .topo-diagram svg .conn-line{stroke:rgba(0,0,0,0.25);stroke-width:2;fill:none;}
+    body.dark .topo-diagram svg .conn-line{stroke:rgba(255,255,255,0.3);}
+    .topo-diagram svg .comm-line{stroke-dasharray:6 4;stroke-width:1.5;fill:none;}
+    .topo-diagram svg .meter-dot{fill:#E67E22;stroke:#fff;stroke-width:2;}
+    .topo-diagram svg .box-fill{stroke-width:1.5;rx:6;ry:6;}
+    @media (max-width:768px){
+      .topo-diagram{padding:10px 8px;}
+    @media (max-width:768px){
+      .topo-grid-2{grid-template-columns:1fr;}
+      .topo-grid-3{grid-template-columns:1fr;}
+      .topology-page{padding:20px 14px 60px;}
+      .topo-card-header h3{font-size:14px;}
+      .topo-table{font-size:11px;}
+      .topo-table .desc-cell{max-width:180px;}
+    }
+
+    @media (max-width:900px){
+      .sidebar{width:64px;}
+      .sidebar-logo{padding:0 8px 12px;justify-content:center;}
+      .sidebar-logo .slogo-text{display:none;}
+      .sidebar-logo .slogo-icon{margin:0;}
+      .sidebar-nav .nav-item{padding:12px;justify-content:center;margin:2px 6px;width:calc(100% - 12px);}
+      .sidebar-nav .nav-item .nav-label{display:none;}
+      .content-area{margin-left:64px;}
+      .home-page,.search-page{padding:24px 16px 40px;}
+      .search-page{min-height:calc(100vh - 120px);}
+      .search-filters{gap:6px;}
+      .search-filters label{padding:4px 10px;font-size:12px;}
+      .config-page main{margin:16px 12px 32px;}
+      .home-hero h2{font-size:24px;}
+      .feature-grid{grid-template-columns:1fr;}
+      .home-weather-quote{flex-direction:column;align-items:center;gap:8px;}
+      .weather-bar,.quote-bar{font-size:12px;padding:6px 14px;}
+      .quote-bar{white-space:normal;text-align:center;}
+    }
+  </style>
+</head>
+<body>
+<!-- 液态玻璃浮动光斑 -->
+<div class="lg-orb lg-orb-1"></div>
+<div class="lg-orb lg-orb-2"></div>
+<div class="lg-orb lg-orb-3"></div>
+
+<div class="app-layout">
+  <!-- ═══════════════ 左侧菜单栏 ═══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="slogo-icon" onclick="toggleSidebar()" title="折叠/展开菜单">⚡</span>
+      <span class="slogo-text">储能配置系统</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="page-home" onclick="switchPage('page-home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">首页</span>
+      </button>
+      <button class="nav-item" data-section="page-search" onclick="switchPage('page-search')">
+        <span class="nav-icon">🔍</span><span class="nav-label">快速搜索</span>
+      </button>
+      <button class="nav-item" data-section="page-topology" onclick="switchPage('page-topology')">
+        <span class="nav-icon">🔗</span><span class="nav-label">拓扑方案</span>
+      </button>
+      <button class="nav-item" data-section="page-config" onclick="switchPage('page-config')">
+        <span class="nav-icon">⚙️</span><span class="nav-label">项目配置</span>
+      </button>
+    </nav>
+    <div class="sidebar-profile" id="sidebar-profile">
+      <img class="sidebar-avatar" id="sidebar-avatar" src="" alt="">
+      <div class="sidebar-user-info">
+        <div class="sidebar-username" id="sidebar-username">用户</div>
+        <div class="sidebar-role" id="sidebar-role">普通用户</div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    (function(){if(localStorage.getItem('ess_sidebar_collapsed')==='1'){document.querySelector('.sidebar').classList.add('collapsed');}})();
+  </script>
+
+  <!-- ═══════════════ 右侧内容区 ═══════════════ -->
+  <div class="content-area">
+    <!-- 顶栏 -->
+    <header>
+      <div class="header-left">
+        <h1 id="page-title" onclick="location.reload()" title="点击刷新页面">首页</h1>
+        <div class="header-text"><p id="page-subtitle"></p></div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" title="切换深色/浅色">🌙</button>
+        <button class="hdr-btn" onclick="UI.logout()" title="退出登录">🚪</button>
+      </div>
+    </header>
+
+    <!-- ═══════════ 首页 ═══════════ -->
+    <div class="page active home-page" id="page-home">
+      <div class="home-hero" data-reveal data-exit="blur" style="transition-delay:0s">
+        <div class="hero-icon">⚡</div>
+        <h2>储能柜项目配置系统</h2>
+        <p class="hero-desc">一站式储能柜项目配置工具，覆盖储能柜、电表、互感器、EMS、交换机等全品类产品管理。从非标需求到 Excel 导出，全流程自动联动，专为储能行业设计。</p>
+      </div>
+      <!-- 天气 + 励志文案 -->
+      <div class="home-weather-quote" data-reveal data-exit="fade-up" style="transition-delay:.08s">
+        <div class="weather-bar" id="weather-bar">
+          <span class="weather-icon" id="weather-icon">☀️</span>
+          <span class="weather-info" id="weather-info">加载天气中…</span>
+        </div>
+        <div class="quote-bar" id="quote-bar">
+          <span class="quote-text">"每一次努力，都是未来的你在向现在求救。"</span>
+        </div>
+      </div>
+      <div class="home-stats" data-reveal data-exit="shrink" style="transition-delay:.12s">
+        <div class="stat-card"><div class="stat-num" id="stat-categories">18</div><div class="stat-label">产品品类</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-products">-</div><div class="stat-label">产品条目</div></div>
+        <div class="stat-card"><div class="stat-num">1 键</div><div class="stat-label">Excel 导出</div></div>
+      </div>
+      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.2s">
+        <div class="home-section-title">✨ 核心功能</div>
+        <div class="feature-grid">
+          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.24s"><div class="fc-icon">🔍</div><h4>快速搜索</h4><p>跨 18 个品类全文搜索，输入关键词即可查找产品编码、描述和备注信息，秒级响应。</p></div>
+          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.30s"><div class="fc-icon">📋</div><h4>非标需求表</h4><p>填写防逆流、抄表方式、汇流柜等需求，系统自动联动下方配置项，减少人工判断。</p></div>
+          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.36s"><div class="fc-icon">⚙️</div><h4>智能项目配置</h4><p>输入项目名称、单台容量和台数，自动生成单台/多台分支配置方案，支持并网功率动态匹配。</p></div>
+          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.26s"><div class="fc-icon">📊</div><h4>一键导出 Excel</h4><p>生成含需求表 + 配置表的双 Sheet Excel 文件，格式规范，可直接交付或存档。</p></div>
+          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.32s"><div class="fc-icon">🛠</div><h4>管理员后台</h4><p>支持产品数据增删改查，品类管理，本地数据持久化，随时调整产品库。</p></div>
+          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.38s"><div class="fc-icon">🌓</div><h4>暗/亮双主题</h4><p>深色/浅色一键切换，适配不同工作环境。</p></div>
+        </div>
+      </div>
+      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.32s">
+        <div class="home-section-title">📖 使用步骤</div>
+        <div class="step-list">
+          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.36s"><div class="step-badge">1</div><div class="step-body"><h4>填写非标需求表</h4><p>点击左侧 <b>项目配置</b>，确认防逆流需求、抄表方式、汇流柜配置。这些选项将自动联动下方产品配置，预选对应模块。</p></div></div>
+          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.42s"><div class="step-badge">2</div><div class="step-body"><h4>输入项目参数</h4><p>填写项目名称、单台储能柜容量（kW）、台数。台数=1 生成单台分支配置，台数≥2 生成多台分支配置。</p></div></div>
+          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.48s"><div class="step-badge">3</div><div class="step-body"><h4>选择产品配置</h4><p>根据自动预选结果调整各品类产品的数量、品牌和型号。灰色字段为系统自动计算，蓝色字段可手动修改。</p></div></div>
+          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.54s"><div class="step-badge">4</div><div class="step-body"><h4>导出 Excel 配置表</h4><p>点击 <b>生成 Excel</b>，一键输出含需求表和完整配置表的双 Sheet 文件，直接交付给工程团队或客户。</p></div></div>
+        </div>
+      </div>
+      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.56s">
+        <div class="home-section-title">💡 温馨提示</div>
+        <div class="step-list">
+          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.60s"><div class="step-badge" style="background:linear-gradient(135deg,#27AE60,#1a7a40)">⚡</div><div class="step-body"><h4>使用快速搜索查产品</h4><p>不确定某个产品的编码或描述？点击 <b>快速搜索</b>，输入关键词即可跨全部品类查找。</p></div></div>
+          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.66s"><div class="step-badge" style="background:linear-gradient(135deg,#E67E22,#b85e1a)">📝</div><div class="step-body"><h4>管理员可增删改产品</h4><p>管理员登录后点击顶栏 <b>🛠 管理员</b> 进入后台，可编辑品类、添加新产品、修改编码描述，数据自动保存到本地。</p></div></div>
+        </div>
+      </div>
+      <div class="tips-section" data-reveal data-exit="float" style="transition-delay:.70s">
+        <div class="tips-bar" id="tips-bar">
+          <span class="tips-icon" id="tips-icon">💡</span>
+          <span class="tips-text" id="tips-text">配置完记得先预览再导出 Excel</span>
+          <span class="tips-tag">小技巧</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 快速搜索 ═══════════ -->
+    <div class="page search-page" id="page-search">
+      <div class="search-wrapper" id="search-wrapper">
+        <div class="search-box" id="search-box-wrap">
+          <input type="text" id="search-input" placeholder="" oninput="debouncedSearch()" onfocus="hideHintOverlay()" onblur="showHintOverlay()" autocomplete="off">
+          <span class="search-hint-overlay" id="search-hint-overlay">今天要搜点什么？</span>
+          <button class="search-icon-btn" onclick="searchProducts()" title="搜索">🔍</button>
+        </div>
+        <div class="search-filters" id="search-filters">
+          <label><input type="checkbox" value="code" checked onchange="debouncedSearch()"> 编码</label>
+          <label><input type="checkbox" value="desc" checked onchange="debouncedSearch()"> 描述</label>
+          <label><input type="checkbox" value="brand" checked onchange="debouncedSearch()"> 品牌</label>
+          <label><input type="checkbox" value="model" onchange="debouncedSearch()"> 型号</label>
+          <label><input type="checkbox" value="note" onchange="debouncedSearch()"> 备注</label>
+          <label><input type="checkbox" value="category" onchange="debouncedSearch()"> 品类</label>
+        </div>
+      </div>
+      <div class="search-stats" id="search-stats"></div>
+      <div class="result-list" id="search-results"></div>
+      <div class="result-empty" id="search-empty">👆 输入关键词开始搜索</div>
+    </div>
+
+    <!-- ═══════════ 拓扑方案 ═══════════ -->
+    <div class="page topology-page" id="page-topology">
+      <div class="topo-hero">
+        <h2>工商业储能 EMS 站控方案</h2>
+      </div>
+      <div id="topo-cards-container"></div>
+    </div>
+
+    <!-- ═══════════ 项目配置 ═══════════ -->
+    <div class="page config-page" id="page-config">
+      <main>
+        <!-- 需求表（步骤0） -->
+        <div id="req-container"></div>
+        <!-- 项目基本信息（步骤1） -->
+        <div id="step1-container"></div>
+        <!-- 配置分支（步骤2：单台/多台） -->
+        <div id="branch-container"></div>
+
+        <!-- 配置确认弹窗 -->
+        <div class="cmodal-overlay" id="cmodal-config" style="display:none">
+          <div class="cmodal-box">
+            <div class="cmodal-title">配置确认</div>
+            <div class="cmodal-desc" id="cmodal-desc"></div>
+            <div id="cmodal-list"></div>
+            <div class="cmodal-btns">
+              <button class="btn-mute" onclick="UI.cancelConfigConfirm()">返回修改</button>
+              <button class="btn-warn" onclick="UI.proceedConfigConfirm()">确认进入配置</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 回到顶部 -->
+    <button class="back-to-top" id="back-to-top" title="🚀 发射回顶部">
+      <svg class="rocket-svg" viewBox="0 0 30 34" fill="none">
+        <defs>
+          <linearGradient id="rocketBodyGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#E8E8EC"/><stop offset="45%" stop-color="#C8C8D2"/><stop offset="100%" stop-color="#9898A8"/>
+          </linearGradient>
+          <linearGradient id="rocketFinGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#D0D0D8"/><stop offset="100%" stop-color="#808090"/>
+          </linearGradient>
+          <linearGradient id="rocketNose" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#E63946"/><stop offset="100%" stop-color="#FF6B6B"/>
+          </linearGradient>
+          <linearGradient id="flameGrad1" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#FF4500"/><stop offset="40%" stop-color="#FF8C00"/><stop offset="70%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFFF0"/>
+          </linearGradient>
+          <linearGradient id="flameGrad2" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#FF6347"/><stop offset="50%" stop-color="#FFA500"/><stop offset="100%" stop-color="#FFFACD"/>
+          </linearGradient>
+          <filter id="rocketGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <!-- 左翼 -->
+        <path d="M10 20 L4 28 L10 24 Z" class="rocket-fin"/>
+        <!-- 右翼 -->
+        <path d="M20 20 L26 28 L20 24 Z" class="rocket-fin"/>
+        <!-- 机身 -->
+        <path d="M15 2 C11 10 10 18 9 26 L21 26 C20 18 19 10 15 2 Z" class="rocket-body" filter="url(#rocketGlow)"/>
+        <!-- 鼻锥 -->
+        <path d="M15 2 C13 5 12 7 11 9 L19 9 C18 7 17 5 15 2 Z" fill="url(#rocketNose)"/>
+        <!-- 舷窗 -->
+        <circle cx="15" cy="13" r="3.5" fill="#4A90D9" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+        <circle cx="14" cy="12" r="1.2" fill="rgba(255,255,255,0.5)"/>
+        <!-- 装饰线 -->
+        <line x1="15" y1="17" x2="15" y2="24" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <line x1="12" y1="26" x2="18" y2="26" stroke="rgba(0,0,0,0.1)" stroke-width="1.5"/>
+      </svg>
+      <svg class="rocket-flame" viewBox="0 0 16 24" fill="none">
+        <ellipse cx="8" cy="14" rx="5.5" ry="9" fill="url(#flameGrad1)"/>
+        <ellipse cx="8" cy="10" rx="3.5" ry="6" fill="url(#flameGrad2)"/>
+        <ellipse cx="8" cy="7" rx="1.5" ry="3" fill="#FFFFF0" opacity="0.7"/>
+      </svg>
+      <div class="rocket-particles"></div>
+    </button>
+  </div><!-- /content-area -->
+</div><!-- /app-layout -->
+
+<script src="js/liquid-glass.js"></script>
+<script src="js/storage.js"></script>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/form.js"></script>
+<script src="js/topo-data.js"></script>
+<script src="js/export.js"></script>
+
+<script>
+// ── 主题切换（纯白背景，仅影响 UI 组件配色）─────────────
+function applyBgSettings() {
+  var s = STORAGE.get('settings') || {};
+  var theme = s.theme || 'light';
+  document.body.classList.remove('dark','light');
+  document.body.classList.add(theme);
+  var tgl = document.getElementById('themeToggle');
+  if (tgl) tgl.textContent = theme === 'light' ? '🌙' : '☀';
+}
+
+document.getElementById('themeToggle').addEventListener('click', function() {
+  var isLight = document.body.classList.contains('light');
+  var next = isLight ? 'dark' : 'light';
+  document.body.classList.remove('dark','light');
+  document.body.classList.add(next);
+  var s = STORAGE.get('settings') || {};
+  s.theme = next;
+  STORAGE.set('settings', s);
+  this.textContent = next === 'light' ? '🌙' : '☀';
+});
+
+// ── 拓扑方案动态渲染 ───────────────────────────────────
+function getTopoData() {
+  var stored = STORAGE.get('topology');
+  if (stored) return JSON.parse(JSON.stringify(stored));
+  return [];
+}
+
+function renderTopologyCards() {
+  var data = getTopoData();
+  var container = document.getElementById('topo-cards-container');
+  if (!container) return;
+  if (!data.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px">暂无拓扑方案数据</p>'; return; }
+  var html = '';
+  data.forEach(function(t) {
+    html += '<div class="topo-card">' +
+      '<div class="topo-card-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">' +
+        '<div><span class="topo-badge ' + t.badgeClass + '">' + t.badge + '</span>' +
+        (t.code ? '<span class="topo-code">' + t.code + '</span>' : '') + '</div>' +
+        '<h3>' + t.title + '</h3><span class="topo-arrow">▾</span>' +
+      '</div><div class="topo-card-body">';
+
+    // Info blocks in grid
+    if (t.infoBlocks && t.infoBlocks.length) {
+      html += '<div class="' + (t.gridClass || 'topo-grid-2') + '">';
+      t.infoBlocks.forEach(function(ib) {
+        html += '<div class="topo-desc"><h4>' + ib.icon + ' ' + ib.title + '</h4>';
+        (ib.items || []).forEach(function(it) {
+          if (it.label) html += '<p><strong>' + it.label + '：</strong>' + it.text + (it.note ? '<br><small>' + it.note + '</small>' : '') + '</p>';
+          else html += '<p>' + it.text + '</p>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Extra blocks
+    if (t.extraBlocks && t.extraBlocks.length) {
+      html += '<div class="' + (t.extraGridClass || 'topo-grid-2') + '" style="margin-top:16px">';
+      t.extraBlocks.forEach(function(eb) {
+        html += '<div class="topo-desc"><h4>' + eb.icon + ' ' + eb.title + '</h4>';
+        (eb.items || []).forEach(function(eit) {
+          if (eit.label) html += '<p><strong>' + eit.label + '：</strong>' + eit.text + '</p>';
+          else html += '<p>' + eit.text + '</p>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // SVG diagram
+    if (t.diagramSvg) {
+      html += '<div class="topo-diagram">' + t.diagramSvg + '</div>';
+    }
+
+    // BOM table
+    if (t.bomTitle && t.bomRows && t.bomRows.length && t.bomHeaders) {
+      html += '<h4 class="topo-sub">' + t.bomTitle + '</h4>' +
+        '<table class="topo-table"><thead><tr>';
+      t.bomHeaders.forEach(function(h) { html += '<th>' + h + '</th>'; });
+      html += '</tr></thead><tbody>';
+      t.bomRows.forEach(function(row) {
+        html += '<tr>';
+        row.forEach(function(cell, ci) {
+          html += '<td' + (ci === 2 ? ' class="desc-cell"' : '') + '>' + cell + '</td>';
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    // Config note
+    if (t.configNote) {
+      html += '<div class="topo-note"' + (!t.bomTitle ? ' style="margin-top:14px"' : '') + '>' +
+        '<strong>' + (t.noteIcon || '⚙️') + ' ' + (t.noteTitle || '配置要点：') + '</strong>' + t.configNote +
+        '</div>';
+    }
+
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+// ── 页面切换（Tab 模式）─────────────────────────────────
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-item[data-section]').forEach(function(item){
+    item.classList.toggle('active', item.dataset.section === id);
+  });
+  var pt = document.getElementById('page-title');
+  var ps = document.getElementById('page-subtitle');
+  if (id === 'page-home') {
+    pt.textContent = '首页'; ps.textContent = '';
+  } else if (id === 'page-search') {
+    pt.textContent = ''; ps.textContent = '';
+  } else if (id === 'page-config') {
+    pt.textContent = '项目配置'; ps.textContent = '填写非标需求 → 选择产品 → 导出 Excel';
+  } else if (id === 'page-topology') {
+    pt.textContent = '拓扑方案'; ps.textContent = 'EMS站控方案 · 工商业储能典型应用场景';
+    renderTopologyCards();
+  }
+  window.scrollTo({top:0,behavior:'instant'});
+  if (id === 'page-home') { requestAnimationFrame(function(){ triggerReveal(); }); }
+  if (id === 'page-search') { startSearchPlaceholderRotation(); }
+}
+
+// ── 双向滚动动画（进入 + 退出）─────────────────────────
+function triggerReveal() {
+  document.querySelectorAll('#page-home [data-reveal]').forEach(function(el){
+    // 清除所有动画状态
+    el.classList.remove('revealed','exiting');
+    el.className = el.className.replace(/\bexit-\S+/g,'');
+    void el.offsetWidth;
+    el.classList.add('revealed');
+  });
+}
+
+(function(){
+  // 退出观察器 —— 防抖 + 提前感知元素即将离开视口
+  var exitObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting && entry.target.classList.contains('revealed') && !entry.target.classList.contains('exiting')) {
+        var exitType = entry.target.dataset.exit || 'fade-up';
+        entry.target.classList.add('exiting','exit-'+exitType);
+        // 标记冷却，防止连续触发
+        entry.target._animLock = Date.now();
+        entry.target.addEventListener('animationend', function handler(){
+          entry.target.classList.remove('revealed','exiting','exit-'+exitType);
+          entry.target.removeEventListener('animationend', handler);
+        }, {once:true});
+      }
+    });
+  }, {threshold:0, rootMargin:'-40px 0px 0px 0px'});
+
+  // 进入观察器 —— 冷却期内不触发，避免回退时卡顿
+  var enterObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting && !entry.target.classList.contains('revealed') && !entry.target.classList.contains('exiting')) {
+        // 冷却检查：离开后 200ms 内不重新进入，防止抖动
+        if (entry.target._animLock && (Date.now() - entry.target._animLock) < 200) return;
+        entry.target.classList.add('revealed');
+      }
+    });
+  }, {threshold:0.1, rootMargin:'0px 0px -30px 0px'});
+
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('#page-home [data-reveal]').forEach(function(el){
+      enterObserver.observe(el);
+      exitObserver.observe(el);
+    });
+    setTimeout(function(){ triggerReveal(); }, 100);
+  });
+})();
+
+// ── 侧边栏折叠（点击 ⚡ 图标触发）───────────────────────
+function toggleSidebar() {
+  var sidebar = document.querySelector('.sidebar');
+  var isCollapsed = sidebar.classList.toggle('collapsed');
+  localStorage.setItem('ess_sidebar_collapsed', isCollapsed ? '1' : '0');
+}
+
+// ── 回到顶部按钮 ───────────────────────────────────────
+(function(){
+  var btn = document.getElementById('back-to-top');
+  function checkScroll() {
+    var st = document.documentElement.scrollTop || document.body.scrollTop;
+    btn.classList.toggle('visible', st > 200);
+  }
+  document.addEventListener('scroll', checkScroll, {passive:true});
+  window.addEventListener('scroll', checkScroll, {passive:true});
+  // 点击：火箭发射 → 页面滚动
+  btn.addEventListener('click', function(){
+    if (btn.classList.contains('launching')) return;
+    btn.classList.add('launching');
+    window.scrollTo({top:0,behavior:'smooth'});
+    // 发射动画结束后重置
+    btn.addEventListener('animationend', function h(){
+      btn.classList.remove('launching');
+      btn.removeEventListener('animationend', h);
+    }, {once:true});
+  });
+})();
+
+// ── 快速搜索（即时搜索 + 筛选 + 上移动画）─────────────────
+var searchTimer = null;
+function debouncedSearch() {
+  clearTimeout(searchTimer);
+  var input = document.getElementById('search-input');
+  // 输入被清空时立即恢复 placeholder 轮换
+  if (!input.value.trim()) { searchProducts(); startSearchPlaceholderRotation(); return; }
+  searchTimer = setTimeout(function(){ searchProducts(); }, 200);
+}
+
+
+function searchProducts() {
+  var q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  var resultsEl = document.getElementById('search-results');
+  var statsEl = document.getElementById('search-stats');
+  var emptyEl = document.getElementById('search-empty');
+  var sp = document.getElementById('page-search');
+  var wrap = document.getElementById('search-wrapper');
+  resultsEl.innerHTML = '';
+
+  // 收集筛选条件
+  var filters = [];
+  document.querySelectorAll('#search-filters input[type="checkbox"]:checked').forEach(function(cb){
+    filters.push(cb.value);
+  });
+
+  if (!q) {
+    emptyEl.style.display='block'; emptyEl.textContent='👆 输入关键词开始搜索';
+    statsEl.style.display='none';
+    sp.classList.remove('has-results');
+    return;
+  }
+  emptyEl.style.display='none';
+
+  var allData = window.AppData || {};
+  var results = [];
+  Object.keys(allData).forEach(function(cat){
+    var items = allData[cat] || [];
+    items.forEach(function(item){
+      var code = (item.code||'').toLowerCase();
+      var desc = (item.desc||'').toLowerCase();
+      var note = (item.note||'').toLowerCase();
+      var brand = (item.brand||'').toLowerCase();
+      var model = (item.model||'').toLowerCase();
+
+      // 默认搜全部字段，有筛选时按筛选来
+      var fields = {code:code, desc:desc, note:note, brand:brand, model:model, category:cat.toLowerCase()};
+      var useAll = filters.length === 0;
+      var matched = false;
+      if (useAll) {
+        matched = code.indexOf(q)>=0 || desc.indexOf(q)>=0 || note.indexOf(q)>=0 || brand.indexOf(q)>=0 || model.indexOf(q)>=0 || cat.toLowerCase().indexOf(q)>=0;
+      } else {
+        matched = filters.some(function(f){ return (fields[f]||'').indexOf(q)>=0; });
+      }
+
+      if (matched) {
+        results.push({category:cat,code:item.code,desc:item.desc,note:item.note,brand:item.brand,model:item.model,icon:item.icon});
+      }
+    });
+  });
+
+  statsEl.style.display='block';
+  statsEl.textContent = '找到 ' + results.length + ' 条结果';
+  if (results.length === 0) {
+    emptyEl.style.display='block'; emptyEl.textContent='😕 未找到匹配结果，试试换个关键词？';
+    sp.classList.add('has-results');
+    return;
+  }
+
+  sp.classList.add('has-results');
+  results.forEach(function(r){
+    var div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = '<div class="result-icon">'+(r.icon||'📦')+'</div>'+
+      '<div class="result-body"><div class="result-title">'+(r.desc||r.model||'—')+'</div>'+
+      '<div class="result-code">编码: '+(r.code||'—')+'</div>'+
+      (r.note?'<div class="result-desc">备注: '+r.note+'</div>':'')+
+      '</div><div class="result-category">'+r.category+'</div>';
+    resultsEl.appendChild(div);
+  });
+}
+
+// ── 配置页渲染（加载时立即执行）─────────────────────────
+function renderConfigPage() {
+  if (typeof UI === 'undefined') return;
+  var reqEl = document.getElementById("req-container");
+  var stepEl = document.getElementById("step1-container");
+  if (reqEl) reqEl.innerHTML = UI.renderRequirements();
+  if (stepEl) stepEl.innerHTML = UI.renderStep1();
+}
+
+// ── 设备检测 ───────────────────────────────────────────
+function detectDevice() {
+  var w = window.innerWidth;
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  var body = document.body;
+  body.classList.remove('is-mobile','is-tablet','is-desktop','is-touch');
+  if (w <= 768) body.classList.add('is-mobile');
+  else if (w <= 1024) body.classList.add('is-tablet');
+  else body.classList.add('is-desktop');
+  if (isTouch) body.classList.add('is-touch');
+}
+var resizeTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){ detectDevice(); }, 200);
+});
+document.addEventListener('DOMContentLoaded', detectDevice);
+
+// ── 天气获取（wttr.in 免费API + 浏览器定位）─────────────
+function fetchWeather() {
+  var iconEl = document.getElementById('weather-icon');
+  var infoEl = document.getElementById('weather-info');
+  if (!iconEl || !infoEl) return;
+
+  function doFetch(city) {
+    var cityZh = {'Shenzhen':'深圳','Guangzhou':'广州','Beijing':'北京','Shanghai':'上海',
+      'Hangzhou':'杭州','Chengdu':'成都','Wuhan':'武汉','Nanjing':'南京','Chongqing':'重庆',
+      'Xian':'西安','Changsha':'长沙','Zhengzhou':'郑州','Jinan':'济南','Tianjin':'天津',
+      'Suzhou':'苏州','Dongguan':'东莞','Foshan':'佛山','Zhuhai':'珠海','Xiamen':'厦门',
+      'Qingdao':'青岛','Dalian':'大连','Kunming':'昆明','Guiyang':'贵阳','Fuzhou':'福州',
+      'Hefei':'合肥','Nanchang':'南昌','Taiyuan':'太原','Shijiazhuang':'石家庄',
+      'Shenyang':'沈阳','Changchun':'长春','Harbin':'哈尔滨'}[city] || city;
+    var url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
+    fetch(url, { signal: AbortSignal.timeout(6000) })
+      .then(function(r){ if (!r.ok) throw r.status; return r.json(); })
+      .then(function(d){
+        var w = d.current_condition[0];
+        var code = w.weatherCode;
+        var temp = w.temp_C + '°C';
+        var hum = w.humidity + '%';
+        var desc = w.lang_zh ? w.lang_zh[0].value : w.weatherDesc[0].value;
+        var wind = w.winddir16Point + ' ' + w.windspeedKmph + 'km/h';
+        var nearest = d.nearest_area ? d.nearest_area[0] : null;
+        var areaName = nearest ? (nearest.areaName ? nearest.areaName[0].value : '') : '';
+        var regionName = nearest ? (nearest.region ? nearest.region[0].value : '') : '';
+        var displayCity = areaName || regionName || cityZh;
+        var map = {113:'☀️',116:'⛅',119:'☁️',122:'🌥️',143:'🌫️',176:'🌦️',179:'🌨️',182:'🌨️',185:'🌧️',200:'⛈️',227:'🌬️',230:'🌬️',248:'🌫️',260:'🌫️',263:'🌧️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',311:'🌧️',314:'🌧️',317:'🌧️',320:'🌧️',323:'🌨️',326:'🌨️',329:'🌨️',332:'🌨️',335:'🌨️',338:'🌨️',350:'🌨️',353:'🌧️',356:'🌧️',359:'🌧️',362:'🌨️',365:'🌨️',368:'🌨️',371:'🌨️',374:'🌧️',377:'🌧️',386:'⛈️',389:'⛈️',392:'⛈️',395:'🌨️'};
+        iconEl.textContent = map[code] || '🌤️';
+        infoEl.textContent = displayCity + ' ' + temp + '  ' + desc + '  💧' + hum + '  🌬' + wind;
+        localStorage.setItem('ess-weather-cache', JSON.stringify({icon:iconEl.textContent,text:infoEl.textContent,t:Date.now()}));
+      })
+      .catch(function(){
+        var cached = localStorage.getItem('ess-weather-cache');
+        if (cached) {
+          try { var c = JSON.parse(cached); iconEl.textContent = c.icon; infoEl.textContent = c.text; } catch(e){}
+        } else {
+          iconEl.textContent = '🌤️'; infoEl.textContent = '天气加载失败';
+        }
+      });
+  }
+
+  // 优先浏览器定位
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        doFetch(pos.coords.latitude + ',' + pos.coords.longitude);
+      },
+      function() {
+        // 定位失败，用 IP 定位
+        fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ doFetch(d.city || d.region || 'Shenzhen'); })
+          .catch(function(){ doFetch('Shenzhen'); });
+      },
+      { timeout: 5000, maximumAge: 600000 }
+    );
+  } else {
+    // 不支持定位，用 IP
+    fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ doFetch(d.city || d.region || 'Shenzhen'); })
+      .catch(function(){ doFetch('Shenzhen'); });
+  }
+}
+
+// ── 励志文案轮换 ─────────────────────────────────────────
+var quotes = [
+  '"每一次努力，都是未来的你在向现在求救。" 💪',
+  '"储能不止于储能，更是为未来蓄力。" ⚡',
+  '"只有极其努力，才能看起来毫不费力。" 🎯',
+  '"你今天偷的懒，都会变成明天打脸的巴掌。" 👊',
+  '"先完成，再完美。" ✨',
+  '"储能行业风口已至，准备好了吗？" 🔋',
+  '"所有的逆袭，都是有备而来。" 🚀',
+  '"不要假装很努力，结果不会陪你演戏。" 💯',
+  '"最好的时间是十年前，其次是现在。" ⏰',
+  '"通往星辰大海的路上，每一步都算数。" 🌟',
+  '"储能人，今天也要加油呀！" ⛽',
+  '"怕什么真理无穷，进一寸有一寸的欢喜。" 📖',
+  '"做难而正确的事，时间会给你答案。" ⏳',
+  '"不是看到希望才坚持，而是坚持了才看到希望。" 🔥',
+  '"储能行业的未来，由我们来书写。" ✍️',
+  '"成功没有捷径，但努力有路径。" 🗺️',
+  '"日拱一卒，功不唐捐。" ♟️',
+  '"每一个伟大的项目，都始于一次勇敢的开始。" 🏗️',
+  '"别让再等等成为你最大的遗憾。" ⚠️',
+  '"今天比昨天好，就是希望。" 🌱',
+  '"储能柜里装的不只是电池，还有梦想。" 🗄️',
+  '"干就完了，别想太多。" 🏃',
+  '"你只管努力，剩下的交给时间。" ⌛',
+  '"不逼自己一把，都不知道自己多优秀。" 🏆',
+  '"今天吃的苦，都会照亮明天的路。" 💡',
+  '"与其临渊羡鱼，不如退而结网。" 🎣',
+  '"深耕储能，做一个长期主义者。" 🌳',
+  '"别怕犯错，怕的是不行动。" 🎬',
+  '"这个行业，值得你全力以赴。" 💼',
+  '"做自己的太阳，无需借谁的光。" ☀️',
+  // ── 新增：夸人 + 励志混合 ──
+  '"你就是储能界的卷王，卷得漂亮！" 👑',
+  '"这配置方案一看就是老手，稳如泰山。" ⛰️',
+  '"储能圈最靓的仔，今天也要发光。" ✨',
+  '"不愧是你，配置思路清晰得一批。" 🧠',
+  '"专业的人做专业的事，非你莫属。" 🥇',
+  '"储能路上，每一步都算数。" 👣',
+  '"今天的每一度电，都是未来的底气。" 💰',
+  '"储能人的字典里没有放弃两个字。" 📕',
+  '"低谷充电，高峰放电，人生亦是如此。" 🔄',
+  '"深耕储能十五载，归来仍是少年。" 🌱',
+  '"你的专业，是储能行业的底气。" 🏛️',
+  '"别怕犯错，怕的是原地踏步。" 🚶',
+  '"能量守恒，努力也不会白费。" ⚖️',
+  '"储能行业的黄金十年，你正当时。" 🥇',
+  '"越是低谷，越要储能。" 🔋',
+  '"用专业赢得尊重，用交付赢得信任。" 🤝',
+  '"你的坚持，终将美好。" 🌸',
+  '"储能人的浪漫：一度电，一份爱。" 💚',
+  '"格局打开，储能未来可期。" 🔭'
+];
+var quoteIdx = 0;
+var quoteTimer = null;
+
+function startQuoteRotation() {
+  quoteIdx = 0;
+  var bar = document.getElementById('quote-bar');
+  var textEl = bar ? bar.querySelector('.quote-text') : null;
+  if (!textEl) return;
+  textEl.textContent = quotes[0];
+  if (quoteTimer) clearInterval(quoteTimer);
+  quoteTimer = setInterval(function(){
+    var el = document.getElementById('quote-bar');
+    var t = el ? el.querySelector('.quote-text') : null;
+    if (!t) return;
+    t.classList.add('fade');
+    setTimeout(function(){
+      quoteIdx = (quoteIdx + 1) % quotes.length;
+      t.textContent = quotes[quoteIdx];
+      t.classList.remove('fade');
+    }, 400);
+  }, 8000);
+}
+
+// ── 操作小技巧轮换 ─────────────────────────────────────────
+var tipsList = [
+  { icon:'💡', text:'配置完记得先预览，确认无误再导出 Excel，省纸省心。' },
+  { icon:'🔍', text:'快速搜索支持编码、描述、品牌多字段同时匹配，搜得越准配得越快。' },
+  { icon:'📋', text:'需求表里选"不需要"的项，Excel 备注栏自动标注"不配置"，一目了然。' },
+  { icon:'⚡', text:'单台模式适合小型试点项目，多台模式自动计算总容量和并网功率。' },
+  { icon:'🗄️', text:'储能柜编码支持模糊搜索，只输前几位就能快速定位目标型号。' },
+  { icon:'🎯', text:'管理员后台可以随时增删改产品数据和品类，数据自动保存到本地。' },
+  { icon:'💾', text:'所有配置数据保存在浏览器本地，换电脑不会自动同步，需要手动备份。' },
+  { icon:'🔄', text:'修改需求表后，下方产品配置项会自动联动更新，无需手动逐一调整。' },
+  { icon:'📊', text:'导出 Excel 前可以先用快速搜索确认产品编码，确保物料清单准确。' },
+  { icon:'🌓', text:'深色模式下工作更护眼，适合长时间配置操作，点顶栏 🌙 一键切换。' },
+  { icon:'⌨️', text:'快捷键提示：页面加载后直接 Ctrl+F 或用搜索框即可快速查找产品。' },
+  { icon:'🏗️', text:'多台项目建议先用单台配置确认方案，再切换到多台模式批量生成。' },
+  { icon:'📝', text:'项目管理功能支持保存多个方案，方便对比不同配置的成本和物料。' },
+  { icon:'🧩', text:'EMS、BMS、PCS 等模块数量自动计算，灰色字段为系统联动，无需手动填。' },
+  { icon:'🔔', text:'导出前检查"并网功率"是否在合理范围，避免配置方案不合规。' }
+];
+var tipsIdx = 0;
+var tipsTimer = null;
+
+function startTipsRotation() {
+  tipsIdx = 0;
+  var iconEl = document.getElementById('tips-icon');
+  var textEl = document.getElementById('tips-text');
+  if (!iconEl || !textEl) return;
+  iconEl.textContent = tipsList[0].icon;
+  textEl.textContent = tipsList[0].text;
+  if (tipsTimer) clearInterval(tipsTimer);
+  tipsTimer = setInterval(function(){
+    var iEl = document.getElementById('tips-icon');
+    var tEl = document.getElementById('tips-text');
+    if (!iEl || !tEl) return;
+    tEl.classList.add('fade');
+    iEl.classList.add('fade');
+    setTimeout(function(){
+      tipsIdx = (tipsIdx + 1) % tipsList.length;
+      iEl.textContent = tipsList[tipsIdx].icon;
+      tEl.textContent = tipsList[tipsIdx].text;
+      tEl.classList.remove('fade');
+      iEl.classList.remove('fade');
+    }, 400);
+  }, 10000);
+}
+
+// ── 初始化 ─────────────────────────────────────────────
+function init() {
+  applyBgSettings();
+
+  // 登录验证（优先从 AUTH 模块读取会话）
+  var session = null;
+  if (typeof AUTH !== 'undefined') {
+    session = AUTH.getSession();
+  }
+  if (!session) {
+    // 兼容旧版登录标记
+    if (!localStorage.getItem('ess-logged-in')) { window.location.href = 'login.html'; return; }
+  }
+
+  // 用户名显示
+  var username = session ? (session.displayName || session.username) : (localStorage.getItem('ess-username') || '用户');
+  // 侧边栏头像和角色
+  var sidebarAvatar = document.getElementById('sidebar-avatar');
+  var sidebarUsername = document.getElementById('sidebar-username');
+  var sidebarRole = document.getElementById('sidebar-role');
+  if (sidebarAvatar) {
+    sidebarAvatar.src = 'https://api.dicebear.com/9.x/avataaars/svg?seed=' + encodeURIComponent(username);
+    sidebarAvatar.onerror = function(){
+      // Fallback to another avatar service
+      this.src = 'https://i.pravatar.cc/150?u=' + encodeURIComponent(username);
+    };
+  }
+  if (sidebarUsername) sidebarUsername.textContent = username;
+  if (sidebarRole) sidebarRole.textContent = (session && session.role === 'admin') ? '管理员' : '普通用户';
+
+  // 管理员：点击左下角头像进入后台
+  if (session && session.role === 'admin') {
+    var sidebarProfile = document.getElementById('sidebar-profile');
+    if (sidebarProfile) {
+      sidebarProfile.style.cursor = 'pointer';
+      sidebarProfile.title = '管理员控制台';
+      sidebarProfile.addEventListener('click', function() {
+        window.location.href = 'admin.html';
+      });
+    }
+    // 加载本地覆盖的产品数据
+    var pData = STORAGE.get('products') || {};
+    if (pData.products) { try { Object.assign(DATA, JSON.parse(JSON.stringify(pData.products))); } catch(e){} }
+  }
+
+  // 构建搜索用的 AppData（将 DATA 映射为品类名→产品列表）
+  window.AppData = {};
+  if (typeof DATA !== 'undefined' && DATA.categoryRegistry) {
+    DATA.categoryRegistry.forEach(function(cat) {
+      window.AppData[cat.name] = DATA[cat.key] || [];
+    });
+  }
+
+  renderConfigPage();
+  // 统计产品总数
+  var allData = window.AppData || {};
+  var total = 0;
+  Object.keys(allData).forEach(function(cat){ total += (allData[cat]||[]).length; });
+  document.getElementById('stat-products').textContent = total;
+  // 天气 + 励志文案 + 小技巧
+  fetchWeather();
+  startQuoteRotation();
+  startTipsRotation();
+  startSearchPlaceholderRotation();
+}
+document.addEventListener('DOMContentLoaded', function() {
+  STORAGE.init().then(init);
+});
+
+// ── 拓扑方案首次加载 ───────────────────────────────────
+(function(){
+  if (!STORAGE.get('topology')) {
+    if (typeof TOPO_DEFAULTS !== 'undefined') {
+      STORAGE.set('topology', TOPO_DEFAULTS);
+    }
+  }
+  renderTopologyCards();
+})();
+
+// ── 液态玻璃鼠标跟随阴影 ──────────────────────────────
+(function(){
+  var glassSel = '.card, .info-card, .stat-card, .feature-card, .topo-card, .search-box';
+  document.addEventListener('mousemove', function(e){
+    document.querySelectorAll(glassSel).forEach(function(el){
+      if (!el.matches(':hover')) return;
+      var rect = el.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var dx = (e.clientX - cx) / rect.width;
+      var dy = (e.clientY - cy) / rect.height;
+      var sx = (dx * 14).toFixed(1);
+      var sy = (dy * 14).toFixed(1);
+      el.style.setProperty('--mx', sx + 'px');
+      el.style.setProperty('--my', sy + 'px');
+    });
+  });
+  document.querySelectorAll(glassSel).forEach(function(el){
+    el.addEventListener('mouseleave', function(){
+      el.style.removeProperty('--mx');
+      el.style.removeProperty('--my');
+    });
+  });
+})();
+
+// ── 搜索框提示语循环（丝滑动画版）────────────────────
+var _searchHints = [
+  '搜个 PCS 看看…',
+  '输入编码秒查产品',
+  '搜"液冷"试试？',
+  '找找 BMS 相关产品',
+  '搜"断路器"秒出结果',
+  '今天配个什么方案？',
+  '搜编码、搜描述、搜品牌',
+  '输入"汇流柜"快速定位',
+  '搜"继电器"试试看？',
+  '搜个电表型号？',
+  '搜"防逆流"一键定位',
+  'EMS、PCS… 随你搜',
+  '搜"STS"切换开关',
+  '搜个变压器型号？',
+  '试试搜"UPS"？',
+  '找找电缆和线束？',
+  '搜"端子"找接线方案',
+  '搜品牌名也可以哦',
+  '搜"空调"看看冷却方案',
+  'IoT、交换机、线缆全都有',
+  '输个型号试试手气',
+  '搜"熔断器"？',
+  '搜"接触器"？',
+  '储能人的秘密武器',
+  '比翻目录快100倍'
+];
+var _hintTimer = null;
+var _hintIdx = 0;
+
+function hideHintOverlay() {
+  var el = document.getElementById('search-hint-overlay');
+  if (el) el.classList.add('hidden');
+}
+function showHintOverlay() {
+  var input = document.getElementById('search-input');
+  if (input && input.value.trim()) return;
+  var el = document.getElementById('search-hint-overlay');
+  if (el) el.classList.remove('hidden');
+}
+
+function startSearchPlaceholderRotation() {
+  var overlay = document.getElementById('search-hint-overlay');
+  var input = document.getElementById('search-input');
+  if (!overlay || !input) return;
+  // 清除旧定时器，防止叠加
+  if (_hintTimer) { clearTimeout(_hintTimer); _hintTimer = null; }
+  overlay.classList.remove('hiding','hidden');
+  // 打乱一次
+  for (var i = _searchHints.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = _searchHints[i]; _searchHints[i] = _searchHints[j]; _searchHints[j] = t; }
+  _hintIdx = 0;
+  overlay.textContent = _searchHints[0];
+  overlay.style.opacity = '1';
+  overlay.style.transform = 'translateY(-50%)';
+
+  function next() {
+    // 正在输入或聚焦时不切换
+    if (document.activeElement === input || (input.value || '').trim()) { _hintTimer = setTimeout(next, 5000); return; }
+    // 淡出 → 换文案 → 淡入
+    overlay.classList.add('hiding');
+    _hintTimer = setTimeout(function(){
+      _hintIdx = (_hintIdx + 1) % _searchHints.length;
+      if (_hintIdx === 0) { for (var i = _searchHints.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = _searchHints[i]; _searchHints[i] = _searchHints[j]; _searchHints[j] = t; } }
+      overlay.textContent = _searchHints[_hintIdx];
+      overlay.classList.remove('hiding');
+      _hintTimer = setTimeout(next, 4000);
+    }, 350);
+  }
+  _hintTimer = setTimeout(next, 4000);
+}
+
+// ── 液态玻璃按钮波纹效果 ────────────────────────────────
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-primary,.btn-secondary,.btn-add,.btn-warn,.btn-mute,.hdr-btn,.theme-toggle,.search-icon-btn,.back-to-top');
+  if (!btn) return;
+  var ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  var rect = btn.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height) * 2;
+  ripple.style.cssText = 'width:'+size+'px;height:'+size+'px;left:'+(e.clientX-rect.left-size/2)+'px;top:'+(e.clientY-rect.top-size/2)+'px;';
+  btn.style.position = 'relative';
+  btn.style.overflow = 'hidden';
+  btn.appendChild(ripple);
+  setTimeout(function(){ ripple.remove(); }, 600);
+});
+
+// ── 退出登录 ───────────────────────────────────────────
+if (typeof UI !== 'undefined') {
+  UI.logout = function() {
+    if (typeof AUTH !== 'undefined') AUTH.logout();
+    localStorage.removeItem('ess-username');
+    localStorage.removeItem('ess-logged-in');
+    window.location.href = 'login.html';
+  };
+}
+</script>
+</body>
+</html>
