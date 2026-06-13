@@ -746,6 +746,7 @@ button:not(.no-glass), .btn, .hdr-btn, .user-badge, .input-field, textarea, sele
 .search-box:hover, .topo-card:hover, .modal-box:hover, .welcome-card:hover,
 .step-card:hover, .cat-card:hover, .result-card:hover,
 button:not(.no-glass):hover, .btn:hover, .hdr-btn:hover {
+  transform: translateY(-4px);
   box-shadow:
     4px 0 10px rgba(255,0,0,0.30),
     -4px 0 10px rgba(0,0,255,0.30),
@@ -766,6 +767,7 @@ body.dark button:not(.no-glass), body.dark .btn, body.dark .hdr-btn {
 body.dark .card:hover, body.dark .stat-card:hover, body.dark .feature-card:hover,
 body.dark .search-box:hover, body.dark .topo-card:hover, body.dark .modal-box:hover,
 body.dark button:not(.no-glass):hover, body.dark .btn:hover, body.dark .hdr-btn:hover {
+  transform: translateY(-4px);
   box-shadow:
     4px 0 10px rgba(255,80,80,0.22),
     -4px 0 10px rgba(80,80,255,0.22),

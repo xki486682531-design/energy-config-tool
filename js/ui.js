@@ -17,11 +17,58 @@
 
 const UI = (() => {
 
+  // ═══════════════════════════════════════════════════════════
+  // 热门产品统计模块（基于 localStorage 记录历史选择次数）
+  // ═══════════════════════════════════════════════════════════
+  const HOT = {
+    STORAGE_KEY: 'ess_product_selections',
+
+    getCounts() {
+      try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {}; }
+      catch (e) { return {}; }
+    },
+
+    record(code) {
+      if (!code) return;
+      const counts = this.getCounts();
+      counts[code] = (counts[code] || 0) + 1;
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(counts));
+    },
+
+    // 返回按热度排序后的列表，附带火苗标记（三级：🔥热门 ⭐温门 💧冷门）
+    sortWithFlame(list) {
+      const counts = this.getCounts();
+      const codeCounts = list.map(i => counts[i.code] || 0);
+      const maxCount = Math.max(...codeCounts, 0);
+
+      // 包装原始索引，按选择次数降序排列
+      const indexed = list.map((item, originalIdx) => {
+        const count = counts[item.code] || 0;
+        let flame = '';
+        if (count > 0 && maxCount > 0) {
+          const ratio = count / maxCount;
+          if (ratio >= 0.5) flame = '🔥 ';
+          else if (ratio >= 0.15) flame = '⭐ ';
+          else flame = '💧 ';
+        }
+        return { item, originalIdx, count, flame };
+      });
+
+      indexed.sort((a, b) => {
+        if (a.count !== b.count) return b.count - a.count;
+        return a.item.code.localeCompare(b.item.code);
+      });
+
+      return indexed;
+    }
+  };
+
   // ── 工具：生成下拉选项 HTML ──────────────────────────────
   function buildOptions(list, placeholder = "请选择") {
+    const sorted = HOT.sortWithFlame(list);
     let html = `<option value="">— ${placeholder} —</option>`;
-    list.forEach((item, i) => {
-      html += `<option value="${i}">${item.code}｜${item.desc}</option>`;
+    sorted.forEach(({ item, originalIdx, flame }) => {
+      html += `<option value="${originalIdx}">${flame}${item.code}｜${item.desc}</option>`;
     });
     return html;
   }
@@ -104,6 +151,7 @@ const UI = (() => {
     const item = dataList[parseInt(idx)];
     codeEl.textContent = item.code;
     descEl.textContent = item.desc;
+    HOT.record(item.code);
   }
 
   // ── 工具：只允许输入正整数 ──────────────────────────────
@@ -142,7 +190,7 @@ const UI = (() => {
 
     let html = `
     <div class="card" id="req-card">
-      <h2 class="step-title"><span class="step-num">0</span><span id="req-title-name" class="req-title-name"></span> 项目非标需求表</h2>
+      <h2 class="step-title"><span id="req-title-name" class="req-title-name"></span> 项目非标需求表</h2>
       <p class="req-tip">填写后，防逆流、抄表、汇流柜、STS柜等选项将自动联动下方配置。其余字段记录到 Excel。</p>`;
 
     for (const sec of sections) {
@@ -244,6 +292,7 @@ const UI = (() => {
           <div class="code-desc-row"><span class="cd-value" id="s-cabinetDemandQty">请在需求表填写</span></div>
         </div>
       </div>
+      <div id="step1-req-summary" class="req-summary-grid" style="margin-top:10px;"></div>
       <div class="btn-row">
         <button class="btn-primary" onclick="UI.handleStep1()">确认项目信息，进入配置 →</button>
       </div>
@@ -318,6 +367,7 @@ const UI = (() => {
     const pwOpts  = buildOptions(DATA.powerModules,    "选择电源模块");
     const busOpts = buildOptions(DATA.combiners,       "选择汇流柜型号");
     const stsOpts = buildOptions(DATA.stsCabinets,     "选择STS柜型号");
+    const monitorOpts = buildOptions(DATA.monitorCabinets, "选择监控箱型号");
     const emOpts  = buildOptions(DATA.ems,             "选择EMS型号");
     const simOpts = buildOptions(DATA.simCards,        "选择流量卡");
     const display = DATA.displays[0];
@@ -327,358 +377,411 @@ const UI = (() => {
     <div class="card" id="branch-multi">
       <h2 class="step-title"><span class="step-num">2</span>多台配置（≥2台储能柜）</h2>
 
-      <div class="section-block">
-        <div class="section-label">储能柜产品编码</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-cabinet-select" onchange="UI.syncField('m-cabinet-select','m-cabinet-code','m-cabinet-desc', UI.getStorageCabinetOptions())">
-              ${cabinetOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-cabinet-qty" value="${window.AppState.count}" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-cabinet-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-cabinet-desc">仅显示 ${window.AppState.cap}kWh 匹配产品</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-cabinet-remark" placeholder="储能柜产品备注（可修改）" rows="2"></textarea>
-        </div>
-      </div>
+      <div class="config-groups">
 
-      <!-- ①二次电表 -->
-      <div class="section-block" id="block-sm">
-        <div class="section-label">
-          二次电表
-          <span class="auto-tag linked-tag" id="sm-linked-tag" style="display:none">🔗 需求表联动已预选</span>
-        </div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-sm-select" onchange="UI.syncField('m-sm-select','m-sm-code','m-sm-desc', DATA.secondaryMeters)">
-              ${smOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-sm-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sm-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sm-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-sm-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ②一次电表 -->
-      <div class="section-block" id="block-pm">
-        <div class="section-label">
-          ② 一次电表
-          <span class="auto-tag linked-tag" id="pm-linked-tag" style="display:none">🔗 需求表联动已预选</span>
-        </div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-pm-select" onchange="UI.syncField('m-pm-select','m-pm-code','m-pm-desc', DATA.primaryMeters)">
-              ${pmOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-pm-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-pm-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-pm-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-pm-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ③路由器 -->
-      <div class="section-block" id="block-rt">
-        <div class="section-label">路由器</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-rt-select" onchange="UI.syncField('m-rt-select','m-rt-code','m-rt-desc', DATA.routers)">
-              ${rtOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-rt-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-rt-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-rt-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-rt-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ④交换机 -->
-      <div class="section-block">
-        <div class="section-label">交换机</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-sw-select" onchange="UI.syncField('m-sw-select','m-sw-code','m-sw-desc', DATA.switches)">
-              ${swOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-sw-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sw-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sw-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-sw-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ⑤电源模块 -->
-      <div class="section-block">
-        <div class="section-label">电源模块</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-pw-select" onchange="UI.syncField('m-pw-select','m-pw-code','m-pw-desc', DATA.powerModules)">
-              ${pwOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-pw-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-pw-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-pw-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-pw-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ⑥EMS -->
-      <div class="section-block">
-        <div class="section-label">EMS</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-em-select" onchange="UI.onEMSChange()">
-              ${emOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-em-qty" placeholder="台数" inputmode="numeric" class="qty-input" oninput="UI.onEMSQtyChange()" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-em-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-em-desc">—</span></div>
-        </div>
-        <div class="form-item">
-          <label>备注</label>
-          <textarea id="m-em-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ⑦流量卡 -->
-      <div class="section-block" id="block-sim">
-        <div class="section-label">流量卡</div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-sim-select" onchange="UI.syncField('m-sim-select','m-sim-code','m-sim-desc', DATA.simCards)">
-              ${simOpts}
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量</label>
-            <input type="text" id="m-sim-qty" placeholder="张" inputmode="numeric" class="qty-input" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sim-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sim-desc">—</span></div>
-        </div>
-        <div class="dual-operator-row">
-          <label class="checkbox-label">
-            <input type="checkbox" id="m-sim-dual" onchange="UI.onDualSimChange()" />
-            <span>使用两家不同运营商（双卡方案）</span>
-          </label>
-        </div>
-        <div id="m-sim2-block" style="display:none; margin-top:10px;">
-          <div class="form-row-3">
-            <div class="form-item">
-              <label>第二家运营商</label>
-              <select id="m-sim2-select" onchange="UI.syncField('m-sim2-select','m-sim2-code','m-sim2-desc', DATA.simCards)">
-                ${simOpts}
-              </select>
+        <!-- ═══ 核心设备 ═══ -->
+        <div class="config-group">
+          <div class="group-header"><span class="group-icon">⚡</span> 核心设备</div>
+          <div class="group-grid">
+            <div class="section-block full-width">
+              <div class="section-label">储能柜</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-cabinet-select" onchange="UI.syncField('m-cabinet-select','m-cabinet-code','m-cabinet-desc', UI.getStorageCabinetOptions())">
+                    ${cabinetOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-cabinet-qty" value="${window.AppState.count}" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-cabinet-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-cabinet-desc">仅显示 ${window.AppState.cap}kWh 匹配产品</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-cabinet-remark" placeholder="储能柜产品备注（可修改）" rows="2"></textarea>
+              </div>
             </div>
-            <div class="form-item">
-              <label>数量</label>
-              <input type="text" id="m-sim2-qty" placeholder="张" inputmode="numeric" class="qty-input" />
+
+            <div class="section-block full-width">
+              <div class="section-label">EMS</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-em-select" onchange="UI.onEMSChange()">
+                    ${emOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-em-qty" placeholder="台数" inputmode="numeric" class="qty-input" oninput="UI.onEMSQtyChange()" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-em-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-em-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-em-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block auto-section full-width">
+              <div class="section-label">EMS配套配件 <span class="auto-tag">自动生成</span></div>
+              <p class="auto-tip">默认每项数量为1；特殊情况可勾选后修改数量。</p>
+              <label class="checkbox-label" style="margin-bottom:10px">
+                <input type="checkbox" id="ems-acc-custom" onchange="UI.onEMSAccessoryCustomChange()" />
+                <span>特殊情况：允许修改配件数量</span>
+              </label>
+              <div id="ems-accessories-list">
+                <div class="auto-item">
+                  <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[0].code}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[0].desc}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-0" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
+                </div>
+                <div class="auto-item" style="margin-top:6px">
+                  <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[1].code}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[1].desc}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-1" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
+                </div>
+                <div class="auto-item" style="margin-top:6px">
+                  <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[2].code}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[2].desc}</span>
+                  &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-2" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
+                </div>
+              </div>
             </div>
           </div>
-          <div class="code-desc-row">
-            <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sim2-code">—</span></div>
-            <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sim2-desc">—</span></div>
-          </div>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>备注</label>
-          <textarea id="m-sim-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- ⑧EMS配套（自动生成） -->
-      <div class="section-block auto-section">
-        <div class="section-label">EMS配套配件 <span class="auto-tag">自动生成</span></div>
-        <p class="auto-tip">默认每项数量为1；特殊情况可勾选后修改数量。</p>
-        <label class="checkbox-label" style="margin-bottom:10px">
-          <input type="checkbox" id="ems-acc-custom" onchange="UI.onEMSAccessoryCustomChange()" />
-          <span>特殊情况：允许修改配件数量</span>
-        </label>
-        <div id="ems-accessories-list">
-          <div class="auto-item">
-            <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[0].code}</span>
-            &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[0].desc}</span>
-            &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-0" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
-          </div>
-          <div class="auto-item" style="margin-top:6px">
-            <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[1].code}</span>
-            &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[1].desc}</span>
-            &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-1" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
-          </div>
-          <div class="auto-item" style="margin-top:6px">
-            <span class="cd-label">编码：</span><span class="auto-value">${DATA.emsAccessories[2].code}</span>
-            &nbsp;|&nbsp;<span class="cd-label">描述：</span><span class="auto-value">${DATA.emsAccessories[2].desc}</span>
-            &nbsp;|&nbsp;<span class="cd-label">数量：</span><span class="auto-value ems-acc-display">1</span><input type="text" id="ems-acc-qty-2" value="1" class="qty-input" oninput="UI.cleanNonNegativeInt(this)" style="width:72px;display:none" />
-          </div>
-        </div>
-      </div>
-
-      <!-- ⑨液晶显示屏 + DVI线缆 -->
-      <div class="section-block auto-section">
-        <div class="section-label">液晶显示屏 <span class="auto-tag">自动配置</span></div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>型号</label>
-            <select id="m-dp-select" disabled>
-              <option value="0" selected>${display.code}｜${display.desc}</option>
-            </select>
-          </div>
-          <div class="form-item">
-            <label>数量（自动配置）</label>
-            <input type="text" id="m-dp-qty" value="1" readonly class="qty-input qty-auto" />
-          </div>
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-dp-code">${display.code}</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-dp-desc">${display.desc}</span></div>
         </div>
 
-        <div class="section-label" style="margin-top:16px">DVI 线缆 <span class="auto-tag">数量随显示屏同步</span></div>
-        <div class="form-row-3">
-          <div class="form-item">
-            <label>选择型号 <span class="required">*</span></label>
-            <select id="m-dvi-select" onchange="UI.syncField('m-dvi-select','m-dvi-code','m-dvi-desc', DATA.dviCables)">
-              ${dviOpts}
-            </select>
+        <!-- ═══ 电气仪表 ═══ -->
+        <div class="config-group">
+          <div class="group-header"><span class="group-icon">🔌</span> 电气仪表</div>
+          <div class="group-grid">
+            <div class="section-block" id="block-sm">
+              <div class="section-label">
+                二次电表
+                <span class="auto-tag linked-tag" id="sm-linked-tag" style="display:none">🔗 联动</span>
+              </div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-sm-select" onchange="UI.syncField('m-sm-select','m-sm-code','m-sm-desc', DATA.secondaryMeters)">
+                    ${smOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-sm-qty" value="1" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sm-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sm-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-sm-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block" id="block-pm">
+              <div class="section-label">
+                一次电表
+                <span class="auto-tag linked-tag" id="pm-linked-tag" style="display:none">🔗 联动</span>
+              </div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-pm-select" onchange="UI.syncField('m-pm-select','m-pm-code','m-pm-desc', DATA.primaryMeters)">
+                    ${pmOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-pm-qty" value="1" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-pm-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-pm-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-pm-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block linked-section" id="block-bus" style="display:none">
+              <div class="section-label">汇流柜 <span class="auto-tag linked-tag">🔗 联动</span></div>
+              <p class="auto-tip" style="color:#c05621">需求表中选择了"需要"</p>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-bus-select" onchange="UI.syncField('m-bus-select','m-bus-code','m-bus-desc', DATA.combiners)">
+                    ${busOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-bus-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-bus-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-bus-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-bus-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block linked-section" id="block-sts" style="display:none">
+              <div class="section-label">STS柜 <span class="auto-tag linked-tag">🔗 联动</span></div>
+              <p class="auto-tip" style="color:#c05621">需求表中选择了"需要"</p>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-sts-select" onchange="UI.syncField('m-sts-select','m-sts-code','m-sts-desc', DATA.stsCabinets)">
+                    ${stsOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-sts-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sts-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sts-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-sts-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block linked-section" id="block-monitor" style="display:none">
+              <div class="section-label">监控箱 <span class="auto-tag linked-tag">🔗 联动</span></div>
+              <p class="auto-tip" style="color:#c05621">需求表中选择了"需要"</p>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-monitor-select" onchange="UI.syncField('m-monitor-select','m-monitor-code','m-monitor-desc', DATA.monitorCabinets)">
+                    ${monitorOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-monitor-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-monitor-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-monitor-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-monitor-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
           </div>
-          <div class="form-item">
-            <label>数量（跟随显示屏）</label>
-            <input type="text" id="m-dvi-qty" value="1" readonly class="qty-input qty-auto" />
+        </div>
+
+        <!-- ═══ 网络通信 ═══ -->
+        <div class="config-group">
+          <div class="group-header"><span class="group-icon">📡</span> 网络通信</div>
+          <div class="group-grid">
+            <div class="section-block" id="block-rt">
+              <div class="section-label">路由器</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-rt-select" onchange="UI.syncField('m-rt-select','m-rt-code','m-rt-desc', DATA.routers)">
+                    ${rtOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-rt-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-rt-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-rt-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-rt-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block">
+              <div class="section-label">交换机</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-sw-select" onchange="UI.syncField('m-sw-select','m-sw-code','m-sw-desc', DATA.switches)">
+                    ${swOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-sw-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sw-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sw-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-sw-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+
+            <div class="section-block full-width" id="block-sim">
+              <div class="section-label">流量卡</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-sim-select" onchange="UI.syncField('m-sim-select','m-sim-code','m-sim-desc', DATA.simCards)">
+                    ${simOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-sim-qty" placeholder="张" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sim-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sim-desc">—</span></div>
+              </div>
+              <div class="dual-operator-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="m-sim-dual" onchange="UI.onDualSimChange()" />
+                  <span>使用两家不同运营商（双卡方案）</span>
+                </label>
+              </div>
+              <div id="m-sim2-block" style="display:none; margin-top:10px;">
+                <div class="form-row-3">
+                  <div class="form-item">
+                    <label>第二家运营商</label>
+                    <select id="m-sim2-select" onchange="UI.syncField('m-sim2-select','m-sim2-code','m-sim2-desc', DATA.simCards)">
+                      ${simOpts}
+                    </select>
+                  </div>
+                  <div class="form-item">
+                    <label>数量</label>
+                    <input type="text" id="m-sim2-qty" placeholder="张" inputmode="numeric" class="qty-input" />
+                  </div>
+                </div>
+                <div class="code-desc-row">
+                  <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sim2-code">—</span></div>
+                  <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sim2-desc">—</span></div>
+                </div>
+              </div>
+              <div class="form-item" style="margin-top:8px">
+                <label>备注</label>
+                <textarea id="m-sim-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-dvi-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-dvi-desc">—</span></div>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>备注</label>
-          <textarea id="m-dp-remark" placeholder="备注说明（可修改）" rows="2"></textarea>
-        </div>
-      </div>
 
-      <!-- ⑩汇流柜（需求表联动，有时才显示） -->
-      <div class="section-block linked-section" id="block-bus" style="display:none">
-        <div class="section-label">汇流柜配置 <span class="auto-tag linked-tag">🔗 需求表联动</span></div>
-        <p class="auto-tip" style="color:#c05621">需求表中"汇流柜"选择了"需要"，请在此选择汇流柜产品型号。</p>
-        <div class="form-item">
-          <label>选择型号 <span class="required">*</span></label>
-          <select id="m-bus-select" onchange="UI.syncField('m-bus-select','m-bus-code','m-bus-desc', DATA.combiners)">
-            ${busOpts}
-          </select>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>汇流柜数量</label>
-          <input type="text" id="m-bus-qty" placeholder="台数" inputmode="numeric" class="qty-input" style="width:120px" />
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-bus-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-bus-desc">—</span></div>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>备注</label>
-          <textarea id="m-bus-remark" placeholder="汇流柜相关备注说明" rows="2"></textarea>
-        </div>
-      </div>
+        <!-- ═══ 配件附件 ═══ -->
+        <div class="config-group">
+          <div class="group-header"><span class="group-icon">🔧</span> 配件附件</div>
+          <div class="group-grid">
+            <div class="section-block">
+              <div class="section-label">电源模块</div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-pw-select" onchange="UI.syncField('m-pw-select','m-pw-code','m-pw-desc', DATA.powerModules)">
+                    ${pwOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-pw-qty" placeholder="台数" inputmode="numeric" class="qty-input" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-pw-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-pw-desc">—</span></div>
+              </div>
+              <div class="form-item">
+                <label>备注</label>
+                <textarea id="m-pw-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
 
-      <!-- ⑪STS柜（需求表联动，选择了"需要"才显示） -->
-      <div class="section-block linked-section" id="block-sts" style="display:none">
-        <div class="section-label">STS柜配置 <span class="auto-tag linked-tag">🔗 需求表联动</span></div>
-        <p class="auto-tip" style="color:#c05621">需求表中"STS功能"选择了"需要"，请在此选择STS柜产品型号。</p>
-        <div class="form-item">
-          <label>选择型号 <span class="required">*</span></label>
-          <select id="m-sts-select" onchange="UI.syncField('m-sts-select','m-sts-code','m-sts-desc', DATA.stsCabinets)">
-            ${stsOpts}
-          </select>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>STS柜数量</label>
-          <input type="text" id="m-sts-qty" placeholder="台数" inputmode="numeric" class="qty-input" style="width:120px" />
-        </div>
-        <div class="code-desc-row">
-          <div><span class="cd-label">编码：</span><span class="cd-value" id="m-sts-code">—</span></div>
-          <div><span class="cd-label">描述：</span><span class="cd-value" id="m-sts-desc">—</span></div>
-        </div>
-        <div class="form-item" style="margin-top:8px">
-          <label>备注</label>
-          <textarea id="m-sts-remark" placeholder="STS柜相关备注说明" rows="2"></textarea>
-        </div>
-      </div>
+            <div class="section-block">
+              <div class="section-label">液晶显示屏 <span class="auto-tag">自动</span></div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>型号</label>
+                  <select id="m-dp-select" disabled>
+                    <option value="0" selected>${display.code}｜${display.desc}</option>
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-dp-qty" value="1" readonly class="qty-input qty-auto" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-dp-code">${display.code}</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-dp-desc">${display.desc}</span></div>
+              </div>
+            </div>
 
-      <!-- 整体项目备注 -->
-      <div class="section-block">
-        <div class="section-label">项目整体备注 / 说明</div>
-        <textarea id="m-global-remark" placeholder="可填写项目整体说明、特殊要求等..." rows="4"></textarea>
-      </div>
+            <div class="section-block full-width">
+              <div class="section-label">DVI 线缆 <span class="auto-tag">数量随显示屏同步</span></div>
+              <div class="form-row-3">
+                <div class="form-item">
+                  <label>选择型号 <span class="required">*</span></label>
+                  <select id="m-dvi-select" onchange="UI.syncField('m-dvi-select','m-dvi-code','m-dvi-desc', DATA.dviCables)">
+                    ${dviOpts}
+                  </select>
+                </div>
+                <div class="form-item">
+                  <label>数量</label>
+                  <input type="text" id="m-dvi-qty" value="1" readonly class="qty-input qty-auto" />
+                </div>
+              </div>
+              <div class="code-desc-row">
+                <div><span class="cd-label">编码：</span><span class="cd-value" id="m-dvi-code">—</span></div>
+                <div><span class="cd-label">描述：</span><span class="cd-value" id="m-dvi-desc">—</span></div>
+              </div>
+              <div class="form-item" style="margin-top:8px">
+                <label>备注</label>
+                <textarea id="m-dp-remark" placeholder="备注" rows="1"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ 备注 ═══ -->
+        <div class="config-group">
+          <div class="group-header"><span class="group-icon">📝</span> 备注</div>
+          <div class="group-grid">
+            <div class="section-block full-width">
+              <div class="section-label">项目整体备注 / 说明</div>
+              <textarea id="m-global-remark" placeholder="可填写项目整体说明、特殊要求等..." rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /config-groups -->
 
       <div class="btn-row">
         <button class="btn-secondary" onclick="UI.resetAll()">← 重新填写</button>
@@ -773,6 +876,18 @@ const UI = (() => {
       hints.push("✅ STS需要 → 已预选STS柜");
     }
 
+    // 监控箱 → 预选监控箱（仅当区块可见时）
+    const monitorVal = document.getElementById("r-monitorCabinet")?.value;
+    const monitorSel = document.getElementById("m-monitor-select");
+    const monitorBlock = document.getElementById("block-monitor");
+    if (monitorSel && monitorVal === "需要" && monitorBlock?.style.display !== "none") {
+      if (monitorSel.value === "") {
+        monitorSel.value = "0";
+        syncField("m-monitor-select", "m-monitor-code", "m-monitor-desc", DATA.monitorCabinets);
+      }
+      hints.push("✅ 监控柜需要 → 已预选监控箱");
+    }
+
     // 显示联动提示
     const hintBar = document.getElementById("req-link-hint");
     const hintText = document.getElementById("req-link-text");
@@ -784,6 +899,9 @@ const UI = (() => {
         hintBar.style.display = "none";
       }
     }
+
+    // 同步更新项目信息页的需求字段汇总
+    refreshStep1Summary();
   }
 
   // ── 变压器数量变化时，同步二次电表数量 ──
@@ -816,7 +934,7 @@ const UI = (() => {
     const errEl = document.getElementById("step1-error");
 
     if (!name)  { showError(errEl, "请先在需求表填写项目名称"); nameEl.scrollIntoView({ behavior: "smooth", block: "center" }); nameEl.focus(); return; }
-    if (!cap || !/^[1-9]\d*$/.test(cap)) { showError(errEl, "请先在需求表填写有效的单台容量（正整数）"); capEl.scrollIntoView({ behavior: "smooth", block: "center" }); capEl.focus(); return; }
+    if (!cap || cap === "请选择容量") { showError(errEl, "请先在需求表选择单台容量"); capEl.scrollIntoView({ behavior: "smooth", block: "center" }); capEl.focus(); return; }
     if (!count || count < 1) { showError(errEl, "请先在需求表填写有效的电池柜需求数量（≥1）"); countEl.scrollIntoView({ behavior: "smooth", block: "center" }); countEl.focus(); return; }
     errEl.style.display = "none";
 
@@ -902,7 +1020,18 @@ const UI = (() => {
     // 所有联动区块（含汇流柜、STS柜）均已通过 buildBlockVisibility 循环处理
   }
 
-  // ── 实时同步步骤一摘要（项目名称/容量/数量）───────────
+  // ── 判断需求字段是否被用户选为"需要"（与 isBlockHidden 相反）──
+  function isFieldNeeded(f) {
+    const el = document.getElementById(f.id);
+    if (!el) return false;
+    const val = el.value.trim();
+    if (f.hiddenOn && f.hiddenOn.startsWith('!')) {
+      return val === f.hiddenOn.slice(1);
+    }
+    return val !== f.hiddenOn;
+  }
+
+  // ── 实时同步步骤一摘要（项目名称/容量/数量 + 需求表字段汇总）───────────
   function refreshStep1Summary() {
     const set = (id, value, suffix = "") => {
       const el = document.getElementById(id);
@@ -916,6 +1045,26 @@ const UI = (() => {
     // 同步更新需求表标题中的项目名称
     const titleNameEl = document.getElementById("req-title-name");
     if (titleNameEl) titleNameEl.textContent = name ? name : "";
+
+    // 同步需求表"需要"字段到项目信息汇总
+    const summaryEl = document.getElementById("step1-req-summary");
+    if (summaryEl) {
+      const needed = (DATA.reqFieldRegistry || [])
+        .filter(f => f.linkedBlockId && f.hiddenOn)
+        .filter(isFieldNeeded);
+      if (needed.length > 0) {
+        const items = needed.map(f => {
+          const el = document.getElementById(f.id);
+          const val = el ? el.value.trim() : '';
+          return `<div class="form-item"><label>${f.label}</label><div class="code-desc-row"><span class="cd-value">${val}</span></div></div>`;
+        }).join('');
+        summaryEl.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px;padding-bottom:4px;border-bottom:0.5px solid rgba(255,255,255,.1);">需求选择确认（以下模块将在配置中显示）</div><div class="form-grid">${items}</div>`;
+        summaryEl.style.display = '';
+      } else {
+        summaryEl.innerHTML = '';
+        summaryEl.style.display = 'none';
+      }
+    }
   }
 
   // ── 其他事件处理 ──────────────────────────────────────────
@@ -1062,5 +1211,7 @@ const UI = (() => {
     showConfigConfirm,
     cancelConfigConfirm,
     proceedConfigConfirm,
+    // 热门产品统计
+    HOT,
   };
 })();

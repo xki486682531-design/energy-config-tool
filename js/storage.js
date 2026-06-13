@@ -30,6 +30,7 @@ const STORAGE = (() => {
     templates:      { file:'templates.json',      ls:'ess_component_templates',default:[] },
     categories:     { file:'categories.json',     ls:'ess_categories',         default:null },
     topology:       { file:'topology.json',       ls:'ess_topology_data',      default:null },
+    cableTypes:     { file:'cable-types.json',   ls:'ess_cable_types',        default:null },
     products:       { file:'products.json',       ls:'ess_products_data',      default:{} },
     settings:       { file:'settings.json',       ls:'ess_settings',           default:{} },
   };
@@ -175,36 +176,57 @@ const STORAGE = (() => {
     StorageUI.updateSyncStatus(_dirHandle ? 'synced' : 'disconnected');
   }
 
+  // 文件优先的 key 列表（手动编辑 data/*.json 后刷新页面即可生效）
+  const FILE_PRIORITY_KEYS = ['components', 'templates', 'categories', 'cableTypes', 'products'];
+
   async function _loadKey(key) {
     const def = DATA_FILES[key];
     if (!def) return;
 
-    // 1. localStorage 已有数据（最新）？直接用
-    const lsRaw = localStorage.getItem(def.ls);
-    if (lsRaw !== null) {
-      try {
-        const parsed = JSON.parse(lsRaw);
-        // 同时尝试同步到 data/ 文件夹
-        if (_dirHandle) {
-          _scheduleWrite(key, parsed);
-        }
-        return parsed;
-      } catch(e) {}
+    const fileFirst = FILE_PRIORITY_KEYS.includes(key);
+
+    if (fileFirst) {
+      // 文件优先模式：文件 > localStorage > 默认值
+      // 适用场景：手动编辑 data/*.json 后刷新页面即生效
+      let fromFile = null;
+      try { fromFile = await _loadFromDataFolder(key); } catch(e) {}
+
+      if (fromFile !== null) {
+        // 文件存在，用它覆盖 localStorage
+        localStorage.setItem(def.ls, JSON.stringify(fromFile));
+        return fromFile;
+      }
+
+      // 文件不存在，回退到 localStorage
+      const lsRaw = localStorage.getItem(def.ls);
+      if (lsRaw !== null) {
+        try {
+          const parsed = JSON.parse(lsRaw);
+          // 同步到文件
+          if (_dirHandle) _scheduleWrite(key, parsed);
+          return parsed;
+        } catch(e) {}
+      }
+    } else {
+      // localStorage 优先模式：localStorage > 文件 > 默认值
+      const lsRaw = localStorage.getItem(def.ls);
+      if (lsRaw !== null) {
+        try {
+          const parsed = JSON.parse(lsRaw);
+          if (_dirHandle) _scheduleWrite(key, parsed);
+          return parsed;
+        } catch(e) {}
+      }
+
+      let fromFile = null;
+      try { fromFile = await _loadFromDataFolder(key); } catch(e) {}
+      if (fromFile !== null) {
+        localStorage.setItem(def.ls, JSON.stringify(fromFile));
+        return fromFile;
+      }
     }
 
-    // 2. 尝试从 data/ 文件夹加载
-    let fromFile = null;
-    try {
-      fromFile = await _loadFromDataFolder(key);
-    } catch(e) {}
-
-    if (fromFile !== null) {
-      // 同步到 localStorage
-      localStorage.setItem(def.ls, JSON.stringify(fromFile));
-      return fromFile;
-    }
-
-    // 3. 使用 JS 默认值
+    // 兜底：JS 默认值
     const d = def.default;
     if (d !== null) {
       localStorage.setItem(def.ls, JSON.stringify(d));

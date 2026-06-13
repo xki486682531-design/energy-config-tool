@@ -17,17 +17,21 @@ const ADMIN = (() => {
   }
 
   function getReqFieldRegistry() {
-    const p = STORAGE.get('products') || {};
-    if (p.reqFields) try { return JSON.parse(JSON.stringify(p.reqFields)); } catch(e){}
-    return Array.isArray(DATA.reqFieldRegistry) ? JSON.parse(JSON.stringify(DATA.reqFieldRegistry)) : [];
+    // 不再从 localStorage 读取，直接从 data.js / custom-config.js 获取
+    const fields = Array.isArray(DATA.reqFieldRegistry) ? JSON.parse(JSON.stringify(DATA.reqFieldRegistry)) : [];
+    // 原始 data.js 中字段没有 showInReq 属性，默认视为 true（显示在需求表中）
+    fields.forEach(f => {
+      if (typeof f.showInReq === 'undefined') f.showInReq = true;
+    });
+    return fields;
   }
 
-  // ── helper：将产品/分类/需求字段保存到 STORAGE ──
+  // ── helper：将产品/分类保存到 STORAGE（reqFields 不再存入 localStorage）──
   function _flushProducts(products, categories, reqFields) {
+    // reqFields 忽略，不再存入 localStorage
     STORAGE.set('products', {
       products: products !== undefined ? products : (STORAGE.get('products') || {}).products,
       categories: categories !== undefined ? categories : (STORAGE.get('products') || {}).categories,
-      reqFields: reqFields !== undefined ? reqFields : (STORAGE.get('products') || {}).reqFields,
     });
   }
 
@@ -48,9 +52,7 @@ const ADMIN = (() => {
     if (pData.categories) {
       try { DATA.categoryRegistry = JSON.parse(JSON.stringify(pData.categories)); } catch(e){}
     }
-    if (pData.reqFields) {
-      try { DATA.reqFieldRegistry = JSON.parse(JSON.stringify(pData.reqFields)); } catch(e){}
-    }
+    // reqFields 不再从 localStorage 加载，改从 data/custom-config.js 加载
 
     document.getElementById('app-root').innerHTML = renderLayout();
     applyTheme();
@@ -66,6 +68,9 @@ const ADMIN = (() => {
     }
     // 初始化元件库管理模块
     if (typeof COMPONENT_LIB_ADMIN !== 'undefined') COMPONENT_LIB_ADMIN.init();
+
+    // 将元件库保存的修改同步回 COMPONENT_LIB（拓扑编辑器从这里读取）
+    _syncStoredComponentsToLib();
 
     // 关闭页面前提醒保存
     _setupBeforeUnload();
@@ -112,6 +117,67 @@ const ADMIN = (() => {
     }
   }
 
+  // 将元件库保存的修改同步回 COMPONENT_LIB / COMPONENT_BY_ID
+  function _syncStoredComponentsToLib() {
+    if (typeof COMPONENT_LIB === 'undefined' || typeof COMPONENT_BY_ID === 'undefined') return;
+    var saved = STORAGE.get('components');
+    if (!Array.isArray(saved) || !saved.length) return;
+
+    var existingIds = {};
+    COMPONENT_LIB.forEach(function(c) { existingIds[c.id] = c; });
+
+    saved.forEach(function(s) {
+      if (!s || !s.id || s.enabled === false) return; // 跳过停用元件
+      var c = existingIds[s.id];
+
+      // 从 connectionPoints 重建 ports 数组
+      var ports = [];
+      var cp = s.connectionPoints || {};
+      if (cp.top && cp.top.enabled)    ports.push({ id:'top',    side:'top',    x:cp.top.offsetX||0.5, y:0 });
+      if (cp.bottom && cp.bottom.enabled) ports.push({ id:'bottom', side:'bottom', x:cp.bottom.offsetX||0.5, y:1 });
+      if (cp.left && cp.left.enabled)  ports.push({ id:'left',   side:'left',   x:0, y:cp.left.offsetY||0.5 });
+      if (cp.right && cp.right.enabled) ports.push({ id:'right',  side:'right',  x:1, y:cp.right.offsetY||0.5 });
+      if (cp.custom) cp.custom.forEach(function(p,i) {
+        ports.push({ id:'custom-'+i, side:p.side||'top', x:p.x||0.5, y:p.y||0 });
+      });
+
+      if (c) {
+        // 更新 COMPONENT_LIB 中的已有元件
+        if (s.svg)           c.svg    = s.svg;
+        if (s.name)          c.name   = s.name;
+        if (s.name)          c.label  = s.name;
+        if (s.description)   c.desc   = s.description;
+        if (s.defaultWidth)  c.width  = s.defaultWidth;
+        if (s.defaultHeight) c.height = s.defaultHeight;
+        if (ports.length)    c.ports  = ports;
+        if (s.hasOwnProperty('overlayEdge')) c.overlayEdge = s.overlayEdge;
+        if (s.defaultRotation != null) c.defaultRotation = s.defaultRotation;
+        if (s.defaultPosX != null) c.defaultPosX = s.defaultPosX;
+        if (s.defaultPosY != null) c.defaultPosY = s.defaultPosY;
+      } else {
+        // 用户新增的元件，追加到 COMPONENT_LIB
+        var catMap = { '储能系统':'storage','PCS系统':'power','EMS/BMS':'control','变压器系统':'trans',
+                       '开关设备':'dist','电网侧':'gen','负载系统':'load','辅助系统':'aux',
+                       '计量系统':'meter','并网系统':'gridcon','母线系统':'busbar','通信设备':'network' };
+        var newComp = {
+          id: s.id, category: catMap[s.categoryParent]||'aux',
+          name: s.name||'未命名', label: s.name||'未命名',
+          svg: s.svg||'', desc: s.description||'',
+          width: s.defaultWidth||80, height: s.defaultHeight||60,
+          ports: ports,
+          defaultRotation: s.defaultRotation||0,
+          defaultPosX: s.defaultPosX||0,
+          defaultPosY: s.defaultPosY||0
+        };
+        COMPONENT_LIB.push(newComp);
+      }
+    });
+
+    // 重建 COMPONENT_BY_ID（包含所有修改）
+    COMPONENT_BY_ID = {};
+    COMPONENT_LIB.forEach(function(c) { COMPONENT_BY_ID[c.id] = c; });
+  }
+
   // ── 渲染整体布局 ─────────────────────────────────────────
   function renderLayout() {
     return /*html*/`
@@ -148,6 +214,10 @@ const ADMIN = (() => {
             <span class="side-icon">&#x1F5C4;</span>
             <span class="side-label">拓扑元件库</span>
           </div>
+          <div class="side-item" data-tab="sitesettings" onclick="ADMIN.switchTab('sitesettings')">
+            <span class="side-icon">&#x2699;&#xFE0F;</span>
+            <span class="side-label">站点设置</span>
+          </div>
         </nav>
         <div class="side-profile" id="side-profile" style="cursor:pointer">
           <div class="side-avatar" id="admin-avatar">A</div>
@@ -183,25 +253,31 @@ const ADMIN = (() => {
 
           <!-- 产品编码 -->
           <div id="atab-products" class="atab-pane">
-            <div class="admin-toolbar">
-              <select id="prod-category" onchange="ADMIN.renderProductList()" style="min-width:160px">
-              </select>
-              <button class="btn-sm btn-blue" onclick="ADMIN.showEditCategory()">⚙️ 大类设置</button>
-              <button class="btn-sm btn-green" onclick="ADMIN.showNewCategory()">＋ 新增大类</button>
-              <button class="btn-sm btn-green" onclick="ADMIN.addProduct()">＋ 新增产品</button>
-              <button class="btn-sm btn-blue" onclick="ADMIN.saveProducts()">&#x1F4BE; 保存修改</button>
+            <div class="req-toolbar-sticky">
+              <div class="admin-toolbar">
+                <select id="prod-category" onchange="ADMIN.renderProductList()" style="min-width:160px">
+                </select>
+                <button id="prod-edit-btn" class="btn-sm btn-blue" onclick="ADMIN.toggleProductEdit(true)">&#x270F;&#xFE0F; 编辑</button>
+                <button id="prod-catset-btn" class="btn-sm btn-blue" onclick="ADMIN.showEditCategory()" style="display:none">&#x2699;&#xFE0F; 大类设置</button>
+                <button id="prod-newcat-btn" class="btn-sm btn-green" onclick="ADMIN.showNewCategory()" style="display:none">＋ 新增大类</button>
+                <button id="prod-newprod-btn" class="btn-sm btn-green" onclick="ADMIN.addProduct()" style="display:none">＋ 新增产品</button>
+                <button id="prod-save-btn" class="btn-sm btn-blue" onclick="ADMIN.saveProducts()" style="display:none">&#x1F4BE; 保存修改</button>
+                <button id="prod-cancel-btn" class="btn-sm btn-gray" onclick="ADMIN.toggleProductEdit(false)" style="display:none">取消</button>
+              </div>
+              <div class="prod-hint">浏览模式下仅查看，点击「编辑」后可增删改产品编码。修改后点击「保存修改」持久化到本地。</div>
             </div>
-            <div class="prod-hint">修改后点击「保存修改」，数据将持久化到本地，覆盖默认编码。</div>
             <div id="admin-prod-list"></div>
           </div>
 
           <!-- 需求模块配置 -->
           <div id="atab-reqfields" class="atab-pane">
-            <div class="admin-toolbar">
-              <button class="btn-sm btn-blue" onclick="ADMIN.saveReqFields()">&#x1F4BE; 保存修改</button>
-              <button class="btn-sm btn-gray" onclick="ADMIN.resetReqFields()">&#x21BA; 恢复默认</button>
+            <div class="req-toolbar-sticky">
+              <div class="admin-toolbar">
+                <button class="btn-sm btn-blue" onclick="ADMIN.saveReqFields()">&#x1F4BE; 保存修改</button>
+                <button class="btn-sm btn-gray" onclick="ADMIN.resetReqFields()">&#x21BA; 恢复默认</button>
+              </div>
+              <div class="prod-hint">自定义需求表中各模块的选项、默认值、关联产品大类及是否显示。点击「保存修改」直接覆盖 data/custom-config.js 文件（换电脑携带此文件）。「恢复默认」将放弃所有本次修改。</div>
             </div>
-            <div class="prod-hint">自定义需求表中各模块的选项、默认值、关联产品大类及是否显示。</div>
             <div id="admin-reqfield-list"></div>
           </div>
 
@@ -226,6 +302,16 @@ const ADMIN = (() => {
             </div>
             <div class="prod-hint">编辑拓扑方案的场景标题、描述、BOM表格、拓扑图和配置要点。保存后主页拓扑方案页自动更新。</div>
             <div id="admin-topo-list"></div>
+          </div>
+
+          <!-- 站点设置 -->
+          <div id="atab-sitesettings" class="atab-pane">
+            <div class="admin-toolbar sitesettings-sticky-toolbar">
+              <button class="btn-sm btn-blue" onclick="ADMIN.saveSiteSettings()">&#x1F4BE; 保存设置</button>
+              <button class="btn-sm btn-gray" onclick="ADMIN.resetSiteSettings()">&#x21BA; 恢复默认</button>
+            </div>
+            <div class="prod-hint" style="margin-top:4px;">修改城市列表、励志文案和操作技巧后，刷新首页即可生效。每行一条，城市格式为"中文名,英文名"。</div>
+            <div id="admin-sitesettings-content"></div>
           </div>
         </div>
       </main>
@@ -255,11 +341,11 @@ const ADMIN = (() => {
             <option value="admin">管理员</option>
           </select>
         </div>
+        <div id="amodal-user-err" class="error-msg" style="display:none;margin-top:8px"></div>
         <div class="amodal-btns">
           <button class="btn-sm btn-gray" onclick="ADMIN.closeModal('amodal-user')">取消</button>
           <button class="btn-sm btn-blue" onclick="ADMIN.saveUser()">保存</button>
         </div>
-        <div id="amodal-user-err" class="error-msg" style="display:none;margin-top:8px"></div>
       </div>
     </div>
 
@@ -395,7 +481,7 @@ const ADMIN = (() => {
     const pane = document.getElementById('atab-' + name);
     if (pane) pane.classList.add('active');
     // 标题
-    const titles = { users: '用户管理', products: '产品编码', reqfields: '需求模块配置', projects: '项目管理', topology: '拓扑方案管理', complib: '拓扑元件库管理' };
+    const titles = { users: '用户管理', products: '产品编码', reqfields: '需求模块配置', projects: '项目管理', topology: '拓扑方案管理', complib: '拓扑元件库管理', sitesettings: '站点设置' };
     document.getElementById('topbar-title').textContent = titles[name] || '';
     // 加载数据
     if (name === 'users')    renderUserList();
@@ -410,15 +496,16 @@ const ADMIN = (() => {
           sel.appendChild(opt);
         });
       }
-      renderProductList();
+      toggleProductEdit(false);
     }
     if (name === 'reqfields') renderReqFieldList();
     if (name === 'projects') renderProjectList();
-    if (name === 'topology') renderTopoAdminList();
+    if (name === 'topology') { _syncStoredComponentsToLib(); renderTopoAdminList(); }
     if (name === 'complib') {
       const container = document.getElementById('complib-container');
       if (container) container.innerHTML = COMPONENT_LIB_ADMIN.renderCompLibPane();
     }
+    if (name === 'sitesettings') renderSiteSettings();
   }
 
   // ── 用户管理 ──────────────────────────────────────────────
@@ -508,6 +595,17 @@ const ADMIN = (() => {
     return pData.products ? JSON.parse(JSON.stringify(pData.products)) : JSON.parse(JSON.stringify(DATA));
   }
 
+  var _productEditMode = false;
+
+  function toggleProductEdit(isEdit) {
+    _productEditMode = isEdit;
+    var viewIds = ['prod-edit-btn'];
+    var editIds = ['prod-catset-btn','prod-newcat-btn','prod-newprod-btn','prod-save-btn','prod-cancel-btn'];
+    viewIds.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=isEdit?'none':''; });
+    editIds.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=isEdit?'':"none"; });
+    renderProductList();
+  }
+
   function renderProductList() {
     const cat  = document.getElementById('prod-category').value;
     const data = getEditableData();
@@ -515,21 +613,34 @@ const ADMIN = (() => {
     const cats = getCategoryRegistry();
     const catInfo = cats.find(c => c.key === cat) || {};
     const showRemark = catInfo.hasRemark || false;
+    const isEdit = _productEditMode;
 
     let html = `<div id="prod-rows">`;
     list.forEach((item, i) => {
-      html += `<div class="prod-row" data-idx="${i}">
-        <input type="text" class="prod-code" value="${item.code}" placeholder="产品编码" style="width:160px;flex-shrink:0" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'')" />
-        <input type="text" class="prod-desc" value="${item.desc}" placeholder="产品描述" style="flex:1" />
-        ${showRemark ? `<input type="text" class="prod-remark" value="${(item.remark||'').replace(/"/g,'&quot;')}" placeholder="备注" style="width:180px;flex-shrink:0" />` : ''}
-        <button class="btn-sm btn-red" onclick="ADMIN.removeProduct(${i})">删除</button>
-      </div>`;
+      var codeVal = (item.code||'').replace(/"/g,'&quot;');
+      var descVal = (item.desc||'').replace(/"/g,'&quot;');
+      var remarkVal = (item.remark||'').replace(/"/g,'&quot;');
+      if (isEdit) {
+        html += `<div class="prod-row" data-idx="${i}">
+          <input type="text" class="prod-code" value="${codeVal}" placeholder="产品编码" style="width:160px;flex-shrink:0" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'')" />
+          <input type="text" class="prod-desc" value="${descVal}" placeholder="产品描述" style="flex:1" />
+          ${showRemark ? `<input type="text" class="prod-remark" value="${remarkVal}" placeholder="备注" style="width:180px;flex-shrink:0" />` : ''}
+          <button class="btn-sm btn-red" onclick="ADMIN.removeProduct(${i})">删除</button>
+        </div>`;
+      } else {
+        html += `<div class="prod-row prod-row-view" data-idx="${i}">
+          <span class="prod-code-view">${codeVal||'<i style="color:rgba(255,255,255,.2)">—</i>'}</span>
+          <span class="prod-desc-view">${descVal||'<i style="color:rgba(255,255,255,.2)">—</i>'}</span>
+          ${showRemark ? `<span class="prod-remark-view">${remarkVal||'<i style="color:rgba(255,255,255,.2)">—</i>'}</span>` : ''}
+        </div>`;
+      }
     });
     html += '</div>';
     document.getElementById('admin-prod-list').innerHTML = html;
   }
 
   function addProduct() {
+    if (!_productEditMode) { alert('请先点击「编辑」进入编辑模式'); return; }
     const container = document.getElementById('prod-rows');
     if (!container) return;
     const cat = document.getElementById('prod-category').value;
@@ -585,6 +696,8 @@ const ADMIN = (() => {
     }).filter(item => item.code);
     _flushProducts(data);
     Object.assign(DATA, data);
+    _refreshProductCodeMap(); // 刷新拓扑编辑器的产品编码查找表
+    toggleProductEdit(false);
     alert('✅ 产品数据已保存！');
   }
 
@@ -774,23 +887,20 @@ const ADMIN = (() => {
     });
 
     const optsText = f.options ? f.options.join('\n') : '';
+    const noDropdown = (f.type === 'text' || f.type === 'textarea');
 
     return /*html*/`
-    <div class="rf-card" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;margin-bottom:10px">
+    <div class="rf-card" data-type="${f.type}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;margin-bottom:10px">
       <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
-        <div class="form-item" style="flex:1;min-width:180px">
-          <label>字段标识</label>
-          <input type="text" value="${f.id}" readonly style="opacity:.5;font-size:12px" />
-        </div>
-        <div class="form-item" style="flex:1;min-width:180px">
+        <div class="form-item" style="flex:1;min-width:200px">
           <label>显示标签</label>
           <input type="text" class="rf-label" value="${f.label}" />
         </div>
         <div class="form-item" style="width:120px">
           <label>类型</label>
-          <select class="rf-type">${typeHTML}</select>
+          <select class="rf-type" onchange="ADMIN.onRfTypeChange(this)">${typeHTML}</select>
         </div>
-        <div class="form-item" style="width:120px">
+        <div class="form-item" style="width:140px">
           <label>所属区块</label>
           <select class="rf-section">
             <option value="A" ${f.section==='A'?'selected':''}>A. 基本信息</option>
@@ -801,11 +911,11 @@ const ADMIN = (() => {
         </div>
       </div>
       <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-top:8px">
-        <div class="form-item" style="flex:1;min-width:200px">
+        <div class="form-item rf-options-wrap" style="flex:1;min-width:200px${noDropdown ? ';display:none' : ''}">
           <label>下拉选项（一行一个）</label>
           <textarea class="rf-options" rows="3" placeholder="一行一个选项&#10;如：&#10;需要&#10;不需要">${optsText}</textarea>
         </div>
-        <div class="form-item" style="flex:1;min-width:150px">
+        <div class="form-item rf-default-wrap" style="flex:1;min-width:150px${noDropdown ? ';display:none' : ''}">
           <label>默认值</label>
           <input type="text" class="rf-default" value="${(f.defaultValue||'').replace(/"/g,'&quot;')}" />
         </div>
@@ -835,35 +945,150 @@ const ADMIN = (() => {
     </div>`;
   }
 
-  function saveReqFields() {
+  function onRfTypeChange(sel) {
+    const card = sel.closest('.rf-card');
+    const noDropdown = (sel.value === 'text' || sel.value === 'textarea');
+    const optsWrap = card.querySelector('.rf-options-wrap');
+    const defWrap = card.querySelector('.rf-default-wrap');
+    if (optsWrap) optsWrap.style.display = noDropdown ? 'none' : '';
+    if (defWrap) defWrap.style.display = noDropdown ? 'none' : '';
+    card.setAttribute('data-type', sel.value);
+  }
+
+  async function saveReqFields() {
     const fields = getReqFieldRegistry();
     const cards = document.querySelectorAll('.rf-card');
-    const cats = getCategoryRegistry();
 
     cards.forEach((card, i) => {
       if (i >= fields.length) return;
       fields[i].label = card.querySelector('.rf-label').value.trim() || fields[i].label;
       fields[i].type = card.querySelector('.rf-type').value;
       fields[i].section = card.querySelector('.rf-section').value;
-      const optsRaw = card.querySelector('.rf-options').value.trim();
+      const optsRaw = card.querySelector('.rf-options')?.value.trim() || '';
       fields[i].options = optsRaw ? optsRaw.split('\n').map(s => s.trim()).filter(s => s) : null;
-      fields[i].defaultValue = card.querySelector('.rf-default').value.trim();
+      fields[i].defaultValue = card.querySelector('.rf-default')?.value.trim() || '';
       fields[i].linkedCategory = card.querySelector('.rf-linkedCat').value || null;
       fields[i].linkedBlockId = card.querySelector('.rf-linkedBlock').value || null;
       fields[i].hiddenOn = card.querySelector('.rf-hiddenOn').value.trim() || null;
       fields[i].showInReq = card.querySelector('.rf-showInReq').checked;
       fields[i].isLinked = card.querySelector('.rf-isLinked').checked;
+      // 文本框/多行文本类型不需要 options 和 defaultValue
+      if (fields[i].type === 'text' || fields[i].type === 'textarea') {
+        fields[i].options = null;
+        fields[i].defaultValue = '';
+      }
     });
 
-    _flushProducts(undefined, undefined, fields);
+    // 更新内存数据
     DATA.reqFieldRegistry = fields;
-    alert('✅ 需求模块配置已保存！刷新主页后生效。');
+
+    // 生成 custom-config.js 文件内容
+    const fileContent = generateCustomConfigJS(fields);
+
+    // 优先使用 File System Access API 直接写文件（Chrome/Edge 支持）
+    if (window.showSaveFilePicker) {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'custom-config.js',
+          startIn: 'desktop',
+          types: [{ description: 'JavaScript File', accept: { 'application/javascript': ['.js'] } }]
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(fileContent);
+        await writable.close();
+        alert('✅ 已直接保存到你选择的位置！\n\n请确保保存到项目 data/ 文件夹中，覆盖旧的 custom-config.js。\n刷新页面后生效。');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // 用户取消，不执行下载
+      }
+    }
+
+    // 降级：触发下载（不支持 File System Access API 的浏览器）
+    const blob = new Blob([fileContent], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'custom-config.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // 清理旧的 localStorage reqFields 数据
+    const p = STORAGE.get('products') || {};
+    if (p.reqFields) {
+      delete p.reqFields;
+      STORAGE.set('products', p);
+    }
+
+    alert('✅ 配置已导出！\n\n请将下载的 custom-config.js 文件放入 data/ 文件夹，覆盖旧文件。\n更换电脑时，携带此文件即可保留配置。');
   }
 
-  function resetReqFields() {
-    if (!confirm('确定恢复为默认配置？所有自定义修改将丢失。')) return;
-    _flushProducts(undefined, undefined, null);
-    window.location.reload();
+  function generateCustomConfigJS(fields) {
+    const fieldsJSON = JSON.stringify(fields, null, 2);
+    return `// data/custom-config.js
+// 自定义需求字段配置（由管理后台导出）
+// 此文件覆盖 js/data.js 中的默认 DATA.reqFieldRegistry
+// 将此文件放入 data/ 目录后，应用会自动加载
+
+(function() {
+  if (typeof DATA === 'undefined') return;
+
+  // 自定义需求字段注册表
+  // 格式与 js/data.js 中的 DATA.reqFieldRegistry 完全一致
+  DATA.reqFieldRegistry = ${fieldsJSON};
+})();
+`;
+  }
+
+  async function resetReqFields() {
+    if (!confirm('确定恢复默认配置？\n\n⚠️ 本次所有未保存的修改将被放弃，恢复到 data.js 中的初始默认值。')) return;
+    // 生成空的 custom-config.js（重置为默认）
+    const resetContent = `// data/custom-config.js
+// 自定义需求字段配置（由管理后台导出）
+// 此文件覆盖 js/data.js 中的默认 DATA.reqFieldRegistry
+// 将此文件放入 data/ 目录后，应用会自动加载
+//
+// 当前为默认状态，使用 data.js 中的默认值。
+`;
+
+    // 优先使用 File System Access API 直接写文件
+    if (window.showSaveFilePicker) {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'custom-config.js',
+          startIn: 'desktop',
+          types: [{ description: 'JavaScript File', accept: { 'application/javascript': ['.js'] } }]
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(resetContent);
+        await writable.close();
+        alert('✅ 已保存重置文件！\n\n请确保覆盖了项目 data/ 文件夹中的 custom-config.js，然后刷新页面。');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    // 降级：触发下载
+    const blob = new Blob([resetContent], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'custom-config.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // 清理旧的 localStorage reqFields 数据
+    const p = STORAGE.get('products') || {};
+    if (p.reqFields) {
+      delete p.reqFields;
+      STORAGE.set('products', p);
+    }
+
+    alert('✅ 已生成重置文件！\n\n请将下载的 custom-config.js 放入 data/ 文件夹覆盖旧文件，然后刷新页面即可恢复默认配置。');
   }
 
   // ── 项目管理 ──────────────────────────────────────────────
@@ -1240,14 +1465,15 @@ const ADMIN = (() => {
 
     // BOM rows
     var bomHTML = '';
-    (t.bomRows || []).forEach(function(row) {
+    (t.bomRows || []).forEach(function(row, idx) {
       bomHTML += '<div class="bom-row">' +
+        '<span class="bom-row-num">' + (idx + 1) + '</span>' +
         '<input class="bom-col-cat" value="' + (row[0] || '').replace(/"/g, '&quot;') + '" placeholder="类别" />' +
-        '<input value="' + (row[1] || '').replace(/"/g, '&quot;') + '" placeholder="编码" style="width:130px;flex:none" />' +
-        '<input value="' + (row[2] || '').replace(/"/g, '&quot;') + '" placeholder="描述" style="flex:1" />' +
+        '<input value="' + (row[1] || '').replace(/"/g, '&quot;') + '" placeholder="产品编码" />' +
+        '<input value="' + (row[2] || '').replace(/"/g, '&quot;') + '" placeholder="描述" />' +
         '<input class="bom-col-qty" value="' + (row[3] || '').replace(/"/g, '&quot;') + '" placeholder="数量" />' +
-        '<input value="' + (row[4] || '').replace(/"/g, '&quot;') + '" placeholder="备注" style="width:100px;flex:none" />' +
-        '<button class="btn-sm btn-red" style="flex:none;padding:4px 8px;font-size:11px" onclick="this.parentElement.remove()">×</button>' +
+        '<input value="' + (row[4] || '').replace(/"/g, '&quot;') + '" placeholder="备注" />' +
+        '<button class="btn-sm btn-red" style="flex:none;padding:2px 6px;font-size:11px;min-width:22px" onclick="var s=this.closest(\'.topo-editor-section\');this.parentElement.remove();ADMIN._renumberBomRows(s)">×</button>' +
       '</div>';
     });
 
@@ -1286,7 +1512,15 @@ const ADMIN = (() => {
         '<div class="form-item"><label>BOM标题</label>' +
           '<input class="topo-edit-bom-title" value="' + (t.bomTitle || '').replace(/"/g, '&quot;') + '" placeholder="📦 典型 BOM（X柜方案）" />' +
         '</div>' +
-        '<div style="margin-bottom:4px;font-size:11px;color:rgba(255,255,255,.4)">表头: 类别 | 物料编码 | 编码描述 | 数量 | 备注</div>' +
+        '<div class="bom-header">' +
+          '<span class="bom-h-num">#</span>' +
+          '<span class="bom-h-cat">类别</span>' +
+          '<span class="bom-h-code">产品编码</span>' +
+          '<span class="bom-h-desc">描述</span>' +
+          '<span class="bom-h-qty">数量</span>' +
+          '<span class="bom-h-rmk">备注</span>' +
+          '<span class="bom-h-act"></span>' +
+        '</div>' +
         bomHTML +
         '<button class="btn-sm btn-green" style="margin-top:4px" onclick="ADMIN.addBomRow(this)">＋ 添加行</button>' +
       '</div>' : '') +
@@ -1307,6 +1541,8 @@ const ADMIN = (() => {
         '</div>' +
         '<div class="topo-canvas-wrap" id="topo-canvas-wrap-' + t.id + '">' +
           '<div class="topo-canvas-toolbar">' +
+            '<button class="topo-btn-sm topo-sync-btn" title="智能合并BOM元件到画板（保留连线）" onclick="ADMIN._syncBomToCanvas(\'' + t.id + '\')">📦 从BOM同步</button>' +
+            '<button class="topo-btn-sm topo-sync-btn" title="从BOM完全重建（清空画布重新生成）" onclick="if(confirm(\'确定要清空画布并从BOM重建吗？所有连线将丢失。\'))ADMIN._syncBomToCanvas(\'' + t.id + '\',true)" style="background:rgba(255,100,50,0.15);border-color:rgba(255,100,50,0.35)">🔄 全量重建</button>' +
             '<button class="topo-btn-sm" title="全屏编辑" onclick="ADMIN._topoToggleFullscreen(\'' + t.id + '\')" id="topo-fs-btn-' + t.id + '">⛶</button>' +
             '<button class="topo-btn-sm" title="放大" onclick="ADMIN._topoZoom(\'' + t.id + '\',1.15)">＋</button>' +
             '<button class="topo-btn-sm" title="缩小" onclick="ADMIN._topoZoom(\'' + t.id + '\',0.87)">－</button>' +
@@ -1314,9 +1550,12 @@ const ADMIN = (() => {
             '<button class="topo-btn-sm" title="重置视图" onclick="ADMIN._topoResetView(\'' + t.id + '\')">⌂</button>' +
             '<button class="topo-btn-sm topo-save-btn" title="保存拓扑" onclick="ADMIN._topoSaveCurrent(\'' + t.id + '\')" style="background:rgba(0,200,100,0.2);border-color:rgba(0,200,100,0.4)">💾 保存</button>' +
           '</div>' +
-          // 线缆图例 — 悬浮可拖拽窗口
-          '<div class="cable-legend-float" id="topo-cable-selector-' + t.id + '" title="线缆类型（可拖拽移动）">' +
-            '<div class="cable-legend-header">🔌 线缆类型</div>' +
+          // 线缆图例 — 悬浮可拖拽+可调节窗口
+          '<div class="cable-legend-float" id="topo-cable-selector-' + t.id + '" title="线缆类型（可拖拽移动，右下角调节大小）">' +
+            '<div class="cable-legend-header">' +
+              '🔌 线缆类型' +
+              '<button class="cable-legend-edit" title="编辑线缆类型" onclick="ADMIN._openCableManager(\'' + t.id + '\')">⚙</button>' +
+            '</div>' +
             '<div class="cable-legend-body">' +
               CABLE_TYPES.map(function(ct) {
                 return '<button class="cable-type-btn" data-cable="' + ct.id + '" onclick="ADMIN._selectCableType(\'' + t.id + '\',\'' + ct.id + '\')" title="' + ct.name + '">' +
@@ -1328,6 +1567,7 @@ const ADMIN = (() => {
                 '</button>';
               }).join('') +
             '</div>' +
+            '<div class="cable-legend-resize" title="拖拽调节窗口大小"></div>' +
           '</div>' +
           '<div class="topo-canvas-inner" id="topo-canvas-' + t.id + '" data-topo-id="' + t.id + '"></div>' +
         '</div>' +
@@ -1445,18 +1685,368 @@ const ADMIN = (() => {
   function addBomRow(btn) {
     var div = document.createElement('div');
     div.className = 'bom-row';
-    div.innerHTML = '<input class="bom-col-cat" value="" placeholder="类别" />' +
-      '<input value="" placeholder="编码" style="width:130px;flex:none" />' +
-      '<input value="" placeholder="描述" style="flex:1" />' +
+    // Count existing rows for the sequence number
+    var section = btn.closest('.topo-editor-section');
+    var num = section ? section.querySelectorAll('.bom-row').length + 1 : 1;
+    div.innerHTML = '<span class="bom-row-num">' + num + '</span>' +
+      '<input class="bom-col-cat" value="" placeholder="类别" />' +
+      '<input value="" placeholder="产品编码" />' +
+      '<input value="" placeholder="描述" />' +
       '<input class="bom-col-qty" value="" placeholder="数量" />' +
-      '<input value="" placeholder="备注" style="width:100px;flex:none" />' +
-      '<button class="btn-sm btn-red" style="flex:none;padding:4px 8px;font-size:11px" onclick="this.parentElement.remove()">×</button>';
+      '<input value="" placeholder="备注" />' +
+      '<button class="btn-sm btn-red" style="flex:none;padding:2px 6px;font-size:11px;min-width:22px" onclick="var s=this.closest(\'.topo-editor-section\');this.parentElement.remove();ADMIN._renumberBomRows(s)">×</button>';
     btn.parentElement.insertBefore(div, btn);
+    // Renumber all rows
+    _renumberBomRows(section);
+  }
+
+  function _renumberBomRows(section) {
+    if (!section) return;
+    var rows = section.querySelectorAll('.bom-row');
+    rows.forEach(function(row, i) {
+      var numEl = row.querySelector('.bom-row-num');
+      if (numEl) numEl.textContent = i + 1;
+    });
   }
 
   // ══════════════════════════════════════════════════════════════
   //  拓扑元件库编辑器（替代 SVG 源码管理模式）
   //══════════════════════════════════════════════════════════════
+
+  // ── BOM类别 → 元件库compId 映射表 ──
+  var BOM_CAT_TO_COMPID = {
+    '储能柜': 'ess-cabinet',
+    'PCS': 'pcs',
+    'BMS': 'bms',
+    'EMS': 'ems',
+    '交换机': 'switch',
+    '路由器': 'router',
+    '串口服务器': 'serial-server',
+    '电表': 'meter',
+    '二次电表': 'meter',
+    '一次电表': 'meter',
+    '互感器': 'ct',
+    '变压器': 'transformer',
+    '高压柜': 'hv-cabinet',
+    '低压柜': 'lv-cabinet',
+    '汇流柜': 'bus-cabinet',
+    '配电柜': 'lv-cabinet',
+    '配电机柜': 'lv-cabinet',
+    'STS柜': 'sts-cabinet',
+    '电源模块': 'power-module',
+    '液晶屏': 'display',
+    '线缆': 'cable',
+    '网线': 'cable',
+    '端子': 'pnt-terminal',
+    '4G天线': 'antenna',
+    '流量卡': 'sim-card',
+    '监控箱': 'monitor-box',
+    '消防': 'fire-ext',
+    '空调': 'ac-unit',
+    '水浸': 'water-sensor',
+    '烟感': 'smoke-sensor',
+    '门磁': 'door-sensor',
+    '网关': 'gateway',
+    'UPS': 'ups',
+    '柴油发电机': 'diesel-gen',
+    '光伏逆变器': 'pv-inverter',
+    '防雷器': 'spd',
+    '电池PACK': 'battery-pack',
+    '电池簇': 'battery-cluster',
+    '监控模块': 'ems',
+    '电流互感器': 'ct',
+    'DVI线缆': 'cable',
+    'EMS配件': 'ems',
+    '4G路由': 'router',
+    '天线': 'antenna',
+    '液晶显示模块': 'display',
+    '断路器': 'lv-cabinet',
+    '隔离开关': 'lv-cabinet',
+    '熔断器': 'lv-cabinet',
+    '系统成套线缆': 'cable',
+  };
+
+  // ── 产品编码查找表：元件compId → 可用产品编码列表 ──
+  // 从 DATA 中提取，支持管理员在"产品编码"Tab中修改后的数据
+  function _buildProductCodeMap() {
+    var map = {};
+    // compId → DATA key 映射
+    var compToDataKey = {
+      'ess-cabinet': 'storageCabinets',
+      'bus-cabinet': 'combiners',
+      'lv-cabinet': 'combiners',
+      'meter': 'secondaryMeters',
+      'ct': 'transformers',
+      'router': 'routers',
+      'switch': 'switches',
+      'power-module': 'powerModules',
+      'ems': 'ems',
+      'sim-card': 'simCards',
+      'display': 'displays',
+      'monitor-box': 'monitorCabinets',
+      'serial-server': 'serialServers',
+      'cable': 'cables',
+      'pnt-terminal': 'pntTerminals',
+      'sts-cabinet': 'stsCabinets',
+      'antenna': 'emsAccessories',
+      'gateway': 'emsAccessories',
+      'ups': 'powerModules',
+      'diesel-gen': null,
+      'transformer': 'transformers',
+      'hv-cabinet': null,
+      'bms': null,
+      'battery-pack': null,
+      'battery-cluster': null,
+      'pv-inverter': null,
+      'spd': null,
+      'fire-ext': null,
+      'ac-unit': null,
+      'water-sensor': null,
+      'smoke-sensor': null,
+      'door-sensor': null,
+    };
+    for (var compId in compToDataKey) {
+      var dataKey = compToDataKey[compId];
+      if (!dataKey || !DATA[dataKey]) continue;
+      var items = DATA[dataKey];
+      map[compId] = [];
+      if (Array.isArray(items)) {
+        items.forEach(function(item) {
+          map[compId].push({ code: item.code, desc: item.desc });
+        });
+      }
+    }
+    return map;
+  }
+  var PRODUCT_CODE_MAP = _buildProductCodeMap();
+
+  // ── 刷新产品编码查找表（管理员修改产品编码后调用）──
+  function _refreshProductCodeMap() {
+    PRODUCT_CODE_MAP = _buildProductCodeMap();
+  }
+
+  // ── 根据元件ID获取可用产品编码列表 ──
+  function _getProductCodesForComp(compId) {
+    // 精确匹配
+    if (PRODUCT_CODE_MAP[compId] && PRODUCT_CODE_MAP[compId].length) {
+      return PRODUCT_CODE_MAP[compId];
+    }
+    // 回退：尝试模糊匹配（通过元件名称）
+    var comp = COMPONENT_BY_ID[compId];
+    if (!comp) return [];
+    var name = (comp.name || '').toLowerCase();
+    // 搜索所有 DATA 中的产品数据
+    var allProducts = [];
+    var searchedKeys = {};
+    for (var key in DATA) {
+      if (!Array.isArray(DATA[key]) || searchedKeys[key]) continue;
+      searchedKeys[key] = true;
+      // 只搜索看起来是产品列表的字段（包含 code/desc 结构）
+      var arr = DATA[key];
+      if (arr.length && arr[0] && arr[0].code) {
+        allProducts = allProducts.concat(arr.map(function(item) {
+          return { code: item.code, desc: item.desc, _source: key };
+        }));
+      }
+    }
+    // 根据名称过滤
+    var filtered = allProducts.filter(function(p) {
+      var d = (p.desc || '').toLowerCase();
+      return d.indexOf(name) >= 0;
+    });
+    return filtered.length ? filtered : allProducts.slice(0, 30); // 最多 30 个
+  }
+
+  // ── 从BOM同步到画板（智能合并模式：保留连线+位置，仅新增/更新）──
+  function _syncBomToCanvas(topoId, forceRebuild) {
+    var card = document.querySelector('.topo-admin-card[data-topo-id="' + topoId + '"]');
+    if (!card) return;
+    // 读取当前BOM行
+    var bomRowEls = card.querySelectorAll('.bom-row');
+    var bomRows = [];
+    bomRowEls.forEach(function(row) {
+      var inputs = row.querySelectorAll('input');
+      if (inputs.length >= 5 && inputs[0].value.trim()) {
+        bomRows.push({
+          cat: inputs[0].value.trim(),
+          code: inputs[1].value.trim(),
+          desc: inputs[2].value.trim(),
+          qty: parseInt(inputs[3].value.trim()) || 1,
+          remark: inputs[4].value.trim()
+        });
+      }
+    });
+    if (!bomRows.length) { _showToast('⚠️ BOM表为空，请先填写BOM数据'); return; }
+
+    var canvas = document.getElementById('topo-canvas-' + topoId);
+    if (!canvas) return;
+    var data = canvas._diagramData;
+    if (!data) { data = { nodes: [], edges: [] }; canvas._diagramData = data; }
+
+    // 如果是 forceRebuild 或画布完全为空，走原有的全量重建逻辑
+    if (forceRebuild || !data.nodes.length) {
+      data.nodes = [];
+      data.edges = [];
+
+      var layoutCols = 4, colSpacing = 200, rowSpacing = 180;
+      var startX = 40, startY = 40;
+
+      bomRows.forEach(function(bomRow, bomIdx) {
+        var compId = _resolveCompId(bomRow);
+        for (var q = 0; q < bomRow.qty; q++) {
+          var nodeIdx = data.nodes.length;
+          var col = nodeIdx % layoutCols, row = Math.floor(nodeIdx / layoutCols);
+          var nodeData = {
+            id: 'n' + Date.now() + '_' + nodeIdx,
+            compId: compId,
+            x: startX + col * colSpacing,
+            y: startY + row * rowSpacing,
+            label: bomRow.qty > 1 ? (bomRow.cat + (q + 1)) : bomRow.cat,
+            productCode: bomRow.code,
+            productDesc: bomRow.desc,
+            bomQty: bomRow.qty,
+            bomRemark: bomRow.remark,
+            bomIndex: bomIdx,
+            bomInstance: q
+          };
+          data.nodes.push(nodeData);
+        }
+      });
+
+      _syncAndRender(canvas, topoId);
+      _showToast('✅ 已从BOM同步 ' + data.nodes.length + ' 个元件到画板');
+      return;
+    }
+
+    // ── 智能合并模式：保留已有节点的位置和连线 ──
+    // 1. 构建 BOM 展开列表（每个数量为一行）
+    var bomFlat = [];
+    bomRows.forEach(function(bomRow, bomIdx) {
+      var compId = _resolveCompId(bomRow);
+      for (var q = 0; q < bomRow.qty; q++) {
+        bomFlat.push({
+          cat: bomRow.cat, code: bomRow.code, desc: bomRow.desc,
+          qty: bomRow.qty, remark: bomRow.remark,
+          compId: compId, bomIndex: bomIdx, bomInstance: q
+        });
+      }
+    });
+
+    // 2. 为画布上已有节点打标（按 compId + bomIndex + bomInstance 匹配）
+    var matchedNodeIds = [];
+    var existingByComp = {}; // compId → 该类型已有节点列表（尚未被匹配的）
+    data.nodes.forEach(function(n, idx) {
+      if (n.onEdge) return; // CT覆盖节点不参与BOM匹配
+      if (!existingByComp[n.compId]) existingByComp[n.compId] = [];
+      existingByComp[n.compId].push({ node: n, idx: idx });
+    });
+
+    // 3. 遍历 BOM 展开列表，优先匹配已有节点
+    var updatedCount = 0, addedCount = 0;
+    bomFlat.forEach(function(bomItem) {
+      var pool = existingByComp[bomItem.compId] || [];
+      // 优先找同 productCode 的已有节点
+      var matched = null;
+      for (var p = 0; p < pool.length; p++) {
+        if (pool[p].node.productCode === bomItem.code) {
+          matched = pool.splice(p, 1)[0]; break;
+        }
+      }
+      // 其次按 bomIndex+bomInstance 匹配
+      if (!matched) {
+        for (var p2 = 0; p2 < pool.length; p2++) {
+          if (pool[p2].node.bomIndex === bomItem.bomIndex && pool[p2].node.bomInstance === bomItem.bomInstance) {
+            matched = pool.splice(p2, 1)[0]; break;
+          }
+        }
+      }
+      // 最后用同类型的剩余节点
+      if (!matched && pool.length > 0) {
+        matched = pool.shift();
+      }
+
+      if (matched) {
+        // 更新已有节点的产品编码信息
+        var n = matched.node;
+        n.productCode = bomItem.code;
+        n.productDesc = bomItem.desc;
+        n.bomQty = bomItem.qty;
+        n.bomRemark = bomItem.remark;
+        n.bomIndex = bomItem.bomIndex;
+        n.bomInstance = bomItem.bomInstance;
+        n.label = bomItem.qty > 1 ? (bomItem.cat + (bomItem.bomInstance + 1)) : bomItem.cat;
+        matchedNodeIds.push(n.id);
+        updatedCount++;
+      } else {
+        // BOM中有但画布上没有 → 新增节点（放在已有节点附近）
+        var lastNode = data.nodes.length ? data.nodes[data.nodes.length - 1] : null;
+        var nx = lastNode ? lastNode.x + 60 : 40;
+        var ny = lastNode ? lastNode.y : 40;
+        // 如果放太远了就换行
+        if (nx > 800) { nx = 40; ny = lastNode ? lastNode.y + 160 : 40; }
+        var newNode = {
+          id: 'n' + Date.now() + '_' + (data.nodes.length + addedCount),
+          compId: bomItem.compId,
+          x: nx, y: ny,
+          label: bomItem.qty > 1 ? (bomItem.cat + (bomItem.bomInstance + 1)) : bomItem.cat,
+          productCode: bomItem.code,
+          productDesc: bomItem.desc,
+          bomQty: bomItem.qty,
+          bomRemark: bomItem.remark,
+          bomIndex: bomItem.bomIndex,
+          bomInstance: bomItem.bomInstance
+        };
+        data.nodes.push(newNode);
+        matchedNodeIds.push(newNode.id);
+        addedCount++;
+      }
+    });
+
+    // 4. 清理画布上 BOM 中已不存在的节点（仅清理 fromBOM 的，保留手动拖入的）
+    var nodesToRemove = [];
+    data.nodes.forEach(function(n, idx) {
+      if (n.onEdge) return; // 保留CT覆盖节点
+      if (matchedNodeIds.indexOf(n.id) < 0 && n.productCode) {
+        // 该节点有产品编码但在 BOM 中找不到了 → 清理
+        nodesToRemove.push(n.id);
+      }
+    });
+    if (nodesToRemove.length > 0) {
+      data.nodes = data.nodes.filter(function(n) { return nodesToRemove.indexOf(n.id) < 0; });
+      // 清理关联的连线
+      data.edges = data.edges.filter(function(e) {
+        return nodesToRemove.indexOf(e.from) < 0 && nodesToRemove.indexOf(e.to) < 0;
+      });
+      // 清理依附于被删连线的CT
+      var removedEdges = [];
+      data.edges.forEach(function(e) {
+        if (nodesToRemove.indexOf(e.from) >= 0 || nodesToRemove.indexOf(e.to) >= 0) removedEdges.push(e.id);
+      });
+      data.nodes = data.nodes.filter(function(n) {
+        return !(n.compId === 'ct' && n.onEdge && removedEdges.indexOf(n.onEdge) >= 0);
+      });
+    }
+
+    var totalNodes = data.nodes.filter(function(n) { return !n.onEdge; }).length;
+    _syncAndRender(canvas, topoId);
+    var msg = '✅ 智能同步完成：更新 ' + updatedCount + ' 个，新增 ' + addedCount + ' 个';
+    if (nodesToRemove.length) msg += '，移除 ' + nodesToRemove.length + ' 个过时元件';
+    msg += '（共 ' + totalNodes + ' 个元件，连线已保留）';
+    _showToast(msg);
+  }
+
+  // ── 解析 BOM 类别到 compId ──
+  function _resolveCompId(bomRow) {
+    var compId = BOM_CAT_TO_COMPID[bomRow.cat];
+    if (!compId) {
+      for (var cid in COMPONENT_BY_ID) {
+        if (COMPONENT_BY_ID[cid].name === bomRow.cat || COMPONENT_BY_ID[cid].label === bomRow.cat) {
+          compId = cid; break;
+        }
+      }
+    }
+    return compId || 'ess-cabinet';
+  }
 
   // 生成 SVG 字符串（用于渲染到前端 index.html）
   function _generateSvgFromDiagram(data) {
@@ -1486,12 +2076,12 @@ const ADMIN = (() => {
       if (!fn || !tn) return;
       var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
       if (!fc || !tc) return;
-      var fp = _getPortPos(fn, e.fromPort || 'bottom', fc);
-      var tp = _getPortPos(tn, e.toPort || 'top', tc);
+      var fp = _getPortPos(fn, e.fromPort || 'center', fc);
+      var tp = _getPortPos(tn, e.toPort || 'center', tc);
       var ct = CABLE_BY_ID[e.cableType] || CABLE_BY_ID['ethernet'];
-      var fromPortSide = (e.fromPort || 'bottom');
-      var toPortSide   = (e.toPort    || 'top');
-      var cable = _buildCablePath(fp, tp, fromPortSide, toPortSide, data.nodes, fn, tn);
+      var fromPortSide = (e.fromPort || 'center');
+      var toPortSide   = (e.toPort    || 'center');
+      var cable = _buildCablePath(fp, tp, fromPortSide, toPortSide, data.nodes, fn, tn, fc, tc);
       var midX = cable.midX, midY = cable.midY;
       svg += '<path d="' + cable.path +
         '" stroke="' + ct.color + '" stroke-width="' + ct.width + '" fill="none" stroke-linecap="round" stroke-linejoin="round"' +
@@ -1516,8 +2106,8 @@ const ADMIN = (() => {
           if (efn && etn) {
             var efc = COMPONENT_BY_ID[efn.compId], etc = COMPONENT_BY_ID[etn.compId];
             if (efc && etc) {
-              var efp = _getPortPos(efn, edge.fromPort || 'bottom', efc);
-              var etp = _getPortPos(etn, edge.toPort || 'top', etc);
+              var efp = _getPortPos(efn, edge.fromPort || 'center', efc);
+              var etp = _getPortPos(etn, edge.toPort || 'center', etc);
               var t = n.t || 0.5;
               var cx = efp.x + (etp.x - efp.x) * t, cy = efp.y + (etp.y - efp.y) * t;
               svg += '<g transform="translate(' + (cx - c.width/2) + ',' + (cy - c.height/2) + ')">' + c.svg +
@@ -1536,6 +2126,10 @@ const ADMIN = (() => {
   }
 
   function _getPortPos(node, portId, comp) {
+    // center 端口 → 返回元件中心
+    if (portId === 'center') {
+      return { x: node.x + comp.width / 2, y: node.y + comp.height / 2 };
+    }
     var p = null;
     (comp.ports || []).forEach(function(pt) { if (pt.id === portId) p = pt; });
     var px = p ? p.x : 0.5, py = p ? p.y : 1;
@@ -1582,21 +2176,70 @@ const ADMIN = (() => {
 
   /* 构建折线路径 d 属性
      根据 fromPort / toPort 方向，生成直角折线，自动避让元件。
-     若两端方向相同（同垂直/同水平）→ 直线；否则 → 折线。
-     碰撞检测：检查路径是否穿过其他元件的包围盒，若穿过则尝试替代路径。
-     返回 { path: 'M x1 y1 L ...', midX, midY, segments } */
-  function _buildCablePath(fp, tp, fromPortSide, toPortSide, allNodes, fn, tn) {
-    var isV = function(s) { return s === 'top' || s === 'bottom'; };
-    var isH = function(s) { return s === 'left' || s === 'right'; };
-    var vf = isV(fromPortSide), vh = isH(fromPortSide);
-    var vt = isV(toPortSide), th = isH(toPortSide);
+     若端口为 'center' → 从元件中心出发，先走到元件边缘再正交走线。
+     碰撞检测：检查路径是否穿过其他元件的包围盒。
+     返回 { path: 'M x1 y1 L ...', midX, midY } */
+  function _buildCablePath(fp, tp, fromPortSide, toPortSide, allNodes, fn, tn, fc, tc, waypoints) {
+    // ── center 端口：将中心坐标转换为边缘出口/入口，确保线缆连到边缘而非中心 ──
+    var isCenterF = (fromPortSide === 'center');
+    var isCenterT = (toPortSide === 'center');
 
-    // 同方向 → 始终使用直角折线（不再画斜线）
+    if (isCenterF || isCenterT) {
+      var scx = fn.x + fc.width / 2;
+      var scy = fn.y + fc.height / 2;
+      var tcx = tn.x + tc.width / 2;
+      var tcy = tn.y + tc.height / 2;
+      var hwF = fc.width / 2, hhF = fc.height / 2;
+      var hwT = tc.width / 2, hhT = tc.height / 2;
+      var useHorizontal = Math.abs(tcx - scx) > Math.abs(tcy - scy);
+
+      if (isCenterF) {
+        if (useHorizontal) {
+          fromPortSide = (tcx > scx) ? 'right' : 'left';
+          fp = { x: scx + (tcx > scx ? hwF : -hwF), y: fp.y };
+        } else {
+          fromPortSide = (tcy > scy) ? 'bottom' : 'top';
+          fp = { x: fp.x, y: scy + (tcy > scy ? hhF : -hhF) };
+        }
+      }
+      if (isCenterT) {
+        if (useHorizontal) {
+          toPortSide = (scx > tcx) ? 'right' : 'left';
+          tp = { x: tcx + (scx > tcx ? hwT : -hwT), y: tp.y };
+        } else {
+          toPortSide = (scy > tcy) ? 'bottom' : 'top';
+          tp = { x: tp.x, y: tcy + (scy > tcy ? hhT : -hhT) };
+        }
+      }
+    }
+
+    // 如果有自定义路径点（用户拖拽控制点），保留 waypoint 路径
+    if (isCenterF && isCenterT && waypoints && waypoints.length > 0) {
+      var d = 'M ' + fp.x + ' ' + fp.y;
+      var pts = [{ x: fp.x, y: fp.y }];
+      for (var w = 0; w < waypoints.length; w++) {
+        d += ' L ' + waypoints[w].x + ' ' + waypoints[w].y;
+        pts.push({ x: waypoints[w].x, y: waypoints[w].y });
+      }
+      d += ' L ' + tp.x + ' ' + tp.y;
+      pts.push({ x: tp.x, y: tp.y });
+      var midIdx2 = Math.floor((waypoints.length + 1) / 2);
+      return { path: d, midX: pts[midIdx2] ? pts[midIdx2].x : (fp.x + tp.x) / 2,
+               midY: pts[midIdx2] ? pts[midIdx2].y : (fp.y + tp.y) / 2, points: pts };
+    }
+
+    // ── 构建路径 ──
+    var _isV = function(s) { return s === 'top' || s === 'bottom'; };
+    var _isH = function(s) { return s === 'left' || s === 'right'; };
+
+    // ── 非 center（现在两端都已是边缘端口）→ 正常路由 ──
+    var vf = _isV(fromPortSide), vh = _isH(fromPortSide);
+    var vt = _isV(toPortSide), th = _isH(toPortSide);
+
+    // 同方向 → 直角折线
     if ((vf && vt) || (vh && th)) {
       var candidates = [];
       if (vf) {
-        // 两端口都垂直，折线：先竖直 → 水平 → 竖直
-        // 路径A：从中点折
         var my = (fp.y + tp.y) / 2;
         candidates.push({
           path: 'M ' + fp.x + ' ' + fp.y + ' L ' + fp.x + ' ' + my + ' L ' + tp.x + ' ' + my + ' L ' + tp.x + ' ' + tp.y,
@@ -1607,7 +2250,6 @@ const ADMIN = (() => {
             { x1: tp.x, y1: my, x2: tp.x, y2: tp.y }
           ]
         });
-        // 路径B：先水平再全竖直
         candidates.push({
           path: 'M ' + fp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + tp.y,
           midX: tp.x, midY: (fp.y + tp.y) / 2,
@@ -1617,7 +2259,6 @@ const ADMIN = (() => {
           ]
         });
       } else {
-        // 两端口都水平，折线：先水平 → 竖直 → 水平
         var mx = (fp.x + tp.x) / 2;
         candidates.push({
           path: 'M ' + fp.x + ' ' + fp.y + ' L ' + mx + ' ' + fp.y + ' L ' + mx + ' ' + tp.y + ' L ' + tp.x + ' ' + tp.y,
@@ -1637,7 +2278,6 @@ const ADMIN = (() => {
           ]
         });
       }
-      // 选择不碰撞的路径
       var best = candidates[0], bestScore = Infinity;
       for (var ci = 0; ci < candidates.length; ci++) {
         var cand = candidates[ci];
@@ -1646,15 +2286,14 @@ const ADMIN = (() => {
           if (_pathCollidesWithNodes(cand.segs[si].x1, cand.segs[si].y1, cand.segs[si].x2, cand.segs[si].y2, allNodes, fn, tn)) collisions++;
         }
         if (collisions < bestScore) { bestScore = collisions; best = cand; }
-        if (collisions === 0) break; // 完美路径，不用再找
+        if (collisions === 0) break;
       }
       return { path: best.path, midX: best.midX, midY: best.midY };
     }
 
-    // 折线：尝试两种路径（先水平后垂直 / 先垂直后水平）
-    var candidates = [];
+    // 折线
+    candidates = [];
     if (vh) {
-      // 路径A: 水平出发 → 先水平到 tp.x，再垂直到 tp.y
       candidates.push({
         path: 'M ' + fp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + tp.y,
         midX: tp.x, midY: (fp.y + tp.y) / 2,
@@ -1663,7 +2302,6 @@ const ADMIN = (() => {
           { x1: tp.x, y1: fp.y, x2: tp.x, y2: tp.y }
         ]
       });
-      // 路径B: 垂直出发 → 先垂直到 tp.y，再水平到 tp.x
       candidates.push({
         path: 'M ' + fp.x + ' ' + fp.y + ' L ' + fp.x + ' ' + tp.y + ' L ' + tp.x + ' ' + tp.y,
         midX: (fp.x + tp.x) / 2, midY: tp.y,
@@ -1673,7 +2311,6 @@ const ADMIN = (() => {
         ]
       });
     } else {
-      // 垂直出发 → 先垂直到 tp.y，再水平到 tp.x
       candidates.push({
         path: 'M ' + fp.x + ' ' + fp.y + ' L ' + fp.x + ' ' + tp.y + ' L ' + tp.x + ' ' + tp.y,
         midX: (fp.x + tp.x) / 2, midY: tp.y,
@@ -1682,7 +2319,6 @@ const ADMIN = (() => {
           { x1: fp.x, y1: tp.y, x2: tp.x, y2: tp.y }
         ]
       });
-      // 路径B: 水平出发 → 先水平到 tp.x，再垂直到 tp.y
       candidates.push({
         path: 'M ' + fp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + fp.y + ' L ' + tp.x + ' ' + tp.y,
         midX: tp.x, midY: (fp.y + tp.y) / 2,
@@ -1693,21 +2329,17 @@ const ADMIN = (() => {
       });
     }
 
-    // 选无碰撞的路径
     for (var ci = 0; ci < candidates.length; ci++) {
       var cand = candidates[ci];
       var collides = false;
       for (var si = 0; si < cand.segs.length; si++) {
         var seg = cand.segs[si];
         if (_pathCollidesWithNodes(seg.x1, seg.y1, seg.x2, seg.y2, allNodes, fn, tn)) {
-          collides = true;
-          break;
+          collides = true; break;
         }
       }
       if (!collides) return { path: cand.path, midX: cand.midX, midY: cand.midY };
     }
-
-    // 都碰撞就用第一条
     return { path: candidates[0].path, midX: candidates[0].midX, midY: candidates[0].midY };
   }
 
@@ -1718,8 +2350,11 @@ const ADMIN = (() => {
       var n = allNodes[i];
       if (excludeNodeA && n.id === excludeNodeA.id) continue;
       if (excludeNodeB && n.id === excludeNodeB.id) continue;
-      if (n.compId === 'ct' && n.onEdge) continue; // CT不算障碍
-      var c = COMPONENT_BY_ID[n.compId];
+      // 所有 CT/互感器类型元件不算障碍（允许线缆与CT叠加）
+      if (n.compId === 'ct') continue;
+      var comp = COMPONENT_BY_ID[n.compId];
+      if (comp && comp.overlayEdge) continue;
+      var c = comp;
       if (!c) continue;
       var margin = 8; // 碰撞边距
       var rx = n.x - margin, ry = n.y - margin;
@@ -1765,13 +2400,22 @@ const ADMIN = (() => {
     if (input && input.value) {
       try { data = JSON.parse(input.value); } catch(e) { data = { nodes: [], edges: [] }; }
     }
-    // 给旧边补充默认 cableType
-    (data.edges||[]).forEach(function(e) { if (!e.cableType) e.cableType = 'ethernet'; });
+    // 给旧边补充默认 cableType 和 center 端口
+    (data.edges||[]).forEach(function(e) {
+      if (!e.cableType) e.cableType = 'ethernet';
+      if (!e.fromPort) e.fromPort = 'center';
+      if (!e.toPort) e.toPort = 'center';
+    });
     canvas._diagramData = data;
     canvas._selectedCableType = 'ethernet'; // 默认线缆类型
     canvas._selectedEdgeId = null;
     _renderTopoCanvas(topoId);
     _updateCableTypeBtns(topoId);
+
+    // 首次加载时居中画布
+    if (!canvas._zoom) {
+      _topoResetView(topoId);
+    }
 
     // 画布拖拽+点击事件
     var wrap = document.getElementById('topo-canvas-wrap-' + topoId);
@@ -1822,7 +2466,7 @@ const ADMIN = (() => {
           'data-topo-id="' + topoId + '" ' +
           'ondragstart="ADMIN._onLibDragStart(event)" ' +
           'ondragend="ADMIN._onLibDragEnd(event)">' +
-          '<div class="topo-lib-icon"><svg viewBox="0 0 90 60" width="22" height="14">' + c.svg + '</svg></div>' +
+          '<div class="topo-lib-icon"><svg viewBox="0 0 '+c.width+' '+c.height+'" width="22" height="14">' + c.svg + '</svg></div>' +
           '<div class="topo-lib-label">' + c.name + '</div>' +
         '</div>';
       });
@@ -1861,12 +2505,303 @@ const ADMIN = (() => {
     });
   }
 
-  // 选择线缆类型
+  // 选择线缆类型（toggle：再次点击已选中的 → 取消）
   function _selectCableType(topoId, cableType) {
     var canvas = document.getElementById('topo-canvas-' + topoId);
     if (!canvas) return;
-    canvas._selectedCableType = cableType;
+    // toggle：如果点击已选中的类型，则取消选择
+    if (canvas._selectedCableType === cableType) {
+      canvas._selectedCableType = '';
+    } else {
+      canvas._selectedCableType = cableType;
+    }
     _updateCableTypeBtns(topoId);
+    _updateCableSelectorHint(topoId);
+    // 更新光标
+    var wrap = document.getElementById('topo-canvas-wrap-' + topoId);
+    if (wrap) wrap.style.cursor = canvas._selectedCableType ? 'crosshair' : '';
+    // 如果取消了选择，也退出连线源模式
+    if (!canvas._selectedCableType && canvas._connectSource) {
+      _exitConnectSource(canvas, topoId);
+    }
+  }
+
+  // 更新线缆窗口标题栏提示文字
+  function _updateCableSelectorHint(topoId) {
+    var legend = document.getElementById('topo-cable-selector-' + topoId);
+    if (!legend) return;
+    var hdr = legend.querySelector('.cable-legend-header');
+    if (!hdr) return;
+    var canvas = document.getElementById('topo-canvas-' + topoId);
+    var typeName = '';
+    if (canvas && canvas._selectedCableType) {
+      var ct = CABLE_TYPES.find(function(c) { return c.id === canvas._selectedCableType; });
+      typeName = ct ? ct.name : '';
+    }
+    if (typeName) {
+      hdr.innerHTML = '〰️ ' + typeName + ' <span style="font-size:10px;opacity:.6;font-weight:400">｜点击元件连线，再次点击取消</span>';
+    } else {
+      hdr.innerHTML = '〰️ 线缆类型';
+    }
+  }
+
+  // ── 智能检测最佳连接端口 ────────────
+  // 根据两个元件的相对位置判断用哪些端口
+  function _autoDetectPorts(sourceNode, targetNode, sourceComp, targetComp) {
+    var sx = sourceNode.x + sourceComp.width / 2;
+    var sy = sourceNode.y + sourceComp.height / 2;
+    var tx = targetNode.x + targetComp.width / 2;
+    var ty = targetNode.y + targetComp.height / 2;
+    var dx = tx - sx, dy = ty - sy;
+    // 始终从元件中心连线，方向用于走线时的出口/入口判定
+    var fromPort = 'center', toPort = 'center';
+    return { fromPort: fromPort, toPort: toPort };
+  }
+
+  function _portAvailable(comp, portId) {
+    return (comp.ports || []).some(function(p) { return p.id === portId; });
+  }
+
+  function _firstAvailablePort(comp) {
+    var ports = comp.ports || [];
+    if (ports.length > 0) return ports[0].id;
+    return null;
+  }
+
+  // ── 进入/退出连线源模式 ────────
+  function _enterConnectSource(canvas, topoId, nodeId, nodeEl) {
+    _exitConnectSource(canvas, topoId);
+    canvas._connectSource = { nodeId: nodeId, nodeEl: nodeEl };
+    nodeEl.classList.add('connect-source');
+    canvas.classList.add('connect-mode');
+    // 创建预览 SVG
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'topo-conn-preview');
+    svg.setAttribute('id', 'topo-conn-preview-' + topoId);
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('stroke', '#F39C12');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-dasharray', '6 4');
+    line.setAttribute('id', 'topo-conn-preview-line-' + topoId);
+    svg.appendChild(line);
+    canvas.appendChild(svg);
+    canvas._previewLine = line;
+    canvas._previewSvg = svg;
+    // 初始位置：从源元件中心出发
+    var node = _findNode(canvas, nodeId);
+    var comp = COMPONENT_BY_ID[node.compId];
+    if (node && comp) {
+      var cx = node.x + comp.width / 2;
+      var cy = node.y + comp.height / 2;
+      line.setAttribute('x1', cx);
+      line.setAttribute('y1', cy);
+      line.setAttribute('x2', cx);
+      line.setAttribute('y2', cy);
+    }
+    document.addEventListener('keydown', _onConnectModeEsc);
+  }
+
+  function _exitConnectSource(canvas, topoId) {
+    if (!canvas._connectSource) return;
+    if (canvas._connectSource.nodeEl) {
+      canvas._connectSource.nodeEl.classList.remove('connect-source');
+    }
+    canvas.classList.remove('connect-mode');
+    if (canvas._previewSvg) {
+      canvas._previewSvg.remove();
+      canvas._previewSvg = null;
+      canvas._previewLine = null;
+    }
+    canvas._connectSource = null;
+    // 清理预览 rAF
+    if (canvas._connPreviewRafId) { cancelAnimationFrame(canvas._connPreviewRafId); canvas._connPreviewRafId = null; }
+    var wrap = document.getElementById('topo-canvas-wrap-' + topoId);
+    if (wrap) wrap.style.cursor = '';
+    document.removeEventListener('keydown', _onConnectModeEsc);
+  }
+
+  function _onConnectModeEsc(e) {
+    if (e.key !== 'Escape') return;
+    var allCanvases = document.querySelectorAll('.topo-canvas-inner');
+    allCanvases.forEach(function(c) {
+      var tId = c.getAttribute('data-topo-id');
+      if (tId) _exitConnectSource(c, tId);
+    });
+  }
+
+  // ── 智能连线（点击连线核心逻辑）───
+  function _smartConnect(canvas, topoId, sourceNodeId, targetNodeId) {
+    var sourceNode = _findNode(canvas, sourceNodeId);
+    var targetNode = _findNode(canvas, targetNodeId);
+    if (!sourceNode || !targetNode) return;
+    var sc = COMPONENT_BY_ID[sourceNode.compId];
+    var tc = COMPONENT_BY_ID[targetNode.compId];
+    if (!sc || !tc) return;
+
+    var ports = _autoDetectPorts(sourceNode, targetNode, sc, tc);
+    if (!ports.fromPort || !ports.toPort) return;
+
+    // 检查重复边
+    var data = canvas._diagramData;
+    var exists = data.edges.some(function(e) {
+      return e.from === sourceNodeId && e.to === targetNodeId;
+    });
+    if (exists) return;
+
+    // 计算端口分布
+    var fromDistrib = _countPortEdges(data, sourceNodeId, ports.fromPort);
+    var toDistrib   = _countPortEdges(data, targetNodeId, ports.toPort);
+
+    data.edges.push({
+      id: 'e' + Date.now(),
+      from: sourceNodeId, to: targetNodeId,
+      fromPort: ports.fromPort, toPort: ports.toPort,
+      cableType: canvas._selectedCableType || 'ethernet',
+      fromPortIdx: fromDistrib,
+      toPortIdx: toDistrib
+    });
+
+    _syncAndRender(canvas, topoId);
+    // 连线完成后不清空 _selectedCableType，保持选中可连续连线
+    // 只退出当前的 _connectSource，等待用户点击下一个源元件
+    if (canvas._connectSource) {
+      _exitConnectSource(canvas, topoId);
+    }
+  }
+
+  function _countPortEdges(data, nodeId, portId) {
+    var count = 0;
+    data.edges.forEach(function(e) {
+      if ((e.from === nodeId && e.fromPort === portId) ||
+          (e.to === nodeId && e.toPort === portId)) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // ── 线缆类型管理器（添加/删除/编辑颜色和粗细）──
+  function _openCableManager(topoId) {
+    // 创建遮罩和弹窗
+    var overlay = document.createElement('div');
+    overlay.className = 'cable-manager-overlay';
+    overlay.id = 'cable-manager-overlay';
+    overlay.onclick = function(e) { if (e.target === overlay) _closeCableManager(); };
+    // 构建编辑列表
+    var rowsHTML = CABLE_TYPES.map(function(ct, idx) {
+      var dashOpts = ['none','4 3','6 3','8 4','2 2','10 5'];
+      var dashHTML = dashOpts.map(function(d) {
+        return '<option value="' + d + '"' + (ct.dash === d ? ' selected' : '') + '>' + (d === 'none' ? '实线' : '虚线 ' + d) + '</option>';
+      }).join('');
+      return '<div class="cable-mgr-row" data-idx="' + idx + '">' +
+        '<span class="cable-mgr-color-pick"><input type="color" value="' + ct.color + '" onchange="ADMIN._updateCableField(' + idx + ',\'color\',this.value)" /></span>' +
+        '<input class="cable-mgr-name" value="' + ct.name + '" onchange="ADMIN._updateCableField(' + idx + ',\'name\',this.value)" title="名称" />' +
+        '<input class="cable-mgr-label" value="' + ct.label + '" onchange="ADMIN._updateCableField(' + idx + ',\'label\',this.value)" title="标签" maxlength="8" />' +
+        '<input class="cable-mgr-width" type="number" step="0.5" min="0.5" max="10" value="' + ct.width + '" onchange="ADMIN._updateCableField(' + idx + ',\'width\',parseFloat(this.value))" title="线宽" />' +
+        '<select class="cable-mgr-dash" onchange="ADMIN._updateCableField(' + idx + ',\'dash\',this.value)">' + dashHTML + '</select>' +
+        '<button class="cable-mgr-del" onclick="ADMIN._deleteCableType(' + idx + ',\'' + topoId + '\')" title="删除">×</button>' +
+        '<svg class="cable-mgr-preview" width="60" height="14" viewBox="0 0 60 14"><line x1="2" y1="7" x2="58" y2="7" stroke="' + ct.color + '" stroke-width="' + Math.max(1.5, ct.width) + '" stroke-linecap="round"' + (ct.dash !== 'none' ? ' stroke-dasharray="' + ct.dash + '"' : '') + '/></svg>' +
+      '</div>';
+    }).join('');
+    overlay.innerHTML = '' +
+      '<div class="cable-manager-dialog">' +
+        '<div class="cable-manager-header">⚙ 线缆类型管理' +
+          '<button class="cable-manager-close" onclick="ADMIN._closeCableManager()">×</button>' +
+        '</div>' +
+        '<div class="cable-manager-hint">编辑颜色、名称、标签、线宽、线型；修改后自动保存到项目文件夹</div>' +
+        '<div class="cable-manager-list">' + rowsHTML + '</div>' +
+        '<div class="cable-manager-footer">' +
+          '<button class="cable-manager-add" onclick="ADMIN._addCableType(\'' + topoId + '\')">＋ 添加线缆类型</button>' +
+          '<button class="cable-manager-save" onclick="ADMIN._saveAndCloseCableManager(\'' + topoId + '\')">💾 保存并关闭</button>' +
+          '<button class="cable-manager-reset" onclick="if(confirm(\'确定恢复默认线缆类型？自定义数据将丢失。\'))ADMIN._resetCableTypes(\'' + topoId + '\')">↺ 恢复默认</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+  }
+
+  function _updateCableField(idx, field, value) {
+    if (idx < 0 || idx >= CABLE_TYPES.length) return;
+    CABLE_TYPES[idx][field] = value;
+    // 实时更新预览
+    var row = document.querySelector('.cable-mgr-row[data-idx="' + idx + '"]');
+    if (row) {
+      var preview = row.querySelector('.cable-mgr-preview line');
+      var colorInput = row.querySelector('.cable-mgr-color-pick input');
+      if (preview) {
+        if (field === 'color') preview.setAttribute('stroke', value);
+        if (field === 'width') preview.setAttribute('stroke-width', Math.max(1.5, value));
+        if (field === 'dash') preview.setAttribute('stroke-dasharray', value === 'none' ? 'none' : value);
+      }
+    }
+  }
+
+  function _addCableType(topoId) {
+    var newId = 'cable_' + Date.now();
+    CABLE_TYPES.push({ id: newId, name: '新线缆', color: '#CCCCCC', width: 2, dash: 'none', label: 'NEW' });
+    // 关闭弹窗并重新打开以刷新列表
+    _closeCableManager();
+    setTimeout(function() { _openCableManager(topoId); }, 100);
+  }
+
+  function _deleteCableType(idx, topoId) {
+    if (CABLE_TYPES.length <= 1) { alert('⚠️ 至少保留一种线缆类型'); return; }
+    if (!confirm('确定删除「' + CABLE_TYPES[idx].name + '」？')) return;
+    CABLE_TYPES.splice(idx, 1);
+    _closeCableManager();
+    setTimeout(function() { _openCableManager(topoId); }, 100);
+  }
+
+  function _resetCableTypes(topoId) {
+    CABLE_TYPES = JSON.parse(JSON.stringify(CABLE_TYPES_DEFAULTS));
+    _closeCableManager();
+    saveCableTypes();
+    _refreshAllCableLegends();
+    _showToast('✅ 线缆类型已恢复默认');
+  }
+
+  function _saveAndCloseCableManager(topoId) {
+    _closeCableManager();
+    saveCableTypes();
+    _rebuildCableById();
+    _refreshAllCableLegends();
+    // 刷新画布中的连线颜色
+    _refreshTopoEdgeColors(null);
+    _showToast('✅ 线缆类型已保存');
+  }
+
+  function _closeCableManager() {
+    var overlay = document.getElementById('cable-manager-overlay');
+    if (overlay) overlay.remove();
+  }
+
+  // 刷新所有画布的线缆图例和按钮
+  function _refreshAllCableLegends() {
+    document.querySelectorAll('.cable-legend-float').forEach(function(legend) {
+      var topoId = legend.id.replace('topo-cable-selector-', '');
+      var body = legend.querySelector('.cable-legend-body');
+      if (!body) return;
+      body.innerHTML = CABLE_TYPES.map(function(ct) {
+        return '<button class="cable-type-btn" data-cable="' + ct.id + '" onclick="ADMIN._selectCableType(\'' + topoId + '\',\'' + ct.id + '\')" title="' + ct.name + '">' +
+          '<svg width="28" height="14" viewBox="0 0 28 14">' +
+            '<line x1="2" y1="7" x2="26" y2="7" stroke="' + ct.color + '" stroke-width="' + Math.max(2, ct.width) + '" stroke-linecap="round"' +
+            (ct.dash !== 'none' ? ' stroke-dasharray="' + ct.dash + '"' : '') + '/>' +
+          '</svg>' +
+          '<span class="cable-label-text">' + ct.label + '</span>' +
+        '</button>';
+      }).join('');
+    });
+  }
+
+  // 刷新所有画布连线颜色（参数null刷新全部）
+  function _refreshTopoEdgeColors(specificTopoId) {
+    document.querySelectorAll('.topo-canvas-inner[id^="topo-canvas-"]').forEach(function(canvas) {
+      var topoId = canvas.getAttribute('data-topo-id');
+      if (specificTopoId && topoId !== specificTopoId) return;
+      var data = canvas._diagramData;
+      if (!data || !data.edges) return;
+      // 简单渲染刷新
+      _renderTopoCanvas(topoId);
+    });
   }
 
   // 从元件库拖拽到画布
@@ -1880,46 +2815,170 @@ const ADMIN = (() => {
     e.target.closest('.topo-lib-item').classList.remove('dragging');
   }
 
-  // 线缆图例悬浮窗口拖拽
+  // 线缆图例悬浮窗口拖拽 + 调节大小（pointer capture，绝不卡死）
   function _setupLegendDrag(wrap, topoId) {
     var legend = document.getElementById('topo-cable-selector-' + topoId);
     if (!legend) return;
-    var isDragging = false, startX, startY, origLeft, origTop;
-    legend.addEventListener('mousedown', function(e) {
-      if (e.target.closest('.cable-type-btn')) return; // 不拦截按钮点击
-      var header = e.target.closest('.cable-legend-header');
-      if (!header && !e.target.closest('.cable-legend-float')) return;
-      isDragging = true;
-      startX = e.clientX; startY = e.clientY;
-      origLeft = legend.offsetLeft;
-      origTop = legend.offsetTop;
-      legend.style.transition = 'none';
-      e.preventDefault();
-    });
-    window.addEventListener('mousemove', function(e) {
+    var isDragging = false, isResizing = false;
+    var startX, startY, origLeft, origTop, origW, origH;
+    var rafId = null;
+    var _latestClientX = 0, _latestClientY = 0;
+    var _boundW, _boundH, _margin = 8;
+    var _lw, _lh, _wrapW, _wrapH;
+
+    var SNAP_THRESHOLD = 50;
+    var SNAP_ZONE = 4;
+
+    function _onDragMove() {
+      rafId = null;
+      if (isResizing) {
+        var dx = _latestClientX - startX, dy = _latestClientY - startY;
+        var newW = Math.max(140, origW + dx);
+        var newH = Math.max(80, origH + dy);
+        var maxW = _boundW - _margin - (origLeft + (legend._tx || 0));
+        var maxH = _boundH - _margin - (origTop + (legend._ty || 0));
+        newW = Math.min(newW, Math.max(140, Math.max(0, maxW)));
+        newH = Math.min(newH, Math.max(80, Math.max(0, maxH)));
+        legend.style.width = newW + 'px';
+        legend.style.height = newH + 'px';
+        legend.style.minWidth = newW + 'px';
+        return;
+      }
       if (!isDragging) return;
-      var dx = e.clientX - startX, dy = e.clientY - startY;
-      var newLeft = origLeft + dx, newTop = origTop + dy;
-      // 限制在画布区域内
-      var wrapRect = wrap.getBoundingClientRect();
-      var legendW = legend.offsetWidth, legendH = legend.offsetHeight;
-      var wrapW = wrapRect.width, wrapH = wrapRect.height;
-      newLeft = Math.max(0, Math.min(wrapW - legendW, newLeft));
-      newTop = Math.max(0, Math.min(wrapH - legendH, newTop));
-      legend.style.left = newLeft + 'px';
-      legend.style.top = newTop + 'px';
-      legend.style.right = 'auto';
-    });
-    window.addEventListener('mouseup', function() {
+      var dx2 = _latestClientX - startX, dy2 = _latestClientY - startY;
+      var newLeft = origLeft + dx2;
+      var newTop = origTop + dy2;
+
+      var snapLeft = null, snapTop = null;
+      var snapped = false;
+
+      if (newLeft <= SNAP_THRESHOLD) {
+        snapLeft = SNAP_ZONE; snapped = true;
+      } else if ((newLeft + _lw) >= (_wrapW - SNAP_THRESHOLD)) {
+        snapLeft = _wrapW - _lw - SNAP_ZONE; snapped = true;
+      }
+      if (newTop <= SNAP_THRESHOLD) {
+        snapTop = SNAP_ZONE; snapped = true;
+      } else if ((newTop + _lh) >= (_wrapH - SNAP_THRESHOLD)) {
+        snapTop = _wrapH - _lh - SNAP_ZONE; snapped = true;
+      }
+
+      var finalLeft = snapLeft !== null ? snapLeft : newLeft;
+      var finalTop = snapTop !== null ? snapTop : newTop;
+      finalLeft = Math.max(0, Math.min(finalLeft, _wrapW - _lw));
+      finalTop = Math.max(0, Math.min(finalTop, _wrapH - _lh));
+
+      var tx = finalLeft - origLeft;
+      var ty = finalTop - origTop;
+      legend.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
+      legend._tx = tx; legend._ty = ty;
+
+      var isVert = (snapLeft !== null) &&
+        (finalLeft <= SNAP_ZONE + 1 || finalLeft >= _wrapW - _lw - SNAP_ZONE - 1);
+      if (isVert) {
+        legend.classList.add('cable-legend-vertical');
+      } else {
+        legend.classList.remove('cable-legend-vertical');
+      }
+      legend._snapped = snapped;
+    }
+
+    function _commitPosition() {
+      if (legend._tx !== undefined) {
+        legend.style.left = (origLeft + legend._tx) + 'px';
+        legend.style.top = (origTop + legend._ty) + 'px';
+        legend.style.transform = '';
+        legend.style.right = 'auto';
+        legend._tx = undefined; legend._ty = undefined;
+      }
+      legend.style.willChange = 'auto';
+      if (legend._snapped) {
+        legend.style.transition = 'left .2s cubic-bezier(.17,.67,.17,1), top .2s cubic-bezier(.17,.67,.17,1), width .2s ease, height .2s ease';
+        setTimeout(function() { legend.style.transition = ''; }, 250);
+      } else {
+        legend.style.transition = '';
+      }
+    }
+
+    function _endDrag() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
       if (isDragging) {
         isDragging = false;
-        legend.style.transition = '';
+        legend.style.cursor = '';
+        _commitPosition();
+      }
+      if (isResizing) { isResizing = false; legend.style.transition = ''; }
+    }
+
+    // ── pointerdown: 用 pointer capture 替代手动 document 监听 ──
+    legend.addEventListener('pointerdown', function(e) {
+      // 电缆按钮和编辑按钮不触发拖拽
+      if (e.target.closest('.cable-type-btn') || e.target.closest('.cable-legend-edit')) {
+        // 阻止冒泡防止 canvas 响应
+        e.stopPropagation();
+        return;
+      }
+
+      if (e.target.closest('.cable-legend-resize')) {
+        isResizing = true;
+        legend.setPointerCapture(e.pointerId);
+        startX = _latestClientX = e.clientX; startY = _latestClientY = e.clientY;
+        origW = legend.offsetWidth;
+        origH = legend.offsetHeight;
+        origLeft = legend.offsetLeft;
+        origTop = legend.offsetTop;
+        _boundW = window.innerWidth; _boundH = window.innerHeight;
+        legend.style.transition = 'none';
+        e.preventDefault(); e.stopPropagation();
+        return;
+      }
+
+      var header = e.target.closest('.cable-legend-header');
+      if (!header && !e.target.closest('.cable-legend-float')) return;
+
+      isDragging = true;
+      legend.setPointerCapture(e.pointerId);
+      startX = _latestClientX = e.clientX; startY = _latestClientY = e.clientY;
+      origLeft = legend.offsetLeft;
+      origTop = legend.offsetTop;
+      _lw = legend.offsetWidth; _lh = legend.offsetHeight;
+      _wrapW = wrap.clientWidth; _wrapH = wrap.clientHeight;
+      legend.style.transition = 'none';
+      legend.style.willChange = 'transform';
+      legend.style.cursor = 'grabbing';
+      e.preventDefault(); e.stopPropagation();
+    });
+
+    legend.addEventListener('pointermove', function(e) {
+      if (!isDragging && !isResizing) return;
+      _latestClientX = e.clientX;
+      _latestClientY = e.clientY;
+      if (!rafId) rafId = requestAnimationFrame(_onDragMove);
+    });
+
+    legend.addEventListener('pointerup', function() {
+      _endDrag();
+    });
+
+    legend.addEventListener('pointercancel', function() {
+      _endDrag();
+    });
+
+    // 兜底：如果点按 cable-type-btn 导致光标被 wrap 设为 crosshair，
+    // 鼠标进入 legend 后恢复为 pointer（覆盖父级 inline cursor）
+    legend.addEventListener('pointerenter', function() {
+      if (!isDragging && !isResizing) {
+        legend.style.cursor = '';
       }
     });
   }
 
   // 画布事件（拖拽元件、平移、连线）
   function _setupCanvasEvents(wrap, canvas, topoId) {
+    // Shift 键追踪（按住 Shift 时 CT 自由放置不吸附）
+    window.addEventListener('keydown', function(e) { if (e.key === 'Shift') window._topoShiftKey = true; });
+    window.addEventListener('keyup', function(e) { if (e.key === 'Shift') window._topoShiftKey = false; });
+
     // 视口坐标 → 画布坐标（getBoundingClientRect 已含 transform 偏移，无需额外补偿）
     function _clientToCanvas(cx, cy) {
       var rect = canvas.getBoundingClientRect();
@@ -1945,6 +3004,7 @@ const ADMIN = (() => {
     // 画布内元件拖拽
     var dragState = { nodeId: null, vpStartX: 0, vpStartY: 0, origX: 0, origY: 0, offX: 0, offY: 0, moving: false };
     var rotState  = { nodeId: null, startAngle: 0, origRotation: 0, moving: false, startX: 0, startY: 0 };
+    var waypointDrag = { edgeId: null, pointIdx: 0, circle: null, moving: false };
     canvas.addEventListener('mousedown', function(e) {
       // 旋转手柄
       var rotHandle = e.target.closest('.topo-rotate-handle');
@@ -1965,16 +3025,54 @@ const ADMIN = (() => {
         rotHandle.style.cursor = 'grabbing';
         return;
       }
+      // ── 走线控制点拖拽 ──
+      var wayCircle = e.target.closest('.topo-waypoint');
+      if (wayCircle) {
+        e.stopPropagation(); e.preventDefault();
+        waypointDrag.edgeId = wayCircle.getAttribute('data-edge-id');
+        waypointDrag.pointIdx = parseInt(wayCircle.getAttribute('data-point-idx'));
+        waypointDrag.circle = wayCircle;
+        waypointDrag.moving = false;
+        wayCircle.style.cursor = 'grabbing';
+        return;
+      }
       var nodeEl = e.target.closest('.topo-node');
       if (nodeEl) {
-        // CT 覆盖节点禁止拖拽
-        if (nodeEl.classList.contains('topo-ct-overlay')) {
-          if (e.shiftKey) {
-            _topoToggleSelectNode(topoId, nodeEl.getAttribute('data-node-id'), nodeEl);
-          } else {
-            _topoSelectNode(topoId, nodeEl.getAttribute('data-node-id'), nodeEl);
+        // ── 点击连线模式 ──
+        // 已在连线模式中，点击另一个元件 → 完成连线
+        if (canvas._connectSource) {
+          var cNodeId = nodeEl.getAttribute('data-node-id');
+          if (cNodeId !== canvas._connectSource.nodeId) {
+            _smartConnect(canvas, topoId, canvas._connectSource.nodeId, cNodeId);
           }
+          _exitConnectSource(canvas, topoId);
+          canvas._movedSinceDown = false;
+          e.stopPropagation(); e.preventDefault();
           return;
+        }
+        // 选中了线缆类型 → 进入连线源模式
+        if (canvas._selectedCableType && !nodeEl.classList.contains('topo-ct-overlay')) {
+          e.stopPropagation(); e.preventDefault();
+          var connNodeId = nodeEl.getAttribute('data-node-id');
+          _enterConnectSource(canvas, topoId, connNodeId, nodeEl);
+          canvas._movedSinceDown = false;
+          return;
+        }
+        // ── 原有元件选择/拖拽 ──
+        // CT 覆盖节点（吸附在线上的）：禁止拖拽，仅可选择
+        if (nodeEl.classList.contains('topo-ct-overlay')) {
+          var nodeId = nodeEl.getAttribute('data-node-id');
+          var node = _findNode(canvas, nodeId);
+          // 仅当CT吸附在线上时才禁止拖拽；自由CT可正常拖拽
+          if (node && node.onEdge) {
+            if (e.shiftKey) {
+              _topoToggleSelectNode(topoId, nodeId, nodeEl);
+            } else {
+              _topoSelectNode(topoId, nodeId, nodeEl);
+            }
+            return;
+          }
+          // 自由CT (无onEdge) → 允许拖拽，继续往下走
         }
         e.stopPropagation();
         dragState.nodeId = nodeEl.getAttribute('data-node-id');
@@ -1994,7 +3092,27 @@ const ADMIN = (() => {
         canvas._movedSinceDown = false;
       }
     });
+    // 连线预览状态（挂在 canvas 上，方便 _exitConnectSource 访问）
+    canvas._connPreviewRafId = null;
+    canvas._connPreviewX = 0;
+    canvas._connPreviewY = 0;
     window.addEventListener('mousemove', function(e) {
+      // ── 连线模式：更新预览虚线（rAF节流）──
+      if (canvas._connectSource && canvas._previewLine) {
+        canvas._connPreviewX = e.clientX;
+        canvas._connPreviewY = e.clientY;
+        if (!canvas._connPreviewRafId) {
+          canvas._connPreviewRafId = requestAnimationFrame(function() {
+            canvas._connPreviewRafId = null;
+            var srcNode = _findNode(canvas, canvas._connectSource.nodeId);
+            if (srcNode && canvas._previewLine) {
+              var pt = _clientToCanvas(canvas._connPreviewX, canvas._connPreviewY);
+              canvas._previewLine.setAttribute('x2', pt.x);
+              canvas._previewLine.setAttribute('y2', pt.y);
+            }
+          });
+        }
+      }
       // 旋转中
       if (rotState.nodeId) {
         // 检测鼠标是否实际移动了（至少3px）
@@ -2024,6 +3142,21 @@ const ADMIN = (() => {
         }
         _updateRotationHandle(canvas, rotNode, rotComp);
         _updateEdges(topoId);
+        return;
+      }
+      // ── 走线控制点拖拽 ──
+      if (waypointDrag.edgeId) {
+        waypointDrag.moving = true;
+        var wpt = _clientToCanvas(e.clientX, e.clientY);
+        // 网格吸附
+        wpt.x = Math.round(wpt.x / 10) * 10;
+        wpt.y = Math.round(wpt.y / 10) * 10;
+        if (waypointDrag.circle) {
+          waypointDrag.circle.setAttribute('cx', wpt.x);
+          waypointDrag.circle.setAttribute('cy', wpt.y);
+        }
+        // 实时更新路径
+        _updateWaypointPreview(canvas, topoId, waypointDrag.edgeId, waypointDrag.pointIdx, wpt);
         return;
       }
       // 元件拖拽中
@@ -2066,16 +3199,15 @@ const ADMIN = (() => {
       }
       nodeEl.style.left = newX + 'px';
       nodeEl.style.top = newY + 'px';
+      // 同步数据节点坐标（_updateEdges 依赖 _findNode 读取 data.nodes 中的位置）
+      var dn = _findNode(canvas, dragState.nodeId);
+      if (dn) { dn.x = newX; dn.y = newY; }
       _updateEdges(topoId);
       _drawAlignGuides(canvas, nodeEl);
       // 同步旋转手柄位置
       var rotHandle = canvas.querySelector('.topo-rotate-handle');
-      if (rotHandle && rotHandle.getAttribute('data-node-id') === dragState.nodeId) {
-        var dn = _findNode(canvas, dragState.nodeId);
-        if (dn) {
-          dn.x = newX; dn.y = newY;
-          _updateRotationHandle(canvas, dn, COMPONENT_BY_ID[dn.compId]);
-        }
+      if (rotHandle && rotHandle.getAttribute('data-node-id') === dragState.nodeId && dn) {
+        _updateRotationHandle(canvas, dn, COMPONENT_BY_ID[dn.compId]);
       }
     });
     window.addEventListener('mouseup', function() {
@@ -2099,6 +3231,13 @@ const ADMIN = (() => {
         }
       }
       dragState.nodeId = null; dragState.moving = false;
+      // ── 走线控制点松手 → 提交到 edge 数据 ──
+      if (waypointDrag.edgeId) {
+        _commitWaypoint(canvas, topoId, waypointDrag);
+        waypointDrag.edgeId = null;
+        waypointDrag.circle = null;
+        waypointDrag.moving = false;
+      }
       _drawAlignGuides(canvas, null); // 清除辅助线
     });
 
@@ -2125,12 +3264,20 @@ const ADMIN = (() => {
       tempSvg.appendChild(tempLine);
       canvas.appendChild(tempSvg);
 
+      var _connRafId = null, _connLastX = portPos.x, _connLastY = portPos.y;
       var mousemoveConn = function(ev) {
-        var pt = _clientToCanvas(ev.clientX, ev.clientY);
-        tempLine.setAttribute('x2', pt.x);
-        tempLine.setAttribute('y2', pt.y);
+        _connLastX = ev.clientX; _connLastY = ev.clientY;
+        if (!_connRafId) {
+          _connRafId = requestAnimationFrame(function() {
+            _connRafId = null;
+            var pt = _clientToCanvas(_connLastX, _connLastY);
+            tempLine.setAttribute('x2', pt.x);
+            tempLine.setAttribute('y2', pt.y);
+          });
+        }
       };
       var mouseupConn = function(ev) {
+        if (_connRafId) { cancelAnimationFrame(_connRafId); _connRafId = null; }
         window.removeEventListener('mousemove', mousemoveConn);
         window.removeEventListener('mouseup', mouseupConn);
         tempSvg.remove();
@@ -2148,9 +3295,13 @@ const ADMIN = (() => {
       window.addEventListener('mouseup', mouseupConn);
     }, true);
 
-    // 画布空白点击取消选中
+    // 画布空白点击取消选中 / 退出连线模式
     canvas.addEventListener('click', function(e) {
       if (canvas._movedSinceDown) { canvas._movedSinceDown = false; return; }
+      // 点击空白退出连线模式
+      if (canvas._connectSource && !e.target.closest('.topo-node')) {
+        _exitConnectSource(canvas, topoId);
+      }
       if (e.target === canvas || e.target.classList.contains('topo-edge-line')) {
         _topoDeselect(topoId);
       }
@@ -2196,25 +3347,70 @@ const ADMIN = (() => {
     var nodeData = { id: nodeId, compId: compId, x: x, y: y, label: comp.label || comp.name };
 
     // CT 互感器：检测是否在连线附近（自动吸附到边的中心点）
+    // 仅在画布已有连线时启用吸附；按住Shift键可强制自由放置
     if (comp.overlayEdge) {
-      var bestEdge = null, bestDist = 60; // 60px 吸附阈值
-      data.edges.forEach(function(edge) {
-        var fn = _findNode(canvas, edge.from), tn = _findNode(canvas, edge.to);
-        if (!fn || !tn) return;
-        var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
-        if (!fc || !tc) return;
-        var fp = _getPortPos(fn, edge.fromPort || 'bottom', fc);
-        var tp = _getPortPos(tn, edge.toPort || 'top', tc);
-        var cx = x + comp.width/2, cy = y + comp.height/2;
-        var dist = _pointToSegmentDist(cx, cy, fp.x, fp.y, tp.x, tp.y);
-        if (dist < bestDist) { bestDist = dist; bestEdge = edge; }
-      });
-      if (bestEdge) {
-        // CT 吸附到线缆中心点 (t = 0.5)
-        nodeData.onEdge = bestEdge.id;
-        nodeData.t = 0.5;
-        nodeData.x = 0; nodeData.y = 0;
+      var shiftKey = (window._topoShiftKey || false);
+      if (!shiftKey && data.edges && data.edges.length > 0) {
+        var bestEdge = null, bestDist = 60; // 60px 吸附阈值
+        data.edges.forEach(function(edge) {
+          var fn = _findNode(canvas, edge.from), tn = _findNode(canvas, edge.to);
+          if (!fn || !tn) return;
+          var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
+          if (!fc || !tc) return;
+          var fp = _getPortPos(fn, edge.fromPort || 'center', fc);
+          var tp = _getPortPos(tn, edge.toPort || 'center', tc);
+          var cx = x + comp.width/2, cy = y + comp.height/2;
+          var dist = _pointToSegmentDist(cx, cy, fp.x, fp.y, tp.x, tp.y);
+          if (dist < bestDist) { bestDist = dist; bestEdge = edge; }
+        });
+        if (bestEdge) {
+          // CT 吸附到线缆中心点 (t = 0.5)
+          nodeData.onEdge = bestEdge.id;
+          nodeData.t = 0.5;
+          nodeData.x = 0; nodeData.y = 0;
+        }
       }
+      // 如果没有吸附到线缆，CT作为自由元件放置（可重叠所有线缆）
+    }
+
+    // ── 自动匹配 BOM 中的产品编码 ──
+    // 读取当前 BOM 行，尝试匹配元件类型
+    var card = document.querySelector('.topo-admin-card[data-topo-id="' + topoId + '"]');
+    if (card) {
+      var bomRowEls = card.querySelectorAll('.bom-row');
+      var hasMatched = false;
+      bomRowEls.forEach(function(row, bomIdx) {
+        if (hasMatched) return;
+        var inputs = row.querySelectorAll('input');
+        if (inputs.length < 5 || !inputs[0].value.trim()) return;
+        var bomCat = inputs[0].value.trim();
+        var bomCompId = BOM_CAT_TO_COMPID[bomCat];
+        if (!bomCompId) {
+          for (var cid in COMPONENT_BY_ID) {
+            if (COMPONENT_BY_ID[cid].name === bomCat || COMPONENT_BY_ID[cid].label === bomCat) {
+              bomCompId = cid; break;
+            }
+          }
+        }
+        if (bomCompId === compId) {
+          // 统计画布上已有多少个该 BOM 行的元件
+          var existingCount = 0;
+          data.nodes.forEach(function(n) {
+            if (n.compId === compId && n.bomIndex === bomIdx) existingCount++;
+          });
+          var bomQty = parseInt(inputs[3].value.trim()) || 1;
+          if (existingCount < bomQty) {
+            nodeData.productCode = inputs[1].value.trim();
+            nodeData.productDesc = inputs[2].value.trim();
+            nodeData.bomQty = bomQty;
+            nodeData.bomRemark = inputs[4].value.trim();
+            nodeData.bomIndex = bomIdx;
+            nodeData.bomInstance = existingCount;
+            nodeData.label = bomQty > 1 ? (bomCat + (existingCount + 1)) : bomCat;
+            hasMatched = true;
+          }
+        }
+      });
     }
 
     data.nodes.push(nodeData);
@@ -2271,16 +3467,16 @@ const ADMIN = (() => {
       if (!fn || !tn) return;
       var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
       if (!fc || !tc) return;
-      var fp = _getPortPos(fn, edge.fromPort || 'bottom', fc);
-      var tp = _getPortPos(tn, edge.toPort || 'top', tc);
+      var fp = _getPortPos(fn, edge.fromPort || 'center', fc);
+      var tp = _getPortPos(tn, edge.toPort || 'center', tc);
       var line = edgeSvg.querySelector('line');
       var path = edgeSvg.querySelector('path:not(.edge-hit-area)');
       if (line) { line.setAttribute('x1', fp.x); line.setAttribute('y1', fp.y); line.setAttribute('x2', tp.x); line.setAttribute('y2', tp.y); }
       else if (path) {
         // 实时重算折线路径（同 _buildCablePath 逻辑）
-        var fromPortSide = edge.fromPort || 'bottom';
-        var toPortSide = edge.toPort || 'top';
-        var cablePath = _buildCablePath(fp, tp, fromPortSide, toPortSide, data.nodes, fn, tn);
+        var fromPortSide = edge.fromPort || 'center';
+        var toPortSide = edge.toPort || 'center';
+        var cablePath = _buildCablePath(fp, tp, fromPortSide, toPortSide, data.nodes, fn, tn, fc, tc);
         path.setAttribute('d', cablePath.path);
         var hitArea = edgeSvg.querySelector('.edge-hit-area');
         if (hitArea) hitArea.setAttribute('d', cablePath.path);
@@ -2322,8 +3518,8 @@ const ADMIN = (() => {
       if (!cfn || !ctn) return;
       var cfc = COMPONENT_BY_ID[cfn.compId], ctc = COMPONENT_BY_ID[ctn.compId];
       if (!cfc || !ctc) return;
-      var cfp = _getPortPos(cfn, ctEdge.fromPort || 'bottom', cfc);
-      var ctp = _getPortPos(ctn, ctEdge.toPort || 'top', ctc);
+      var cfp = _getPortPos(cfn, ctEdge.fromPort || 'center', cfc);
+      var ctp = _getPortPos(ctn, ctEdge.toPort || 'center', ctc);
       var t = ctNode.t || 0.5;
       var c = COMPONENT_BY_ID['ct'];
       ctEl.style.left = (cfp.x + (ctp.x - cfp.x) * t - c.width/2) + 'px';
@@ -2426,8 +3622,36 @@ const ADMIN = (() => {
       return;
     }
 
+    // ── 获取元件可用的产品编码选项 ──
+    var productOptions = _getProductCodesForComp(node.compId);
+    // 如果当前已有编码但不在列表中，追加进去
+    if (node.productCode && !productOptions.some(function(o) { return o.code === node.productCode; })) {
+      productOptions.unshift({ code: node.productCode, desc: node.productDesc || '' });
+    }
+    var productOptionsHTML = '';
+    var datalistId = 'pc-list-' + topoId + '-' + nodeId;
+    if (productOptions.length > 0) {
+      // 统一使用 input+datalist，支持完整显示文本
+      var displayVal = node.productCode ? (node.productCode + ' | ' + (node.productDesc || '')) : '';
+      productOptionsHTML =
+        '<div class="topo-pc-picker">' +
+          '<input list="' + datalistId + '" value="' + displayVal.replace(/"/g, '&quot;') + '"' +
+            ' onchange="ADMIN._topoPickProductCode(\'' + topoId + '\',\'' + nodeId + '\',this)"' +
+            ' placeholder="搜索/选择产品编码..."' +
+            ' style="font-size:11px;border:1px solid rgba(230,126,34,0.4);background:rgba(230,126,34,0.1);color:#f5a623;width:100%;box-sizing:border-box;padding:5px 8px;border-radius:5px" />' +
+          '<datalist id="' + datalistId + '">';
+      productOptions.forEach(function(o) {
+        productOptionsHTML += '<option value="' + o.code + ' | ' + (o.desc || '') + '">' + (o.desc || '') + '</option>';
+      });
+      productOptionsHTML += '</datalist></div>';
+    }
+
     body.innerHTML =
       '<div class="topo-prop-group"><label>元件类型</label><input readonly value="' + (comp ? comp.name : '未知') + '" /></div>' +
+      '<div class="topo-prop-group"><label>🔗 关联产品编码</label>' + (productOptionsHTML || '<input value="' + (node.productCode || '') + '" placeholder="输入物料编码..." onchange="ADMIN._topoAssignProductCode(\'' + topoId + '\',\'' + nodeId + '\',this.value)" style="font-size:11px" />') + '</div>' +
+      (node.productCode ? '<div class="topo-prop-group"><label>编码描述</label><textarea readonly rows="' + Math.max(2, Math.ceil((node.productDesc || '').length / 35)) + '" style="font-size:10px;background:rgba(230,126,34,0.08);resize:none;min-height:30px">' + (node.productDesc || '') + '</textarea></div>' : '') +
+      (node.bomQty ? '<div class="topo-prop-group"><label>BOM数量</label><input readonly value="' + node.bomQty + '" /></div>' : '') +
+      (node.bomRemark ? '<div class="topo-prop-group"><label>BOM备注</label><input readonly value="' + node.bomRemark + '" /></div>' : '') +
       '<div class="topo-prop-group"><label>显示标签</label><input value="' + (node.label || '').replace(/"/g, '&quot;') + '" oninput="ADMIN._topoUpdateLabel(\'' + topoId + '\',\'' + nodeId + '\',this.value)" /></div>' +
       '<div class="topo-prop-group"><label>描述</label><textarea rows="2" placeholder="元件描述..." oninput="ADMIN._topoUpdateDescription(\'' + topoId + '\',\'' + nodeId + '\',this.value)" style="resize:vertical;min-height:40px;font-size:11px">' + (node.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>' +
       '<div class="topo-prop-group"><label>X 坐标</label><input type="number" value="' + Math.round(node.x) + '" onchange="ADMIN._topoUpdatePos(\'' + topoId + '\',\'' + nodeId + '\',\'x\',this.value)" /></div>' +
@@ -2617,6 +3841,66 @@ const ADMIN = (() => {
     }
   }
 
+  // ── 为元件分配产品编码 ──
+  function _topoPickProductCode(topoId, nodeId, input) {
+    var val = (input.value || '').trim();
+    // 从 "code | desc" 格式中提取编码部分
+    var code = val.split('|')[0].trim();
+    if (code === val) code = ''; // 如果用户只输入了编码（无|），当作完整编码
+    // 如果是已知编码则提取，否则当作清除
+    _topoAssignProductCode(topoId, nodeId, code || '');
+  }
+
+  function _topoAssignProductCode(topoId, nodeId, code) {
+    var canvas = document.getElementById('topo-canvas-' + topoId);
+    var node = _findNode(canvas, nodeId);
+    if (!node) return;
+    if (!code) {
+      // 清除关联
+      delete node.productCode;
+      delete node.productDesc;
+      delete node.bomQty;
+      delete node.bomRemark;
+      delete node.bomIndex;
+      delete node.bomInstance;
+    } else {
+      node.productCode = code;
+      // 从产品数据中查找描述
+      var found = false;
+      for (var compId in PRODUCT_CODE_MAP) {
+        var list = PRODUCT_CODE_MAP[compId];
+        for (var i = 0; list && i < list.length; i++) {
+          if (list[i].code === code) {
+            node.productDesc = list[i].desc;
+            found = true; break;
+          }
+        }
+        if (found) break;
+      }
+      // 如果 PRODUCT_CODE_MAP 里没找到，尝试全局搜索 DATA
+      if (!found) {
+        for (var key in DATA) {
+          if (!Array.isArray(DATA[key])) continue;
+          var arr = DATA[key];
+          for (var j = 0; j < arr.length; j++) {
+            if (arr[j].code === code) {
+              node.productDesc = arr[j].desc;
+              found = true; break;
+            }
+          }
+          if (found) break;
+        }
+      }
+      if (!found) node.productDesc = '';
+    }
+    _syncAndRender(canvas, topoId);
+    // 刷新属性面板
+    setTimeout(function() {
+      var nodeEl = canvas.querySelector('.topo-node[data-node-id="' + nodeId + '"]');
+      if (nodeEl) _topoSelectNode(topoId, nodeId, nodeEl);
+    }, 50);
+  }
+
   // ── 连线删除（点击连线选中后删除） ──
   // (简化：连线不可选中，拖拽时自动覆盖旧连接)
 
@@ -2628,8 +3912,12 @@ const ADMIN = (() => {
 
     var oldZoom = canvas._zoom;
     var newZoom = oldZoom * factor;
-    newZoom = Math.max(0.3, Math.min(2, newZoom));
+    newZoom = Math.max(0.05, Math.min(20, newZoom)); // 支持 5% ~ 2000% 无极缩放
     canvas._zoom = newZoom;
+
+    // 动态调整网格密度（跟随缩放级别，网格在 wrap 上）
+    var wrapForGrid = document.getElementById('topo-canvas-wrap-' + topoId);
+    _adjustGridForZoom(wrapForGrid, newZoom);
 
     // 确定缩放锚点：有鼠标坐标时用鼠标位置，否则用画布容器中心
     var anchorX, anchorY;
@@ -2659,13 +3947,43 @@ const ADMIN = (() => {
     _topoUpdateZoomLabel(topoId);
   }
 
+  // 动态调整网格密度（网格现在在 wrap 的伪元素上）
+  function _adjustGridForZoom(wrap, zoom) {
+    var smallSize, largeSize, smallAlpha, largeAlpha;
+    if (zoom < 0.2) {
+      smallSize = 100; largeSize = 500; smallAlpha = 0.03; largeAlpha = 0.08;
+    } else if (zoom < 0.5) {
+      smallSize = 50; largeSize = 250; smallAlpha = 0.03; largeAlpha = 0.08;
+    } else if (zoom < 1.5) {
+      smallSize = 10; largeSize = 50; smallAlpha = 0.04; largeAlpha = 0.1;
+    } else if (zoom < 4) {
+      smallSize = 5; largeSize = 25; smallAlpha = 0.04; largeAlpha = 0.1;
+    } else {
+      smallSize = 2; largeSize = 10; smallAlpha = 0.04; largeAlpha = 0.1;
+    }
+    if (!wrap) return;
+    wrap.style.setProperty('--grid-small', smallSize + 'px');
+    wrap.style.setProperty('--grid-large', largeSize + 'px');
+    wrap.style.setProperty('--grid-small-alpha', smallAlpha);
+    wrap.style.setProperty('--grid-large-alpha', largeAlpha);
+  }
+
   function _topoResetView(topoId) {
     var canvas = document.getElementById('topo-canvas-' + topoId);
+    var wrap = document.getElementById('topo-canvas-wrap-' + topoId);
     canvas._zoom = 1;
     canvas.style.transform = '';
     canvas.style.transformOrigin = '';
-    canvas.style.left = '';
-    canvas.style.top = '';
+    // 居中画布：让内容区域（0~1200, 0~900）居中于容器
+    if (wrap) {
+      var contentW = 1200, contentH = 900;  // 典型内容区域
+      canvas.style.left = Math.round((wrap.clientWidth - contentW) / 2) + 'px';
+      canvas.style.top = Math.round((wrap.clientHeight - contentH) / 2) + 'px';
+    } else {
+      canvas.style.left = '';
+      canvas.style.top = '';
+    }
+    _adjustGridForZoom(wrap, 1);
     _topoUpdateZoomLabel(topoId);
   }
 
@@ -2698,13 +4016,15 @@ const ADMIN = (() => {
         if (!canvas) return;
         var wrapEl = document.getElementById('topo-canvas-wrap-' + topoId);
         if (!wrapEl) return;
-        var fit = Math.min(wrapEl.clientWidth / 1200, wrapEl.clientHeight / 900, 1.2);
-        fit = Math.max(0.3, Math.min(2, fit));
+        var contentW = 1200, contentH = 900;
+        var fit = Math.min(wrapEl.clientWidth / contentW, wrapEl.clientHeight / contentH, 2);
+        fit = Math.max(0.1, Math.min(10, fit));
         canvas._zoom = fit;
-        canvas.style.left = '';
-        canvas.style.top = '';
-        canvas.style.transform = 'scale(' + canvas._zoom + ')';
-        canvas.style.transformOrigin = 'center center';
+        // 居中内容区域
+        canvas.style.left = Math.round((wrapEl.clientWidth - contentW * fit) / 2) + 'px';
+        canvas.style.top = Math.round((wrapEl.clientHeight - contentH * fit) / 2) + 'px';
+        canvas.style.transform = 'scale(' + fit + ')';
+        canvas.style.transformOrigin = '0 0';
         _topoUpdateZoomLabel(topoId);
       }, 100);
     }
@@ -2717,18 +4037,130 @@ const ADMIN = (() => {
     var data = canvas._diagramData || { nodes: [], edges: [] };
     var html = '';
 
-    // 连接线层（带颜色和标识）
+    // ── 连接线层（带颜色和标识，支持叠印）──
+    // 按 (from, to, fromPort, toPort, cableType) 分组，不同缆型走不同偏移避免重叠
+    var edgeGroups = {};
+    data.edges.forEach(function(e) {
+      var key = e.from + '|' + (e.fromPort || 'center') + '|' + e.to + '|' + (e.toPort || 'center') + '|' + (e.cableType || 'ethernet');
+      if (!edgeGroups[key]) edgeGroups[key] = [];
+      edgeGroups[key].push(e);
+    });
+
+    var edgeIndex = {}; // edgeId → {groupSize, idx, offsetX, offsetY, perpX, perpY}
+    var stackSpacing = 6; // 叠放间距(px)
+
+    for (var gk in edgeGroups) {
+      var group = edgeGroups[gk];
+      if (group.length <= 1) {
+        // 单线，无偏移
+        group.forEach(function(e) { edgeIndex[e.id] = { groupSize: 1, idx: 0, offsetX: 0, offsetY: 0, perpX: 0, perpY: 0, portOffsetX: 0, portOffsetY: 0 }; });
+        continue;
+      }
+      // 计算这组线缆的方向和垂直单位向量
+      var e0 = group[0];
+      var fn0 = _findNode(canvas, e0.from), tn0 = _findNode(canvas, e0.to);
+      if (!fn0 || !tn0) continue;
+      var fc0 = COMPONENT_BY_ID[fn0.compId], tc0 = COMPONENT_BY_ID[tn0.compId];
+      if (!fc0 || !tc0) continue;
+      var fp0 = _getPortPos(fn0, e0.fromPort || 'center', fc0);
+      var tp0 = _getPortPos(tn0, e0.toPort || 'center', tc0);
+      var dx = tp0.x - fp0.x, dy = tp0.y - fp0.y;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var perpX = -dy / len, perpY = dx / len;
+      // 为每条线计算叠放偏移
+      group.forEach(function(e, i) {
+        var offset = (i - (group.length - 1) / 2) * stackSpacing;
+        edgeIndex[e.id] = {
+          groupSize: group.length, idx: i,
+          offsetX: perpX * offset, offsetY: perpY * offset,
+          perpX: perpX, perpY: perpY,
+          portOffsetX: 0, portOffsetY: 0
+        };
+      });
+    }
+
+    // ── 端口级自动均布：多条线缆连到同一元件同一端口时水平/垂直均匀排布 ──
+    var portGroups = {}; // nodeId|portId → edges[]
+    data.edges.forEach(function(e) {
+      var fk = e.from + '|' + (e.fromPort || 'center');
+      var tk = e.to + '|' + (e.toPort || 'center');
+      if (!portGroups[fk]) portGroups[fk] = [];
+      if (!portGroups[tk]) portGroups[tk] = [];
+      portGroups[fk].push({ edge: e, isFrom: true });
+      portGroups[tk].push({ edge: e, isFrom: false });
+    });
+    var PORT_SPACING = 14; // 端口均布间距(px)
+    for (var pk in portGroups) {
+      var pg = portGroups[pk];
+      if (pg.length <= 1) continue;
+      // 取第一个来判定端口方向
+      var firstEdge = pg[0].edge;
+      var firstNode = _findNode(canvas, pg[0].isFrom ? firstEdge.from : firstEdge.to);
+      var firstComp = firstNode ? COMPONENT_BY_ID[firstNode.compId] : null;
+      var portId = pg[0].isFrom ? (firstEdge.fromPort || 'center') : (firstEdge.toPort || 'center');
+      var side = 'bottom';
+      var isVertical = true;
+
+      if (portId === 'center') {
+        // center 端口：根据对方节点的空间分布自适应偏移方向
+        // 计算所有对方节点中心，判断线缆主要方向，在垂直方向做均布
+        var cx = firstNode ? (firstNode.x + (firstNode.w || 0) / 2) : 0;
+        var cy = firstNode ? (firstNode.y + (firstNode.h || 0) / 2) : 0;
+        var oNodes = [];
+        pg.forEach(function(item) {
+          var oid = item.isFrom ? item.edge.to : item.edge.from;
+          var on = _findNode(canvas, oid);
+          if (on) oNodes.push({ node: on, dx: on.x + (on.w || 0) / 2 - cx, dy: on.y + (on.h || 0) / 2 - cy });
+        });
+        // 计算对方节点在 X 和 Y 方向的跨度
+        if (oNodes.length > 0) {
+          var minX = oNodes[0].dx, maxX = oNodes[0].dx;
+          var minY = oNodes[0].dy, maxY = oNodes[0].dy;
+          oNodes.forEach(function(n) {
+            if (n.dx < minX) minX = n.dx; if (n.dx > maxX) maxX = n.dx;
+            if (n.dy < minY) minY = n.dy; if (n.dy > maxY) maxY = n.dy;
+          });
+          var spanX = maxX - minX;
+          var spanY = maxY - minY;
+          // X 跨度大（对方水平分布）→ 垂直方向偏移；否则水平偏移
+          isVertical = (spanX >= spanY);
+        }
+      } else if (firstComp) {
+        var pp = null;
+        (firstComp.ports || []).forEach(function(p) { if (p.id === portId) pp = p; });
+        if (pp) side = pp.side || portId;
+        isVertical = (side === 'top' || side === 'bottom');
+      }
+
+      pg.forEach(function(item, i) {
+        var offset = (i - (pg.length - 1) / 2) * PORT_SPACING;
+        var ei = edgeIndex[item.edge.id];
+        if (!ei) { ei = { offsetX: 0, offsetY: 0, portOffsetX: 0, portOffsetY: 0, groupSize: 1, idx: 0, perpX: 0, perpY: 0 }; edgeIndex[item.edge.id] = ei; }
+        if (isVertical) {
+          ei.portOffsetX = offset;
+          ei.portOffsetY = ei.portOffsetY || 0;
+        } else {
+          ei.portOffsetY = offset;
+          ei.portOffsetX = ei.portOffsetX || 0;
+        }
+      });
+    }
+
     data.edges.forEach(function(e) {
       var fn = _findNode(canvas, e.from), tn = _findNode(canvas, e.to);
       if (!fn || !tn) return;
       var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
       if (!fc || !tc) return;
-      var fp = _getPortPos(fn, e.fromPort || 'bottom', fc);
-      var tp = _getPortPos(tn, e.toPort || 'top', tc);
+      var fp = _getPortPos(fn, e.fromPort || 'center', fc);
+      var tp = _getPortPos(tn, e.toPort || 'center', tc);
+      var ei = edgeIndex[e.id] || { offsetX: 0, offsetY: 0, portOffsetX: 0, portOffsetY: 0 };
+      // 施加叠放偏移 + 端口均布偏移
+      var ofp = { x: fp.x + ei.offsetX + (ei.portOffsetX || 0), y: fp.y + ei.offsetY + (ei.portOffsetY || 0) };
+      var otp = { x: tp.x + ei.offsetX + (ei.portOffsetX || 0), y: tp.y + ei.offsetY + (ei.portOffsetY || 0) };
       var ct = CABLE_BY_ID[e.cableType] || CABLE_BY_ID['ethernet'];
-      var fromPortSide = (e.fromPort || 'bottom');
-      var toPortSide   = (e.toPort    || 'top');
-      var cable = _buildCablePath(fp, tp, fromPortSide, toPortSide, data.nodes, fn, tn);
+      var fromPortSide = (e.fromPort || 'center');
+      var toPortSide   = (e.toPort    || 'center');
+      var cable = _buildCablePath(ofp, otp, fromPortSide, toPortSide, data.nodes, fn, tn, fc, tc, e.waypoints);
       var midX = cable.midX, midY = cable.midY;
       var isSel = (canvas._selectedEdgeId === e.id);
       html += '<svg class="topo-edge-line' + (isSel ? ' selected' : '') + '" data-edge-id="' + e.id +
@@ -2745,11 +4177,22 @@ const ADMIN = (() => {
         '<text class="cable-label" x="' + midX + '" y="' + (midY + 1) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#fff"' +
         ' font-family="Arial,sans-serif">' + ct.label + '</text>' +
         // 端点标记（区分缆型）
-        _getCableEndMarkers(e.cableType, tp.x, tp.y, ct.color) +
-        '</svg>';
+        _getCableEndMarkers(e.cableType, otp.x, otp.y, ct.color);
+      // 选中时渲染可拖拽控制点
+      if (isSel && cable.points) {
+        for (var pi = 1; pi < cable.points.length - 1; pi++) {
+          var pt = cable.points[pi];
+          html += '<circle class="topo-waypoint" data-edge-id="' + e.id + '" data-point-idx="' + pi +
+            '" cx="' + pt.x + '" cy="' + pt.y + '" r="5" fill="#fff" stroke="' + ct.color +
+            '" stroke-width="2" style="cursor:move"/>';
+        }
+      }
+      html += '</svg>';
     });
 
-    // CT 覆盖节点（先于普通节点渲染，放在线段之后）
+    // CT 覆盖节点（渲染在线缆上方的CT节点，旧格式兼容）
+    // 分两类：有 onEdge 的吸附CT + 无 onEdge 的自由CT（自由CT用topo-ct-free类）
+    // ── 吸附型 CT（依附在特定线缆上，考虑叠放偏移）──
     data.nodes.forEach(function(n) {
       if (n.compId !== 'ct' || !n.onEdge) return;
       var edge = null;
@@ -2761,8 +4204,12 @@ const ADMIN = (() => {
       if (!fn || !tn) return;
       var fc = COMPONENT_BY_ID[fn.compId], tc = COMPONENT_BY_ID[tn.compId];
       if (!fc || !tc) return;
-      var fp = _getPortPos(fn, edge.fromPort || 'bottom', fc);
-      var tp = _getPortPos(tn, edge.toPort || 'top', tc);
+      var fp = _getPortPos(fn, edge.fromPort || 'center', fc);
+      var tp = _getPortPos(tn, edge.toPort || 'center', tc);
+      // 应用叠放偏移 + 端口均布偏移
+      var ei = edgeIndex[edge.id] || { offsetX: 0, offsetY: 0, portOffsetX: 0, portOffsetY: 0 };
+      fp = { x: fp.x + ei.offsetX + (ei.portOffsetX || 0), y: fp.y + ei.offsetY + (ei.portOffsetY || 0) };
+      tp = { x: tp.x + ei.offsetX + (ei.portOffsetX || 0), y: tp.y + ei.offsetY + (ei.portOffsetY || 0) };
       var t = n.t || 0.5;
       var cx = fp.x + (tp.x - fp.x) * t, cy = fp.y + (tp.y - fp.y) * t;
       var c = COMPONENT_BY_ID['ct'];
@@ -2771,15 +4218,26 @@ const ADMIN = (() => {
         '<div class="topo-node-label">' + (n.label || 'CT') + '</div></div>';
     });
 
-    // 普通节点（排除已渲染的CT覆盖节点）
+    // 普通节点（排除已渲染的CT吸附节点；自由CT用topo-ct-overlay类确保在线缆上方）
     data.nodes.forEach(function(n) {
-      if (n.compId === 'ct' && n.onEdge) return; // 已在上方渲染
+      if (n.compId === 'ct' && n.onEdge) return; // 吸附CT已在上面渲染
       var c = COMPONENT_BY_ID[n.compId]; if (!c) return;
       var rot = n.rotation || 0;
       var trans = rot ? ';transform:rotate(' + rot + 'deg);transform-origin:' + (c.width/2) + 'px ' + (c.height/2) + 'px' : '';
-      html += '<div class="topo-node" data-node-id="' + n.id + '" data-comp-id="' + n.compId + '" style="left:' + n.x + 'px;top:' + n.y + 'px' + trans + '">' +
+      // 自由CT节点加 topo-ct-overlay 类获得更高z-index（渲染在线缆之上）
+      var extraClass = (n.compId === 'ct' && !n.onEdge) ? ' topo-ct-overlay' : '';
+      html += '<div class="topo-node' + extraClass + '" data-node-id="' + n.id + '" data-comp-id="' + n.compId + '" style="left:' + n.x + 'px;top:' + n.y + 'px' + trans + '">' +
         '<svg viewBox="0 0 ' + c.width + ' ' + c.height + '" width="' + c.width + '" height="' + c.height + '">' + c.svg + '</svg>' +
         '<div class="topo-node-label">' + (n.label || c.label || c.name) + '</div>';
+      // 产品编码标签（显示在元件上方，有编码的元件均展示）
+      if (n.productCode) {
+        var shortCode = n.productCode.length > 11 ? n.productCode.substring(0, 10) + '…' : n.productCode;
+        html += '<div class="topo-node-code" title="物料编码: ' + n.productCode + (n.productDesc ? '\n描述: ' + n.productDesc : '') + '">' + shortCode + '</div>';
+      }
+      // BOM数量角标（数量>1时显示序号，所有有关联BOM的元件均展示）
+      if (n.bomQty && n.bomQty > 1 && n.bomInstance !== undefined) {
+        html += '<div class="topo-node-qty" title="BOM数量: ' + n.bomQty + '; 第' + (n.bomInstance + 1) + '个实例">' + (n.bomInstance + 1) + '</div>';
+      }
       // 连接点
       (c.ports || []).forEach(function(p) {
         html += '<div class="topo-port" data-port-id="' + p.id + '" style="left:' + (c.width * p.x) + 'px;top:' + (c.height * p.y) + 'px"></div>';
@@ -2833,8 +4291,8 @@ const ADMIN = (() => {
     body.innerHTML =
       '<div class="topo-prop-group"><label>连接线缆</label><div style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + ct.color + '"></span><span style="font-size:11px;color:rgba(180,210,255,0.7)">' + ct.name + '</span></div></div>' +
       '<div class="topo-prop-group"><label>线缆类型</label><select onchange="ADMIN._topoUpdateEdgeType(\'' + topoId + '\',\'' + edgeId + '\',this.value)">' + cableOpts + '</select></div>' +
-      '<div class="topo-prop-group"><label>起点 (' + (edge.fromPort || 'bottom') + ')</label><select onchange="ADMIN._topoUpdateEdgePort(\'' + topoId + '\',\'' + edgeId + '\',\'fromPort\',this.value)">' + _buildPortOptions(canvas, edge.from, edge.fromPort) + '</select></div>' +
-      '<div class="topo-prop-group"><label>终点 (' + (edge.toPort || 'top') + ')</label><select onchange="ADMIN._topoUpdateEdgePort(\'' + topoId + '\',\'' + edgeId + '\',\'toPort\',this.value)">' + _buildPortOptions(canvas, edge.to, edge.toPort) + '</select></div>' +
+      '<div class="topo-prop-group"><label>起点 (' + (edge.fromPort || 'center') + ')</label><select onchange="ADMIN._topoUpdateEdgePort(\'' + topoId + '\',\'' + edgeId + '\',\'fromPort\',this.value)">' + _buildPortOptions(canvas, edge.from, edge.fromPort) + '</select></div>' +
+      '<div class="topo-prop-group"><label>终点 (' + (edge.toPort || 'center') + ')</label><select onchange="ADMIN._topoUpdateEdgePort(\'' + topoId + '\',\'' + edgeId + '\',\'toPort\',this.value)">' + _buildPortOptions(canvas, edge.to, edge.toPort) + '</select></div>' +
       '<div class="topo-prop-group">' +
         '<label>更换连接</label>' +
         '<div style="display:flex;gap:4px">' +
@@ -3142,6 +4600,99 @@ const ADMIN = (() => {
     switchTab(tab);
   }
 
+  // ── 站点设置 ──────────────────────────────────────────────
+  function renderSiteSettings() {
+    var s = STORAGE.get('settings') || {};
+    var cities = s.weatherCities || [];
+    var quotes = s.quotes || [];
+    var tips = s.tips || [];
+
+    var citiesText = cities.map(function(c){ return c.zh + ',' + c.en; }).join('\n');
+    var quotesText = quotes.join('\n');
+    var tipsText = tips.map(function(t){ return t.icon + ' ' + t.text; }).join('\n');
+
+    var html = '<div style="display:grid;gap:18px;max-width:700px">';
+
+    // 城市列表
+    html += '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">';
+    html += '<div style="font-size:14px;font-weight:600;color:#64b4ff;margin-bottom:8px">🌍 天气城市列表</div>';
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px">每行一个城市，格式：中文名,英文名。例：深圳,Shenzhen</div>';
+    html += '<textarea id="ss-cities" rows="12" style="width:100%;font-family:monospace;font-size:12px;resize:vertical">' + citiesText + '</textarea>';
+    html += '</div>';
+
+    // 励志文案
+    html += '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">';
+    html += '<div style="font-size:14px;font-weight:600;color:#64b4ff;margin-bottom:8px">💬 励志文案</div>';
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px">每行一条文案，首页天气栏旁边轮播显示</div>';
+    html += '<textarea id="ss-quotes" rows="10" style="width:100%;font-family:monospace;font-size:12px;resize:vertical">' + quotesText + '</textarea>';
+    html += '</div>';
+
+    // 操作技巧
+    html += '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">';
+    html += '<div style="font-size:14px;font-weight:600;color:#64b4ff;margin-bottom:8px">💡 操作技巧</div>';
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px">每行一条，格式：icon + 空格 + 文字。例：💡 配置完记得先预览再导出 Excel</div>';
+    html += '<textarea id="ss-tips" rows="10" style="width:100%;font-family:monospace;font-size:12px;resize:vertical">' + tipsText + '</textarea>';
+    html += '</div>';
+
+    html += '</div>';
+    document.getElementById('admin-sitesettings-content').innerHTML = html;
+  }
+
+  function saveSiteSettings() {
+    var citiesText = (document.getElementById('ss-cities') || {}).value || '';
+    var quotesText = (document.getElementById('ss-quotes') || {}).value || '';
+    var tipsText = (document.getElementById('ss-tips') || {}).value || '';
+
+    // 解析城市
+    var cities = [];
+    citiesText.split('\n').forEach(function(line){
+      line = line.trim();
+      if (!line) return;
+      var parts = line.split(',');
+      var zh = (parts[0] || '').trim();
+      var en = (parts[1] || '').trim();
+      if (zh && en) cities.push({zh:zh, en:en});
+    });
+
+    // 解析语录
+    var quotes = [];
+    quotesText.split('\n').forEach(function(line){
+      line = line.trim();
+      if (line) quotes.push(line);
+    });
+
+    // 解析技巧
+    var tips = [];
+    tipsText.split('\n').forEach(function(line){
+      line = line.trim();
+      if (!line) return;
+      var spaceIdx = line.indexOf(' ');
+      if (spaceIdx > 0) {
+        tips.push({icon: line.substring(0, spaceIdx), text: line.substring(spaceIdx + 1)});
+      } else {
+        tips.push({icon: '💡', text: line});
+      }
+    });
+
+    var s = STORAGE.get('settings') || {};
+    s.weatherCities = cities;
+    s.quotes = quotes;
+    s.tips = tips;
+    STORAGE.set('settings', s);
+    alert('✅ 站点设置已保存！刷新首页生效。');
+  }
+
+  function resetSiteSettings() {
+    if (!confirm('确定要恢复默认设置吗？将清除所有自定义城市、文案和技巧。')) return;
+    var s = STORAGE.get('settings') || {};
+    delete s.weatherCities;
+    delete s.quotes;
+    delete s.tips;
+    STORAGE.set('settings', s);
+    renderSiteSettings();
+    alert('✅ 已恢复默认设置。刷新首页生效。');
+  }
+
   // ── 模态框 ────────────────────────────────────────────────
   function closeModal(id) {
     const el = document.getElementById(id);
@@ -3152,17 +4703,20 @@ const ADMIN = (() => {
   return {
     init, switchTab, backToMain, toggleTheme, toggleSidebar, applyTheme, closeModal,
     showCreateUser, showEditUser, saveUser, deleteUser,
-    renderUserList, renderProductList, addProduct, removeProduct, saveProducts,
+    renderUserList, renderProductList, addProduct, removeProduct, saveProducts, toggleProductEdit,
     showEditCategory, saveCategory, deleteCategory, showNewCategory, saveNewCategory,
-    renderReqFieldList, saveReqFields, resetReqFields,
+    renderReqFieldList, saveReqFields, resetReqFields, onRfTypeChange,
     renderProjectList, deleteProject, importProjects,
     showProfile, closeProfile, randomizeAvatar, changePassword, profileGoTo,
     renderTopoAdminList, addTopoScene, deleteTopoScene, toggleTopoEditor,
     saveTopoData, resetTopoData,
-    addInfoBlock, addInfoItem, addExtraBlock, addExtraItem, addBomRow,
+    addInfoBlock, addInfoItem, addExtraBlock, addExtraItem, addBomRow, _renumberBomRows,
     _initTopoEditor, _filterComponentLib, _onLibDragStart, _onLibDragEnd,
     _selectCableType, _topoZoom, _topoResetView, _topoToggleFullscreen, _topoDeselect, _topoDeleteNode, _topoDuplicateNode,
     _topoUpdateLabel, _topoUpdatePos, _topoUpdateCTPos, _topoUpdateDescription,
-    _topoUpdateEdgeType, _topoDeleteEdge, _topoReconnectEdge, _topoSaveCurrent, _generateSvgFromDiagram
+    _topoPickProductCode, _topoAssignProductCode, _topoUpdateEdgeType, _topoDeleteEdge, _topoReconnectEdge, _topoSaveCurrent, _generateSvgFromDiagram,
+    _syncBomToCanvas, _refreshProductCodeMap,
+    _openCableManager, _closeCableManager, _addCableType, _deleteCableType, _updateCableField, _resetCableTypes, _saveAndCloseCableManager,
+    renderSiteSettings, saveSiteSettings, resetSiteSettings
   };
 })();

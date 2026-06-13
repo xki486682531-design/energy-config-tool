@@ -866,7 +866,8 @@ function toggleTheme() {
   // 天气：wttr.in 实时数据（中文）
   async function fetchWeather() {
     try {
-      const resp = await fetch('https://wttr.in/?format=j1&lang=zh', { signal: AbortSignal.timeout(5000) });
+      const savedCity = localStorage.getItem('ess-weather-city-en') || 'Shenzhen';
+      const resp = await fetch('https://wttr.in/' + encodeURIComponent(savedCity) + '?format=j1', { signal: AbortSignal.timeout(5000) });
       const data = await resp.json();
       const cur = data.current_condition[0];
       const code = parseInt(cur.weatherCode) || 0;
@@ -890,53 +891,59 @@ function toggleTheme() {
 
       if (wIcon) wIcon.textContent = emoji;
       if (wDesc) {
-        // 使用中文天气描述（lang_zh 或 手动翻译 weatherCode）
-        var zhDesc = '';
-        if (cur.lang_zh && cur.lang_zh.length) {
-          zhDesc = cur.lang_zh[0].value;
-        } else {
-          // fallback：手动翻译常见天气
-          var zhMap = {
-            'Clear':'晴','Sunny':'晴','Partly cloudy':'多云','Cloudy':'阴','Overcast':'阴',
-            'Mist':'薄雾','Fog':'雾','Freezing fog':'冻雾','Patchy rain possible':'局部阵雨',
-            'Patchy snow possible':'局部阵雪','Patchy sleet possible':'局部雨夹雪',
-            'Patchy freezing drizzle possible':'局部冻雨','Thundery outbreaks possible':'可能有雷暴',
-            'Blowing snow':'吹雪','Blizzard':'暴风雪','Light drizzle':'小雨','Light rain':'小雨',
-            'Moderate rain at times':'间歇中雨','Moderate rain':'中雨','Heavy rain at times':'间歇大雨',
-            'Heavy rain':'大雨','Light freezing rain':'小冻雨','Moderate or heavy freezing rain':'中到重冻雨',
-            'Light sleet':'小雨夹雪','Moderate or heavy sleet':'中到重雨夹雪',
-            'Light snow':'小雪','Patchy light snow':'局部小雪','Moderate snow':'中雪',
-            'Heavy snow':'大雪','Ice pellets':'冰粒','Light rain shower':'小阵雨',
-            'Moderate or heavy rain shower':'中到大阵雨','Torrential rain shower':'暴雨',
-            'Light sleet showers':'小雨夹雪阵雨','Moderate or heavy sleet showers':'中到重雨夹雪阵雨',
-            'Light snow showers':'小阵雪','Moderate or heavy snow showers':'中到大阵雪',
-            'Light showers of ice pellets':'小冰粒阵雨','Moderate or heavy showers of ice pellets':'中到大冰粒阵雨',
-            'Patchy light rain with thunder':'局部雷阵雨','Moderate or heavy rain with thunder':'中到重雷雨',
-            'Patchy light snow with thunder':'局部雷阵雪','Moderate or heavy snow with thunder':'中到重雷雪'
-          };
-          zhDesc = zhMap[cur.weatherDesc[0].value] || cur.weatherDesc[0].value;
-        }
+        // 天气描述：format=j1 下 lang_zh 为 null，纯靠 zhMap 翻译
+        const rawDesc = (cur.weatherDesc[0] && cur.weatherDesc[0].value || '').trim();
+        const zhMap = {
+          'Clear':'晴','Sunny':'晴','Partly cloudy':'多云','Partly Cloudy':'多云','Cloudy':'阴','Overcast':'阴',
+          'Mist':'薄雾','Fog':'雾','Freezing fog':'冻雾','Patchy rain possible':'局部小雨',
+          'Patchy snow possible':'局部小雪','Patchy sleet possible':'局部雨夹雪',
+          'Patchy freezing drizzle possible':'局部冻雨','Thundery outbreaks possible':'局部雷暴',
+          'Blowing snow':'吹雪','Blizzard':'暴风雪','Light drizzle':'毛毛雨',
+          'Freezing drizzle':'冻雨','Heavy freezing drizzle':'大冻雨',
+          'Patchy light rain':'局部小雨','Light rain':'小雨',
+          'Moderate rain at times':'间歇中雨','Moderate rain':'中雨',
+          'Heavy rain at times':'间歇大雨','Heavy rain':'大雨',
+          'Light freezing rain':'小冻雨','Moderate or heavy freezing rain':'中到大冻雨',
+          'Light sleet':'小雨夹雪','Moderate or heavy sleet':'中到大雨夹雪',
+          'Patchy light snow':'局部小雪','Light snow':'小雪',
+          'Patchy moderate snow':'局部中雪','Moderate snow':'中雪',
+          'Patchy heavy snow':'局部大雪','Heavy snow':'大雪',
+          'Ice pellets':'冰粒','Light rain shower':'小阵雨',
+          'Moderate or heavy rain shower':'中到大阵雨','Torrential rain shower':'暴雨',
+          'Light sleet showers':'小雨夹雪','Moderate or heavy sleet showers':'中到大雨夹雪',
+          'Light snow showers':'小雪阵','Moderate or heavy snow showers':'中到大雪阵',
+          'Light showers of ice pellets':'小冰粒阵','Moderate or heavy showers of ice pellets':'中到大冰粒阵',
+          'Patchy light rain with thunder':'局部雷雨','Moderate or heavy rain with thunder':'中到大雷雨',
+          'Patchy light snow with thunder':'局部雷雪','Moderate or heavy snow with thunder':'中到大雷雪',
+          'Patchy rain nearby':'局部小雨','Light rain shower':'小阵雨'
+        };
+        const zhDesc = zhMap[rawDesc] || rawDesc;
         // 城市名用中文（从nearest_area取，或default深圳）
         var locName = '';
         try {
           locName = data.nearest_area[0].areaName[0].value;
-          // 常见城市英文→中文
+          // 常见城市英文→中文（含香港/深圳周边地区名）
           var cityMap = {'Shenzhen':'深圳','Guangzhou':'广州','Beijing':'北京','Shanghai':'上海',
             'Hangzhou':'杭州','Chengdu':'成都','Wuhan':'武汉','Nanjing':'南京','Chongqing':'重庆',
-            'Xian':'西安','Changsha':'长沙','Zhengzhou':'郑州','Jinan':'济南','Tianjin':'天津',
+            'Xian':'西安',"Xi'an":'西安','Changsha':'长沙','Zhengzhou':'郑州','Jinan':'济南','Tianjin':'天津',
             'Suzhou':'苏州','Dongguan':'东莞','Foshan':'佛山','Zhuhai':'珠海','Xiamen':'厦门',
             'Qingdao':'青岛','Dalian':'大连','Kunming':'昆明','Guiyang':'贵阳','Fuzhou':'福州',
             'Hefei':'合肥','Nanchang':'南昌','Taiyuan':'太原','Shijiazhuang':'石家庄',
-            'Shenyang':'沈阳','Changchun':'长春','Harbin':'哈尔滨'};
-          locName = cityMap[locName] || locName;
-        } catch(e) { locName = '深圳'; }
+            'Shenyang':'沈阳','Changchun':'长春','Harbin':'哈尔滨',
+            'Lo Wu':'深圳','Luo Hu':'深圳','Ma Tso Lung':'深圳',"Bao'an":'深圳',
+            'Nanshan':'深圳','Longhua':'深圳','Futian':'深圳','Yantian':'深圳',
+            'Pingshan':'深圳','Guangming':'深圳','Dapeng':'深圳','Longgang':'深圳',
+            'Hong Kong':'中国香港','Macau':'中国澳门','Macao':'中国澳门',
+            'Taipei':'中国台北','Kaohsiung':'中国高雄','Taichung':'中国台中'};
+          locName = cityMap[locName] || '本地';
+        } catch(e) { locName = '本地'; }
         wDesc.textContent = locName + ' ' + cur.temp_C + '°C ' + zhDesc;
       }
       if (wExtra) {
         wExtra.textContent = '💧湿度' + cur.humidity + '%  💨风速' + cur.windspeedKmph + '公里/时';
       }
     } catch (_) {
-      if (wDesc) wDesc.textContent = '深圳 --°C 天气加载中…';
+      if (wDesc) wDesc.textContent = '本地 --°C 天气加载中…';
       if (wExtra) wExtra.textContent = '--';
     }
   }

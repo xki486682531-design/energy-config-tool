@@ -1,0 +1,681 @@
+[
+  {
+    "id": "t1",
+    "badge": "场景 1",
+    "badgeClass": "green",
+    "code": "top#1",
+    "title": "高供高计 · 低压并网 · 低压防逆流 · 单台变压器配储并消纳",
+    "infoBlocks": [
+      {
+        "icon": "📋",
+        "title": "应用信息",
+        "items": [
+          {
+            "label": "客户特征",
+            "text": "自有单台变压器，变压器内共享单台/多台储能",
+            "note": ""
+          },
+          {
+            "label": "运营模式",
+            "text": "电价峰谷套利",
+            "note": ""
+          },
+          {
+            "label": "接入条件",
+            "text": "谷电价时段，变压器有足够余量为储能电池蓄能；峰电价时段，客户负载可有效消耗储能电池能量。",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "🔌",
+        "title": "电表安装",
+        "items": [
+          {
+            "label": "1#电表",
+            "text": "低压防逆流 / 变压器防过载",
+            "note": "安装点：变压器0.4kV出线总开关"
+          },
+          {
+            "label": "2#电表",
+            "text": "储能并网点关口计量表",
+            "note": "安装点：储能0.4kV并网柜"
+          }
+        ]
+      }
+    ],
+    "gridClass": "topo-grid-2",
+    "diagramSvg": "<svg viewBox=\"-190 -210 1180 940\" width=\"100%\" height=\"auto\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M -120 350 L -120 180 L -150 180 L -150 10\" stroke=\"#3498DB\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"-159\" y=\"171\" width=\"39\" height=\"14\" rx=\"4\" fill=\"#3498DB\" opacity=\"0.85\"/><text x=\"-135\" y=\"181\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">ETH</text><path d=\"M 410 -140 L 410 102 L 310 102\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"336\" y=\"93\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"360\" y=\"103\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><path d=\"M 285 370 L 285 440 L 420 440 L 420 510\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"328.5\" y=\"431\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"352.5\" y=\"441\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><path d=\"M 285 370 L 285 440 L 160 440 L 160 510\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"198.5\" y=\"431\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"222.5\" y=\"441\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><path d=\"M 725 280 L 725 342 L 725 405 L 570 405 L 570 468 L 570 512\" stroke=\"#E74C3C\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"623.5\" y=\"396\" width=\"66\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"647.5\" y=\"406\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">AC220V</text><path d=\"M 875 512 L 875 470 L 875 406 L 725 406 L 725 342 L 725 280\" stroke=\"#E74C3C\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"776\" y=\"397\" width=\"66\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"800\" y=\"407\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">AC220V</text><path d=\"M -150 -20 L -98 -20 L -15 -20 L -15 105 L 68 105 L 120 105\" stroke=\"#9B59B6\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"4 3\"/><rect x=\"-39\" y=\"33.5\" width=\"57\" height=\"14\" rx=\"4\" fill=\"#9B59B6\" opacity=\"0.85\"/><text x=\"-15\" y=\"43.5\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">RS485</text><path d=\"M 310 132 L 310 166 L 310 212 L 285 212 L 285 258 L 285 320\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"273.5\" y=\"203\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"297.5\" y=\"213\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><path d=\"M 410 -175 L 410 -128 L 410 -10 L 540 -10 L 540 108 L 540 142\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"451\" y=\"-19\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"475\" y=\"-9\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><path d=\"M 540 142 L 582 142 L 625 142 L 625 280 L 668 280 L 725 280\" stroke=\"#E74C3C\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"601\" y=\"202\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#E74C3C\" opacity=\"0.85\"/><text x=\"625\" y=\"212\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#fff\" font-family=\"Arial,sans-serif\">LV</text><g transform=\"translate(90,510)\"><rect x=\"4\" y=\"2\" width=\"132\" height=\"136\" rx=\"8\" fill=\"rgba(52,152,219,0.06)\" stroke=\"#3498DB\" stroke-width=\"2.5\"/><text x=\"70\" y=\"14\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#3498DB\">液冷储能柜</text><rect x=\"12\" y=\"20\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"29\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 1</text><rect x=\"12\" y=\"37\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"46\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 2</text><rect x=\"12\" y=\"54\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"63\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 3</text><rect x=\"12\" y=\"71\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"80\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 4</text><rect x=\"12\" y=\"88\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"97\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 5</text><rect x=\"60\" y=\"20\" width=\"30\" height=\"24\" rx=\"3\" fill=\"rgba(243,156,18,0.15)\" stroke=\"#F39C12\" stroke-width=\"1.2\"/><text x=\"75\" y=\"30\" text-anchor=\"middle\" font-size=\"6\" font-weight=\"700\" fill=\"#F39C12\">PCS1</text><text x=\"75\" y=\"38\" text-anchor=\"middle\" font-size=\"5\" fill=\"#F39C12\" opacity=\"0.7\">100kW</text><rect x=\"95\" y=\"20\" width=\"30\" height=\"24\" rx=\"3\" fill=\"rgba(243,156,18,0.15)\" stroke=\"#F39C12\" stroke-width=\"1.2\"/><text x=\"110\" y=\"30\" text-anchor=\"middle\" font-size=\"6\" font-weight=\"700\" fill=\"#F39C12\">PCS2</text><text x=\"110\" y=\"38\" text-anchor=\"middle\" font-size=\"5\" fill=\"#F39C12\" opacity=\"0.7\">100kW</text><rect x=\"60\" y=\"50\" width=\"30\" height=\"16\" rx=\"3\" fill=\"rgba(52,152,219,0.12)\" stroke=\"#3498DB\" stroke-width=\"1.2\"/><text x=\"75\" y=\"60\" text-anchor=\"middle\" font-size=\"6\" fill=\"#3498DB\" font-weight=\"600\">BMS</text><rect x=\"95\" y=\"50\" width=\"30\" height=\"16\" rx=\"3\" fill=\"rgba(155,89,182,0.12)\" stroke=\"#9B59B6\" stroke-width=\"1.2\"/><text x=\"110\" y=\"60\" text-anchor=\"middle\" font-size=\"6\" fill=\"#9B59B6\" font-weight=\"600\">EMS</text><path d=\"M60 74 L120 74\" stroke=\"#3498DB\" stroke-width=\"1.5\" stroke-dasharray=\"4 3\"/><path d=\"M60 82 L120 82\" stroke=\"#3498DB\" stroke-width=\"1.5\" stroke-dasharray=\"4 3\"/><text x=\"90\" y=\"92\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#3498DB\">液冷管路</text><circle cx=\"75\" cy=\"108\" r=\"7\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1\" stroke-dasharray=\"2 2\"/><circle cx=\"75\" cy=\"108\" r=\"2\" fill=\"#3498DB\" opacity=\"0.5\"/><circle cx=\"105\" cy=\"108\" r=\"7\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1\" stroke-dasharray=\"2 2\"/><circle cx=\"105\" cy=\"108\" r=\"2\" fill=\"#3498DB\" opacity=\"0.5\"/><text x=\"90\" y=\"122\" text-anchor=\"middle\" font-size=\"5\" fill=\"#3498DB\">FAN ×2</text><rect x=\"12\" y=\"110\" width=\"42\" height=\"18\" rx=\"2\" fill=\"none\" stroke=\"rgba(52,152,219,0.5)\" stroke-width=\"1\"/><text x=\"33\" y=\"122\" text-anchor=\"middle\" font-size=\"5\" fill=\"rgba(52,152,219,0.7)\">端子排</text><text x=\"70\" y=\"154\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">液冷储能柜</text></g><g transform=\"translate(350,510)\"><rect x=\"4\" y=\"2\" width=\"132\" height=\"136\" rx=\"8\" fill=\"rgba(52,152,219,0.06)\" stroke=\"#3498DB\" stroke-width=\"2.5\"/><text x=\"70\" y=\"14\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#3498DB\">液冷储能柜</text><rect x=\"12\" y=\"20\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"29\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 1</text><rect x=\"12\" y=\"37\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"46\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 2</text><rect x=\"12\" y=\"54\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"63\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 3</text><rect x=\"12\" y=\"71\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"80\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 4</text><rect x=\"12\" y=\"88\" width=\"42\" height=\"14\" rx=\"2\" fill=\"rgba(26,188,156,0.18)\" stroke=\"#1ABC9C\" stroke-width=\"1\"/><text x=\"33\" y=\"97\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#1ABC9C\" font-weight=\"600\">Pack 5</text><rect x=\"60\" y=\"20\" width=\"30\" height=\"24\" rx=\"3\" fill=\"rgba(243,156,18,0.15)\" stroke=\"#F39C12\" stroke-width=\"1.2\"/><text x=\"75\" y=\"30\" text-anchor=\"middle\" font-size=\"6\" font-weight=\"700\" fill=\"#F39C12\">PCS1</text><text x=\"75\" y=\"38\" text-anchor=\"middle\" font-size=\"5\" fill=\"#F39C12\" opacity=\"0.7\">100kW</text><rect x=\"95\" y=\"20\" width=\"30\" height=\"24\" rx=\"3\" fill=\"rgba(243,156,18,0.15)\" stroke=\"#F39C12\" stroke-width=\"1.2\"/><text x=\"110\" y=\"30\" text-anchor=\"middle\" font-size=\"6\" font-weight=\"700\" fill=\"#F39C12\">PCS2</text><text x=\"110\" y=\"38\" text-anchor=\"middle\" font-size=\"5\" fill=\"#F39C12\" opacity=\"0.7\">100kW</text><rect x=\"60\" y=\"50\" width=\"30\" height=\"16\" rx=\"3\" fill=\"rgba(52,152,219,0.12)\" stroke=\"#3498DB\" stroke-width=\"1.2\"/><text x=\"75\" y=\"60\" text-anchor=\"middle\" font-size=\"6\" fill=\"#3498DB\" font-weight=\"600\">BMS</text><rect x=\"95\" y=\"50\" width=\"30\" height=\"16\" rx=\"3\" fill=\"rgba(155,89,182,0.12)\" stroke=\"#9B59B6\" stroke-width=\"1.2\"/><text x=\"110\" y=\"60\" text-anchor=\"middle\" font-size=\"6\" fill=\"#9B59B6\" font-weight=\"600\">EMS</text><path d=\"M60 74 L120 74\" stroke=\"#3498DB\" stroke-width=\"1.5\" stroke-dasharray=\"4 3\"/><path d=\"M60 82 L120 82\" stroke=\"#3498DB\" stroke-width=\"1.5\" stroke-dasharray=\"4 3\"/><text x=\"90\" y=\"92\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"#3498DB\">液冷管路</text><circle cx=\"75\" cy=\"108\" r=\"7\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1\" stroke-dasharray=\"2 2\"/><circle cx=\"75\" cy=\"108\" r=\"2\" fill=\"#3498DB\" opacity=\"0.5\"/><circle cx=\"105\" cy=\"108\" r=\"7\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1\" stroke-dasharray=\"2 2\"/><circle cx=\"105\" cy=\"108\" r=\"2\" fill=\"#3498DB\" opacity=\"0.5\"/><text x=\"90\" y=\"122\" text-anchor=\"middle\" font-size=\"5\" fill=\"#3498DB\">FAN ×2</text><rect x=\"12\" y=\"110\" width=\"42\" height=\"18\" rx=\"2\" fill=\"none\" stroke=\"rgba(52,152,219,0.5)\" stroke-width=\"1\"/><text x=\"33\" y=\"122\" text-anchor=\"middle\" font-size=\"5\" fill=\"rgba(52,152,219,0.7)\">端子排</text><text x=\"70\" y=\"154\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">液冷储能柜</text></g><g transform=\"translate(-190,-50)\"><rect x=\"6\" y=\"4\" width=\"68\" height=\"52\" rx=\"6\" class=\"comp-body\" fill=\"rgba(155,89,182,0.15)\" stroke=\"#9B59B6\" stroke-width=\"2.5\"/><rect x=\"14\" y=\"12\" width=\"52\" height=\"28\" rx=\"3\" fill=\"#9B59B6\" opacity=\"0.2\"/><line x1=\"20\" y1=\"34\" x2=\"60\" y2=\"34\" stroke=\"#9B59B6\" stroke-width=\"1.5\"/><polygon points=\"34,22 38,16 42,22\" fill=\"#9B59B6\" opacity=\"0.5\"/><text x=\"40\" y=\"74\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">EMS\n能量管理系统</text></g><g transform=\"translate(370,-210)\"><circle cx=\"40\" cy=\"24\" r=\"18\" fill=\"none\" stroke=\"#E74C3C\" stroke-width=\"2.5\"/><circle cx=\"40\" cy=\"46\" r=\"18\" fill=\"none\" stroke=\"#E74C3C\" stroke-width=\"2.5\"/><text x=\"40\" y=\"28\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"700\" fill=\"#E74C3C\">10kV</text><text x=\"40\" y=\"50\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"700\" fill=\"#E74C3C\">0.4kV</text><path d=\"M4 6 L12 6 M4 12 L8 12\" stroke=\"#E74C3C\" stroke-width=\"2\"/><path d=\"M76 6 L68 6 M76 12 L72 12\" stroke=\"#E74C3C\" stroke-width=\"2\"/><text x=\"40\" y=\"84\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">变压器</text></g><g transform=\"translate(240,270)\"><rect x=\"2\" y=\"2\" width=\"86\" height=\"96\" rx=\"6\" fill=\"rgba(142,68,173,0.06)\" stroke=\"#8E44AD\" stroke-width=\"2\"/><rect x=\"2\" y=\"2\" width=\"86\" height=\"14\" rx=\"6\" fill=\"rgba(142,68,173,0.22)\"/><rect x=\"2\" y=\"8\" width=\"86\" height=\"8\" fill=\"rgba(142,68,173,0.22)\"/><text x=\"45\" y=\"12\" text-anchor=\"middle\" font-size=\"7.5\" fill=\"#E8EEF6\" font-weight=\"700\">汇流柜 (2路)</text><rect x=\"18\" y=\"19\" width=\"54\" height=\"5\" rx=\"2\" fill=\"rgba(243,156,18,0.55)\" stroke=\"#F39C12\" stroke-width=\"0.6\"/><rect x=\"9\" y=\"28\" width=\"28\" height=\"22\" rx=\"3\" fill=\"rgba(255,255,255,0.06)\" stroke=\"#8E44AD\" stroke-width=\"1.2\"/><line x1=\"23\" y1=\"24\" x2=\"23\" y2=\"28\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"18\" y=\"26\" width=\"10\" height=\"5\" rx=\"1.5\" fill=\"#E74C3C\"/><text x=\"23\" y=\"37\" text-anchor=\"middle\" font-size=\"6.5\" fill=\"#E8EEF6\" font-weight=\"700\">QF1</text><text x=\"23\" y=\"46\" text-anchor=\"middle\" font-size=\"4\" fill=\"rgba(255,255,255,0.25)\">断路器</text><line x1=\"23\" y1=\"50\" x2=\"23\" y2=\"62\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"16\" y=\"62\" width=\"14\" height=\"4\" rx=\"2\" fill=\"rgba(243,156,18,0.5)\" stroke=\"#F39C12\" stroke-width=\"0.5\"/><circle cx=\"23\" cy=\"72\" r=\"3.5\" fill=\"rgba(46,204,113,0.2)\" stroke=\"#2ECC71\" stroke-width=\"1.8\"/><rect x=\"53\" y=\"28\" width=\"28\" height=\"22\" rx=\"3\" fill=\"rgba(255,255,255,0.06)\" stroke=\"#8E44AD\" stroke-width=\"1.2\"/><line x1=\"67\" y1=\"24\" x2=\"67\" y2=\"28\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"62\" y=\"26\" width=\"10\" height=\"5\" rx=\"1.5\" fill=\"#E74C3C\"/><text x=\"67\" y=\"37\" text-anchor=\"middle\" font-size=\"6.5\" fill=\"#E8EEF6\" font-weight=\"700\">QF2</text><text x=\"67\" y=\"46\" text-anchor=\"middle\" font-size=\"4\" fill=\"rgba(255,255,255,0.25)\">断路器</text><line x1=\"67\" y1=\"50\" x2=\"67\" y2=\"62\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"60\" y=\"62\" width=\"14\" height=\"4\" rx=\"2\" fill=\"rgba(243,156,18,0.5)\" stroke=\"#F39C12\" stroke-width=\"0.5\"/><circle cx=\"67\" cy=\"72\" r=\"3.5\" fill=\"rgba(46,204,113,0.2)\" stroke=\"#2ECC71\" stroke-width=\"1.8\"/><text x=\"23\" y=\"83\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"rgba(46,204,113,0.7)\">OUT1</text><text x=\"67\" y=\"83\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"rgba(46,204,113,0.7)\">OUT2</text><text x=\"45\" y=\"114\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">汇流柜</text></g><g transform=\"translate(840,482)\"><polygon points=\"35,4 20,56 50,56\" fill=\"rgba(52,73,94,0.12)\" stroke=\"#34495E\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><text x=\"35\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"700\" fill=\"#34495E\">L</text><text x=\"35\" y=\"74\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">负载</text></g><g transform=\"translate(540,480)\"><rect x=\"14\" y=\"20\" width=\"32\" height=\"38\" rx=\"6\" fill=\"rgba(52,152,219,0.1)\" stroke=\"#3498DB\" stroke-width=\"2.2\"/><rect x=\"20\" y=\"26\" width=\"20\" height=\"10\" rx=\"3\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1.2\"/><text x=\"30\" y=\"33\" text-anchor=\"middle\" font-size=\"7\" fill=\"#3498DB\" font-weight=\"700\">kW</text><line x1=\"30\" y1=\"40\" x2=\"30\" y2=\"50\" stroke=\"#3498DB\" stroke-width=\"2\"/><circle cx=\"30\" cy=\"53\" r=\"4\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1.5\"/><line x1=\"18\" y1=\"8\" x2=\"42\" y2=\"8\" stroke=\"#3498DB\" stroke-width=\"2.5\"/><circle cx=\"18\" cy=\"8\" r=\"3\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1.2\"/><circle cx=\"42\" cy=\"8\" r=\"3\" fill=\"none\" stroke=\"#3498DB\" stroke-width=\"1.2\"/><line x1=\"18\" y1=\"8\" x2=\"18\" y2=\"20\" stroke=\"#3498DB\" stroke-width=\"1.5\"/><line x1=\"42\" y1=\"8\" x2=\"42\" y2=\"20\" stroke=\"#3498DB\" stroke-width=\"1.5\"/><text x=\"30\" y=\"78\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">充电桩</text></g><g transform=\"translate(60,334)\"><circle cx=\"14\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"14\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"14\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><circle cx=\"40\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"40\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"40\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><circle cx=\"66\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"66\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"66\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><line x1=\"4\" y1=\"18\" x2=\"7\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"21\" y1=\"18\" x2=\"33\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"47\" y1=\"18\" x2=\"59\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"73\" y1=\"18\" x2=\"76\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><text x=\"40\" y=\"50\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">CT组\n×3</text></g><g transform=\"translate(80,70)\"><rect x=\"6\" y=\"4\" width=\"68\" height=\"62\" rx=\"6\" fill=\"rgba(46,204,113,0.1)\" stroke=\"#2ECC71\" stroke-width=\"2.5\"/><rect x=\"14\" y=\"10\" width=\"52\" height=\"20\" rx=\"3\" fill=\"#1a1a2e\" stroke=\"#2ECC71\" stroke-width=\"1\"/><text x=\"40\" y=\"19\" text-anchor=\"middle\" font-size=\"6\" fill=\"#00ff88\" font-family=\"monospace\">888888</text><text x=\"40\" y=\"27\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"700\" fill=\"#00ff88\" font-family=\"monospace\">kWh</text><line x1=\"20\" y1=\"38\" x2=\"60\" y2=\"38\" stroke=\"#2ECC71\" stroke-width=\"1\"/><circle cx=\"26\" cy=\"46\" r=\"3.5\" fill=\"#2ECC71\" opacity=\"0.5\"/><circle cx=\"40\" cy=\"46\" r=\"3.5\" fill=\"#2ECC71\" opacity=\"0.5\"/><circle cx=\"54\" cy=\"46\" r=\"3.5\" fill=\"#2ECC71\" opacity=\"0.5\"/><text x=\"40\" y=\"58\" text-anchor=\"middle\" font-size=\"7\" fill=\"#2ECC71\" font-weight=\"600\">快速</text><text x=\"40\" y=\"84\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">快速电表</text></g><g transform=\"translate(110,-110)\"><rect x=\"6\" y=\"4\" width=\"68\" height=\"62\" rx=\"6\" fill=\"rgba(231,76,60,0.08)\" stroke=\"#E74C3C\" stroke-width=\"2.5\"/><rect x=\"14\" y=\"10\" width=\"52\" height=\"20\" rx=\"3\" fill=\"#1a1a2e\" stroke=\"#E74C3C\" stroke-width=\"1\"/><text x=\"40\" y=\"19\" text-anchor=\"middle\" font-size=\"6\" fill=\"#ff6677\" font-family=\"monospace\">888888</text><text x=\"40\" y=\"27\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"700\" fill=\"#ff6677\" font-family=\"monospace\">kW</text><path d=\"M24 38 L56 38 M56 38 L48 34 M56 38 L48 42\" stroke=\"#E74C3C\" stroke-width=\"1.8\" fill=\"none\"/><circle cx=\"26\" cy=\"46\" r=\"3.5\" fill=\"none\" stroke=\"#E74C3C\" stroke-width=\"1.2\"/><circle cx=\"40\" cy=\"46\" r=\"3.5\" fill=\"none\" stroke=\"#E74C3C\" stroke-width=\"1.2\"/><circle cx=\"54\" cy=\"46\" r=\"3.5\" fill=\"none\" stroke=\"#E74C3C\" stroke-width=\"1.2\"/><text x=\"40\" y=\"58\" text-anchor=\"middle\" font-size=\"7\" fill=\"#E74C3C\" font-weight=\"600\">防逆流</text><text x=\"40\" y=\"84\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">防逆流表\n2次</text></g><g transform=\"translate(200,-60)\"><circle cx=\"14\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"14\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"14\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><circle cx=\"40\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"40\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"40\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><circle cx=\"66\" cy=\"18\" r=\"11\" fill=\"rgba(100,180,255,0.06)\" stroke=\"#64B4FF\" stroke-width=\"2\"/><circle cx=\"66\" cy=\"18\" r=\"7\" fill=\"none\" stroke=\"#64B4FF\" stroke-width=\"1.2\" stroke-dasharray=\"3 2\"/><circle cx=\"66\" cy=\"18\" r=\"3\" fill=\"#4A90D9\" opacity=\"0.6\"/><line x1=\"4\" y1=\"18\" x2=\"7\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"21\" y1=\"18\" x2=\"33\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"47\" y1=\"18\" x2=\"59\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><line x1=\"73\" y1=\"18\" x2=\"76\" y2=\"18\" stroke=\"#64B4FF\" stroke-width=\"1.8\"/><text x=\"40\" y=\"50\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">CT互感器组</text></g><g transform=\"translate(280,110) rotate(270 30 22)\"><line x1=\"4\" y1=\"22\" x2=\"22\" y2=\"22\" stroke=\"#F39C12\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"42\" y1=\"22\" x2=\"56\" y2=\"22\" stroke=\"#F39C12\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"22\" x2=\"42\" y2=\"4\" stroke=\"#F39C12\" stroke-width=\"2.5\"/><circle cx=\"22\" cy=\"22\" r=\"2.5\" fill=\"#F39C12\"/><circle cx=\"42\" cy=\"4\" r=\"2.5\" fill=\"none\" stroke=\"#F39C12\" stroke-width=\"1.5\"/><line x1=\"30\" y1=\"38\" x2=\"35\" y2=\"38\" stroke=\"#F39C12\" stroke-width=\"2\"/><line x1=\"28\" y1=\"36\" x2=\"37\" y2=\"36\" stroke=\"#F39C12\" stroke-width=\"2\"/><text x=\"32\" y=\"14\" text-anchor=\"middle\" font-size=\"7\" font-weight=\"700\" fill=\"#F39C12\">DS</text><text x=\"30\" y=\"58\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">隔离开关</text></g><g transform=\"translate(-150,350)\"><rect x=\"4\" y=\"4\" width=\"52\" height=\"32\" rx=\"5\" fill=\"rgba(127,140,141,0.15)\" stroke=\"#7F8C8D\" stroke-width=\"2.2\"/><rect x=\"10\" y=\"9\" width=\"40\" height=\"8\" rx=\"2\" fill=\"none\" stroke=\"#7F8C8D\" stroke-width=\"1\"/><circle cx=\"20\" cy=\"24\" r=\"2.5\" fill=\"#2ECC71\"/><circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#2ECC71\"/><circle cx=\"40\" cy=\"24\" r=\"2.5\" fill=\"#2ECC71\"/><circle cx=\"50\" cy=\"24\" r=\"2.5\" fill=\"#F39C12\" opacity=\"0.6\"/><text x=\"30\" y=\"54\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">工业交换机\n4口</text></g><g transform=\"translate(680,230)\"><rect x=\"2\" y=\"2\" width=\"86\" height=\"96\" rx=\"6\" fill=\"rgba(142,68,173,0.06)\" stroke=\"#8E44AD\" stroke-width=\"2\"/><rect x=\"2\" y=\"2\" width=\"86\" height=\"14\" rx=\"6\" fill=\"rgba(142,68,173,0.22)\"/><rect x=\"2\" y=\"8\" width=\"86\" height=\"8\" fill=\"rgba(142,68,173,0.22)\"/><text x=\"45\" y=\"12\" text-anchor=\"middle\" font-size=\"7.5\" fill=\"#E8EEF6\" font-weight=\"700\">汇流柜 (2路)</text><rect x=\"18\" y=\"19\" width=\"54\" height=\"5\" rx=\"2\" fill=\"rgba(243,156,18,0.55)\" stroke=\"#F39C12\" stroke-width=\"0.6\"/><rect x=\"9\" y=\"28\" width=\"28\" height=\"22\" rx=\"3\" fill=\"rgba(255,255,255,0.06)\" stroke=\"#8E44AD\" stroke-width=\"1.2\"/><line x1=\"23\" y1=\"24\" x2=\"23\" y2=\"28\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"18\" y=\"26\" width=\"10\" height=\"5\" rx=\"1.5\" fill=\"#E74C3C\"/><text x=\"23\" y=\"37\" text-anchor=\"middle\" font-size=\"6.5\" fill=\"#E8EEF6\" font-weight=\"700\">QF1</text><text x=\"23\" y=\"46\" text-anchor=\"middle\" font-size=\"4\" fill=\"rgba(255,255,255,0.25)\">断路器</text><line x1=\"23\" y1=\"50\" x2=\"23\" y2=\"62\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"16\" y=\"62\" width=\"14\" height=\"4\" rx=\"2\" fill=\"rgba(243,156,18,0.5)\" stroke=\"#F39C12\" stroke-width=\"0.5\"/><circle cx=\"23\" cy=\"72\" r=\"3.5\" fill=\"rgba(46,204,113,0.2)\" stroke=\"#2ECC71\" stroke-width=\"1.8\"/><rect x=\"53\" y=\"28\" width=\"28\" height=\"22\" rx=\"3\" fill=\"rgba(255,255,255,0.06)\" stroke=\"#8E44AD\" stroke-width=\"1.2\"/><line x1=\"67\" y1=\"24\" x2=\"67\" y2=\"28\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"62\" y=\"26\" width=\"10\" height=\"5\" rx=\"1.5\" fill=\"#E74C3C\"/><text x=\"67\" y=\"37\" text-anchor=\"middle\" font-size=\"6.5\" fill=\"#E8EEF6\" font-weight=\"700\">QF2</text><text x=\"67\" y=\"46\" text-anchor=\"middle\" font-size=\"4\" fill=\"rgba(255,255,255,0.25)\">断路器</text><line x1=\"67\" y1=\"50\" x2=\"67\" y2=\"62\" stroke=\"#F39C12\" stroke-width=\"2.4\"/><rect x=\"60\" y=\"62\" width=\"14\" height=\"4\" rx=\"2\" fill=\"rgba(243,156,18,0.5)\" stroke=\"#F39C12\" stroke-width=\"0.5\"/><circle cx=\"67\" cy=\"72\" r=\"3.5\" fill=\"rgba(46,204,113,0.2)\" stroke=\"#2ECC71\" stroke-width=\"1.8\"/><text x=\"23\" y=\"83\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"rgba(46,204,113,0.7)\">OUT1</text><text x=\"67\" y=\"83\" text-anchor=\"middle\" font-size=\"5.5\" fill=\"rgba(46,204,113,0.7)\">OUT2</text><text x=\"45\" y=\"114\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">汇流柜</text></g><g transform=\"translate(510,120) rotate(270 30 22)\"><line x1=\"4\" y1=\"22\" x2=\"22\" y2=\"22\" stroke=\"#F39C12\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"42\" y1=\"22\" x2=\"56\" y2=\"22\" stroke=\"#F39C12\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"22\" x2=\"42\" y2=\"4\" stroke=\"#F39C12\" stroke-width=\"2.5\"/><circle cx=\"22\" cy=\"22\" r=\"2.5\" fill=\"#F39C12\"/><circle cx=\"42\" cy=\"4\" r=\"2.5\" fill=\"none\" stroke=\"#F39C12\" stroke-width=\"1.5\"/><line x1=\"30\" y1=\"38\" x2=\"35\" y2=\"38\" stroke=\"#F39C12\" stroke-width=\"2\"/><line x1=\"28\" y1=\"36\" x2=\"37\" y2=\"36\" stroke=\"#F39C12\" stroke-width=\"2\"/><text x=\"32\" y=\"14\" text-anchor=\"middle\" font-size=\"7\" font-weight=\"700\" fill=\"#F39C12\">DS</text><text x=\"30\" y=\"58\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">隔离开关</text></g></svg>",
+    "bomTitle": "📦 典型 BOM（2柜方案）",
+    "bomHeaders": [
+      "类别",
+      "物料编码",
+      "编码描述",
+      "数量",
+      "备注"
+    ],
+    "bomRows": [
+      [
+        "储能柜",
+        "201130006",
+        "一体式储能系统 ICB241kWh-120kW-A-G-LF3E",
+        "2",
+        "—"
+      ],
+      [
+        "交换机",
+        "250040007",
+        "VES318 工业级8路网口交换机 DC12-48V",
+        "1",
+        "导轨式"
+      ],
+      [
+        "交换机",
+        "202800076",
+        "电源模块 75W 24V RSP-75-24",
+        "1",
+        "国内"
+      ],
+      [
+        "电表",
+        "206010103",
+        "电表 3*220/380V 3*1.5(6)A 6400i/kbps RS485",
+        "1",
+        "485线≤500m"
+      ],
+      [
+        "电表",
+        "209060040",
+        "互感器 1:1000 5A/5mA 引线1m",
+        "3",
+        "与工程核实"
+      ],
+      [
+        "EMS",
+        "202310024",
+        "监控模块 IMMU2 充电机计费单元-带包材",
+        "1",
+        "安装于通讯盒"
+      ],
+      [
+        "EMS",
+        "223040023",
+        "液晶显示模块 7寸液晶屏",
+        "1",
+        "—"
+      ]
+    ],
+    "noteIcon": "⚙️",
+    "noteTitle": "配置要点：",
+    "configNote": "只需在主控上配置EMS管理计划；高压表需使能\"正向有功总最大需量\"；线缆较长时放电保护值设小、充电参数设大。",
+    "diagramData": {
+      "nodes": [
+        {
+          "id": "n1780640753772",
+          "compId": "ess-liquid-cooled",
+          "x": 90,
+          "y": 510,
+          "label": "液冷储能柜"
+        },
+        {
+          "id": "n1780640756784",
+          "compId": "ess-liquid-cooled",
+          "x": 350,
+          "y": 510,
+          "label": "液冷储能柜"
+        },
+        {
+          "id": "n1780640798083",
+          "compId": "ems",
+          "x": -190,
+          "y": -50,
+          "label": "EMS\n能量管理系统"
+        },
+        {
+          "id": "n1780640823505",
+          "compId": "transformer",
+          "x": 370,
+          "y": -210,
+          "label": "变压器"
+        },
+        {
+          "id": "n1780640861292",
+          "compId": "bus-cabinet",
+          "x": 240,
+          "y": 270,
+          "label": "汇流柜",
+          "description": "2路汇流柜"
+        },
+        {
+          "id": "n1780640917035",
+          "compId": "load",
+          "x": 840,
+          "y": 482,
+          "label": "负载"
+        },
+        {
+          "id": "n1780640948129",
+          "compId": "ev-charger",
+          "x": 540,
+          "y": 480,
+          "label": "充电桩"
+        },
+        {
+          "id": "n1780640968299",
+          "compId": "ct-set",
+          "x": 60,
+          "y": 334,
+          "label": "CT组\n×3",
+          "onEdge": "e1780640904967",
+          "t": 0.3885533015944052
+        },
+        {
+          "id": "n1780641020858",
+          "compId": "fast-meter",
+          "x": 80,
+          "y": 70,
+          "label": "快速电表"
+        },
+        {
+          "id": "n1780641027192",
+          "compId": "ar-meter",
+          "x": 110,
+          "y": -110,
+          "label": "防逆流表\n2次"
+        },
+        {
+          "id": "n1780641035492",
+          "compId": "ct-set",
+          "x": 200,
+          "y": -60,
+          "label": "",
+          "onEdge": "e1780640880807",
+          "t": 0.5916178817141908
+        },
+        {
+          "id": "n1780641056326",
+          "compId": "ds-switch",
+          "x": 280,
+          "y": 110,
+          "label": "隔离开关",
+          "rotation": 270
+        },
+        {
+          "id": "n1780641065635",
+          "compId": "ind-switch-4",
+          "x": -150,
+          "y": 350,
+          "label": "工业交换机\n4口"
+        },
+        {
+          "id": "n1780650302565",
+          "compId": "bus-cabinet",
+          "x": 680,
+          "y": 230,
+          "label": "汇流柜"
+        },
+        {
+          "id": "n1781336190396",
+          "compId": "ds-switch",
+          "x": 510,
+          "y": 120,
+          "label": "隔离开关",
+          "rotation": 270
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1780641452318",
+          "from": "n1780641065635",
+          "to": "n1780640798083",
+          "fromPort": "top",
+          "toPort": "bottom",
+          "cableType": "ethernet"
+        },
+        {
+          "id": "e1780652350014",
+          "from": "n1780640823505",
+          "to": "n1780641056326",
+          "fromPort": "bottom",
+          "toPort": "right",
+          "cableType": "lv-cable"
+        },
+        {
+          "id": "e1780652431967",
+          "from": "n1780640861292",
+          "to": "n1780640756784",
+          "fromPort": "bottom",
+          "toPort": "top",
+          "cableType": "lv-cable"
+        },
+        {
+          "id": "e1780652442428",
+          "from": "n1780640861292",
+          "to": "n1780640753772",
+          "fromPort": "bottom",
+          "toPort": "top",
+          "cableType": "lv-cable"
+        },
+        {
+          "id": "e1781335981284",
+          "from": "n1780650302565",
+          "to": "n1780640948129",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "power220v",
+          "fromPortIdx": 0,
+          "toPortIdx": 1
+        },
+        {
+          "id": "e1781335989506",
+          "from": "n1780640917035",
+          "to": "n1780650302565",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "power220v",
+          "fromPortIdx": 0,
+          "toPortIdx": 1
+        },
+        {
+          "id": "e1781336099170",
+          "from": "n1780640798083",
+          "to": "n1780641020858",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "rs485",
+          "fromPortIdx": 0,
+          "toPortIdx": 0
+        },
+        {
+          "id": "e1781336175742",
+          "from": "n1780641056326",
+          "to": "n1780640861292",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "lv-cable",
+          "fromPortIdx": 0,
+          "toPortIdx": 0
+        },
+        {
+          "id": "e1781336209151",
+          "from": "n1780640823505",
+          "to": "n1781336190396",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "lv-cable",
+          "fromPortIdx": 0,
+          "toPortIdx": 0
+        },
+        {
+          "id": "e1781336212289",
+          "from": "n1781336190396",
+          "to": "n1780650302565",
+          "fromPort": "center",
+          "toPort": "center",
+          "cableType": "lv-cable",
+          "fromPortIdx": 1,
+          "toPortIdx": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "t2",
+    "badge": "场景 2",
+    "badgeClass": "blue",
+    "code": "top#6",
+    "title": "安装高压防逆流表 · 高供高计 · 低压并网 · 多台变配储跨变压器消纳",
+    "infoBlocks": [
+      {
+        "icon": "📋",
+        "title": "应用信息",
+        "items": [
+          {
+            "label": "客户特征",
+            "text": "自有多台变压器，多变压器下接入多台储能，储能电量可跨变压器消纳",
+            "note": ""
+          },
+          {
+            "label": "运营模式",
+            "text": "电价峰谷套利",
+            "note": ""
+          },
+          {
+            "label": "案例项目",
+            "text": "佳霖-畅信纺织",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "🔌",
+        "title": "电表安装",
+        "items": [
+          {
+            "label": "1#电表",
+            "text": "高压防逆流电表",
+            "note": "安装点：10kV高压进线开关"
+          },
+          {
+            "label": "n-1#电表",
+            "text": "变压器防过载",
+            "note": "安装点：变压器0.4kV出线总开关"
+          },
+          {
+            "label": "n-2#电表",
+            "text": "储能并网点关口计量表",
+            "note": "安装点：储能0.4kV并网柜"
+          }
+        ]
+      }
+    ],
+    "gridClass": "topo-grid-2",
+    "diagramSvg": "",
+    "bomTitle": "📦 典型 BOM（16柜方案）",
+    "bomHeaders": [
+      "类别",
+      "物料编码",
+      "编码描述",
+      "数量",
+      "备注"
+    ],
+    "bomRows": [
+      [
+        "储能柜",
+        "201130006",
+        "一体式储能系统 ICB241kWh-120kW-A-G-LF3E",
+        "16",
+        "—"
+      ],
+      [
+        "交换机",
+        "250140003",
+        "系统用交换机 16口百兆非网管型 DC12-48V",
+        "2",
+        "导轨式"
+      ],
+      [
+        "电表",
+        "206010103",
+        "电表 3*220/380V 3*1.5(6)A 6400i RS485",
+        "3",
+        "485线≤500m"
+      ],
+      [
+        "电表",
+        "209060040",
+        "互感器 1:1000 5A/5mA 引线1m",
+        "9",
+        "与工程核实"
+      ],
+      [
+        "EMS",
+        "202310024",
+        "监控模块 IMMU2",
+        "3",
+        "安装于通讯盒"
+      ]
+    ],
+    "noteIcon": "⚙️",
+    "noteTitle": "配置要点：",
+    "configNote": "主控配置EMS管理计划 + 各支路主控需配置防逆流使能；防逆流使能后不会跨变压器放电，不使能则可跨变压器使用。"
+  },
+  {
+    "id": "t3",
+    "badge": "场景 3",
+    "badgeClass": "orange",
+    "code": "top#7",
+    "title": "未安装高压防逆流表 · 多支路辅助表防逆流 · 多台变配储跨变压器消纳",
+    "infoBlocks": [
+      {
+        "icon": "📋",
+        "title": "应用信息",
+        "items": [
+          {
+            "label": "客户特征",
+            "text": "自有多台变压器，多变压器下可接入储能，电量可跨变压器消纳",
+            "note": ""
+          },
+          {
+            "label": "运营模式",
+            "text": "电价峰谷套利",
+            "note": ""
+          },
+          {
+            "label": "案例项目",
+            "text": "恒华电力",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "🔌",
+        "title": "电表安装",
+        "items": [
+          {
+            "label": "n-1#电表",
+            "text": "变压器防过载",
+            "note": "安装点：变压器0.4kV出线总开关"
+          },
+          {
+            "label": "n-2#电表",
+            "text": "储能并网点关口计量表",
+            "note": "安装点：储能0.4kV并网柜"
+          },
+          {
+            "label": "m-1#/m-2#",
+            "text": "辅助表1、辅助表2",
+            "note": "最多支持2块辅助表"
+          }
+        ]
+      }
+    ],
+    "gridClass": "topo-grid-2",
+    "diagramSvg": "",
+    "bomTitle": "📦 典型 BOM（6柜方案）",
+    "bomHeaders": [
+      "类别",
+      "物料编码",
+      "编码描述",
+      "数量",
+      "备注"
+    ],
+    "bomRows": [
+      [
+        "储能柜",
+        "201130006",
+        "一体式储能系统 ICB241kWh-120kW-A-G-LF3E",
+        "6",
+        "—"
+      ],
+      [
+        "交换机",
+        "250140003",
+        "系统用交换机 16口百兆 DC12-48V",
+        "1",
+        "导轨式"
+      ],
+      [
+        "电表",
+        "206010103",
+        "电表 3*220/380V 3*1.5(6)A 6400i RS485",
+        "2",
+        "485线≤500m"
+      ],
+      [
+        "电表",
+        "209060040",
+        "互感器 1:1000 5A/5mA 引线1m",
+        "6",
+        "与工程核实"
+      ],
+      [
+        "EMS",
+        "202310024",
+        "监控模块 IMMU2",
+        "3",
+        "安装于通讯盒"
+      ]
+    ],
+    "noteIcon": "⚙️",
+    "noteTitle": "配置要点：",
+    "configNote": "主控配置EMS管理计划（无需高压表最大需量）；支路需配置防逆流/防过载使能，控制跨变压器放电行为。"
+  },
+  {
+    "id": "t4",
+    "badge": "扩展",
+    "badgeClass": "purple",
+    "code": "",
+    "title": "接入第三方 EMS · 逆流/过载自动充放电 · 快速防逆流 · 电网服务",
+    "infoBlocks": [
+      {
+        "icon": "🔗",
+        "title": "第三方EMS接入",
+        "items": [
+          {
+            "label": "",
+            "text": "案例：川崎、浙江金华-中能电科",
+            "note": ""
+          },
+          {
+            "label": "",
+            "text": "目前只支持104协议",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "⚡",
+        "title": "逆流自动启动充电",
+        "items": [
+          {
+            "label": "",
+            "text": "案例：美华智充、一行电力",
+            "note": ""
+          },
+          {
+            "label": "",
+            "text": "逆流≤-40kW启动充电，配合目标功率修正值调整。",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "🔋",
+        "title": "过载自动启动放电",
+        "items": [
+          {
+            "label": "",
+            "text": "案例：美华智充",
+            "note": ""
+          },
+          {
+            "label": "",
+            "text": "网侧功率≥700kW启动放电，变压器扩容。",
+            "note": ""
+          }
+        ]
+      }
+    ],
+    "gridClass": "topo-grid-3",
+    "diagramSvg": "",
+    "bomTitle": "",
+    "bomHeaders": [
+      "类别",
+      "物料编码",
+      "编码描述",
+      "数量",
+      "备注"
+    ],
+    "bomRows": [],
+    "extraBlocks": [
+      {
+        "icon": "🚀",
+        "title": "快速防逆流方案 #4",
+        "items": [
+          {
+            "label": "",
+            "text": "加装负载表方案：变压器容量小、充电桩配置储能（如Electra场景）"
+          },
+          {
+            "label": "关键要求",
+            "text": "电表必须使用快表（安科瑞ADL400），网侧表+关口表接485 #1，负载表接485 #2。"
+          }
+        ]
+      },
+      {
+        "icon": "🌐",
+        "title": "电网服务",
+        "items": [
+          {
+            "label": "",
+            "text": "接受电网调度指令，快速响应（200ms内从收到指令到输出功率）。"
+          },
+          {
+            "label": "",
+            "text": "适用场景：单台变压器容量小，接入光伏、风能等，连接到MU2的ETH1/ETH2。"
+          }
+        ]
+      }
+    ],
+    "extraGridClass": "topo-grid-2",
+    "noteIcon": "",
+    "noteTitle": "",
+    "configNote": ""
+  },
+  {
+    "id": "t5",
+    "badge": "规范",
+    "badgeClass": "teal",
+    "code": "",
+    "title": "设备编号规则 · 充放电功率分配策略 · 常见问题",
+    "infoBlocks": [
+      {
+        "icon": "📛",
+        "title": "设备编号规则",
+        "items": [
+          {
+            "label": "",
+            "text": "4字节UINT十进制，序号从1开始：",
+            "note": ""
+          },
+          {
+            "label": "编码格式",
+            "text": "一级主控 | 二级主控(支路,无填0) | 三级主控(无填0) | 储能设备编号",
+            "note": ""
+          }
+        ]
+      },
+      {
+        "icon": "⚙️",
+        "title": "功率分配策略",
+        "items": [
+          {
+            "label": "",
+            "text": "效率优先 + 同充同放 + 按总充放电量 / SOC排序等算法融合，灵活按需求调整。",
+            "note": ""
+          },
+          {
+            "label": "未来方向",
+            "text": "光伏协调控制（接入天气数据）、负荷预测、发电预测模型。",
+            "note": ""
+          }
+        ]
+      }
+    ],
+    "gridClass": "topo-grid-2",
+    "diagramSvg": "",
+    "bomTitle": "",
+    "bomHeaders": [
+      "类别",
+      "物料编码",
+      "编码描述",
+      "数量",
+      "备注"
+    ],
+    "bomRows": [],
+    "noteIcon": "⚠️",
+    "noteTitle": "常见问题：",
+    "configNote": "未充满原因——接近需量的最大功率按效率优先给部分储能柜充电，到08:17时部分已充满，可充功率仅剩800kW。按需量计费的客户，月初需量较低只能手工调整，需持续优化降低客户需量费用。"
+  }
+]

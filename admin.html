@@ -12,7 +12,7 @@
     body.light #bg-layer{background:linear-gradient(135deg,#dce8f5 0%,#c5dff7 50%,#a8cef5 100%);}
     #app-root{height:100vh;width:100vw;}
     .admin-shell{display:flex;height:100vh;}
-    .admin-sidebar{width:170px;flex-shrink:0;background:rgba(255,255,255,0.06);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border-right:0.5px solid rgba(255,255,255,0.25);display:flex;flex-direction:column;color:#e0ecf8;box-shadow:4px 0 30px rgba(0,0,0,0.2),inset 0 0.5px 0 rgba(255,255,255,0.4);position:relative;z-index:10;}
+    .admin-sidebar{width:170px;flex-shrink:0;background:rgba(255,255,255,0.06);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border-right:0.5px solid rgba(255,255,255,0.25);display:flex;flex-direction:column;color:#e0ecf8;box-shadow:4px 0 30px rgba(0,0,0,0.2),inset 0 0.5px 0 rgba(255,255,255,0.4);position:relative;z-index:10;overflow:hidden;}
     .admin-sidebar::after{content:'';position:absolute;top:0;right:0;bottom:0;width:1px;background:linear-gradient(180deg,rgba(255,255,255,0.5),rgba(255,255,255,0.05) 50%,rgba(255,255,255,0.3));pointer-events:none;}
     body.light .admin-sidebar{background:rgba(255,255,255,0.45);border-right-color:rgba(255,255,255,0.4);color:#1a3a5c;box-shadow:4px 0 30px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6);}
     body.light .admin-sidebar::after{background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.4));}
@@ -23,8 +23,8 @@
     .side-logo-icon{font-size:20px;margin-bottom:2px;}
     .side-logo-text{font-size:11px;font-weight:700;letter-spacing:.5px;}
     .side-logo-sub{font-size:9px;opacity:.5;margin-top:1px;}
-    .side-nav{flex:1;padding:6px 6px;display:flex;flex-direction:column;gap:0;}
-    .side-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s,transform .2s;color:rgba(224,236,248,.65);user-select:none;position:relative;overflow:hidden;}
+    .side-nav{flex:1;padding:6px 6px;display:flex;flex-direction:column;gap:0;overflow:hidden;}
+    .side-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s,transform .2s;color:rgba(224,236,248,.65);user-select:none;position:relative;overflow:hidden;flex-shrink:0;white-space:nowrap;}
     .side-item::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));opacity:0;transition:opacity .2s;border-radius:inherit;}
     .side-item:hover::before{opacity:1;}
     body.light .side-item{color:rgba(26,58,92,.6);}
@@ -95,6 +95,10 @@
     .admin-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;}
     .prod-hint{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:5px;}
     body.light .prod-hint{color:#718096;}
+    .req-toolbar-sticky{position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.03);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);padding:8px 14px;margin:-10px -14px 6px;border-bottom:0.5px solid rgba(255,255,255,0.1);}
+    body.light .req-toolbar-sticky{background:rgba(255,255,255,0.25);border-bottom-color:rgba(100,160,220,0.15);}
+    .sitesettings-sticky-toolbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.03);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);padding:8px 14px;margin:-10px -14px 6px;border-bottom:0.5px solid rgba(255,255,255,0.1);}
+    body.light .sitesettings-sticky-toolbar{background:rgba(255,255,255,0.25);border-bottom-color:rgba(100,160,220,0.15);}
     .btn-sm{padding:4px 9px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;border:none;transition:all .2s cubic-bezier(.22,.61,.18,1);white-space:nowrap;position:relative;overflow:hidden;}
     .btn-blue{background:linear-gradient(135deg,rgba(31,110,176,0.8),rgba(59,155,219,0.75));color:#fff;border:1px solid rgba(100,180,255,0.3);box-shadow:0 4px 15px rgba(31,110,176,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
     body.light .btn-blue{background:rgba(41,128,185,0.85);color:#fff;border-color:rgba(41,128,185,0.5);}
@@ -125,6 +129,13 @@
     .tag-me{font-size:10px;padding:1px 6px;background:rgba(39,174,96,.25);color:#7effc0;border-radius:8px;margin-left:4px;}
     body.light .tag-me{background:#d4edda;color:#155724;}
     .prod-row{display:flex;gap:5px;align-items:center;margin-bottom:5px;}
+    .prod-row-view{padding:5px 7px;min-height:28px;box-sizing:border-box;}
+    .prod-code-view{width:160px;flex-shrink:0;font-size:11px;color:#64b4ff;font-family:'SF Mono','Cascadia Code','Consolas',monospace;font-weight:600;}
+    body.light .prod-code-view{color:#1F4E79;}
+    .prod-desc-view{flex:1;font-size:11px;color:rgba(255,255,255,.85);min-width:0;word-break:break-all;}
+    body.light .prod-desc-view{color:#2d4a6a;}
+    .prod-remark-view{width:180px;flex-shrink:0;font-size:11px;color:rgba(255,255,255,.6);min-width:0;word-break:break-all;}
+    body.light .prod-remark-view{color:#718096;}
     .form-item{display:flex;flex-direction:column;gap:3px;margin-bottom:6px;}
     .form-item label{font-size:10px;color:rgba(255,255,255,.75);font-weight:600;}
     body.light .form-item label{color:#4a5568;}
@@ -145,6 +156,15 @@
     .amodal-title{font-size:13px;font-weight:700;color:#9fd0ff;margin-bottom:10px;}
     body.light .amodal-title{color:#1F4E79;}
     .amodal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+    /* 模态框顶部固定栏（标题+按钮） */
+    .amodal-sticky-top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-bottom:8px;background:transparent;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+    .amodal-sticky-top .amodal-title{margin-bottom:0;padding:0;}
+    .amodal-sticky-top .sticky-btns{display:flex;gap:6px;flex-shrink:0;}
+    .amodal-sticky-top .sticky-btns .btn-sm{padding:5px 14px;font-size:12px;}
+    body.light .amodal-sticky-top{background:transparent;}
+    /* modal-box 可滚动时顶部不留空 */
+    .amodal-box.has-sticky-header{padding-top:0;}
+    .amodal-box.has-sticky-header .amodal-sticky-top{padding-top:12px;margin-top:0;}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
@@ -176,10 +196,31 @@
     body.light .topo-editor-section{background:rgba(255,255,255,0.5);border-color:rgba(100,160,220,0.1);}
     .topo-editor-section h5{color:#64b4ff;margin-bottom:4px;font-size:10px;}
     body.light .topo-editor-section h5{color:#1F4E79;}
-    .bom-row{display:flex;gap:4px;align-items:center;margin-bottom:3px;}
-    .bom-row input{flex:1;min-width:0;}
-    .bom-row .bom-col-cat{width:80px;flex:none;}
-    .bom-row .bom-col-qty{width:50px;flex:none;}
+    .bom-row{display:flex;gap:4px;align-items:center;margin-bottom:2px;}
+    .bom-row input{flex:1;min-width:0;padding:4px 6px;font-size:11px;
+      background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+      border-radius:4px;color:rgba(220,235,255,0.9);outline:none;}
+    .bom-row input:focus{border-color:rgba(100,180,255,0.4);background:rgba(255,255,255,0.08);}
+    .bom-row .bom-col-cat{width:70px;flex:none;}
+    .bom-row .bom-col-qty{width:46px;flex:none;}
+    .bom-row-num{width:20px;flex:none;text-align:center;font-size:9px;
+      color:rgba(180,210,255,0.35);font-weight:600;user-select:none;}
+    .bom-header{display:flex;gap:4px;align-items:center;margin-bottom:3px;
+      padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .bom-header span{font-size:9px;font-weight:700;color:rgba(180,210,255,0.5);
+      text-transform:uppercase;letter-spacing:.5px;}
+    .bom-h-num{width:20px;flex:none;text-align:center;}
+    .bom-h-cat{width:70px;flex:none;}
+    .bom-h-code{flex:1;min-width:0;}
+    .bom-h-desc{flex:1;min-width:0;}
+    .bom-h-qty{width:46px;flex:none;text-align:center;}
+    .bom-h-rmk{flex:1;min-width:0;}
+    .bom-h-act{width:28px;flex:none;}
+    body.light .bom-row input{background:rgba(0,0,0,0.02);border-color:rgba(0,0,0,0.08);color:#1a3a5c;}
+    body.light .bom-row input:focus{background:rgba(66,133,244,0.04);border-color:rgba(41,128,185,0.4);}
+    body.light .bom-header span{color:rgba(30,60,100,0.45);}
+    body.light .bom-header{border-bottom-color:rgba(0,0,0,0.06);}
+    body.light .bom-row-num{color:rgba(30,60,100,0.25);}
     .topo-svg-edit{height:200px;font-family:'Consolas','Courier New',monospace;font-size:11px;}
     .tag-row{display:flex;gap:4px;align-items:center;margin-bottom:4px;flex-wrap:wrap;}
     .tag-row input{flex:1;min-width:0;}
@@ -212,6 +253,7 @@
   <script src="js/storage.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/data.js"></script>
+  <script src="data/custom-config.js"></script>
   <script src="js/component-lib.js"></script>
   <script src="js/component-lib-admin.js"></script>
   <script src="js/admin.js"></script>
@@ -222,6 +264,9 @@
       if (!btn) return;
       var ripple = document.createElement('span');
       ripple.className = 'ripple';
+      ripple.style.position = 'absolute';
+      ripple.style.borderRadius = '50%';
+      ripple.style.pointerEvents = 'none';
       var rect = btn.getBoundingClientRect();
       var size = Math.max(rect.width, rect.height);
       ripple.style.width = ripple.style.height = size + 'px';
@@ -237,14 +282,19 @@
       if (!item) return;
       var ripple = document.createElement('span');
       ripple.className = 'ripple';
+      ripple.style.position = 'absolute';
+      ripple.style.borderRadius = '50%';
+      ripple.style.pointerEvents = 'none';
       ripple.style.background = 'rgba(100,180,255,0.25)';
+      ripple.style.transform = 'scale(0)';
+      ripple.style.animation = 'rippleAnim 0.6s linear forwards';
       var rect = item.getBoundingClientRect();
       var size = Math.max(rect.width, rect.height) * 2;
       ripple.style.width = ripple.style.height = size + 'px';
       ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
       ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
       item.appendChild(ripple);
-      setTimeout(function(){ ripple.remove(); }, 600);
+      setTimeout(function(){ ripple.remove(); }, 650);
     });
 
     STORAGE.init().then(function() { ADMIN.init(); });

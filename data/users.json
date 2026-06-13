@@ -1,0 +1,34 @@
+[
+  {
+    "id": "u1",
+    "username": "admin",
+    "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "role": "admin",
+    "displayName": "系统管理员",
+    "createdAt": 1779675770147
+  },
+  {
+    "id": "u2",
+    "username": "user",
+    "passwordHash": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+    "role": "user",
+    "displayName": "普通用户",
+    "createdAt": 1779675770147
+  },
+  {
+    "id": "u1780128104587",
+    "username": "2",
+    "passwordHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+    "role": "admin",
+    "displayName": "2",
+    "createdAt": 1780128104587
+  },
+  {
+    "id": "u1780128109544",
+    "username": "1",
+    "passwordHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+    "role": "user",
+    "displayName": "1",
+    "createdAt": 1780128109544
+  }
+]

@@ -108,14 +108,16 @@
       box-shadow:0 2px 12px rgba(0,0,0,0.18),inset 0 0.5px 0 rgba(255,255,255,0.08);
     }
     .card:hover,.info-card:hover{
+      transform:translateY(-4px);
       background:rgba(255,255,255,0.15);
       border-color:rgba(0,0,0,0.06);
       box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6);
     }
     body.dark .card:hover,body.dark .info-card:hover{
+      transform:translateY(-4px);
       background:rgba(28,28,32,0.5);
       border-color:rgba(255,255,255,0.1);
-      box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.12);
+      box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.3),inset 0 1.5px 0 rgba(255,255,255,0.12);
     }
 
     /* ── 通用表单 ── */
@@ -249,6 +251,109 @@
     .input-with-unit{display:flex;align-items:center;gap:6px;}
     .input-with-unit input{flex:1;}
     .unit{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+
+    /* ── 配置页 品类区块 ── */
+    .section-block{
+      background:rgba(255,255,255,0.07);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 35%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(24px) saturate(130%);
+      -webkit-backdrop-filter:blur(24px) saturate(130%);
+      border:0.5px solid rgba(255,255,255,0.2);
+      border-radius:20px;
+      padding:18px 22px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.03),inset 0 1.5px 0 rgba(255,255,255,0.35);
+      transition:all .3s ease;
+    }
+    body.dark .section-block{
+      background:rgba(255,255,255,0.04);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 35%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.12);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12),inset 0 1.5px 0 rgba(255,255,255,0.06);
+    }
+    .section-block:hover{
+      border-color:rgba(255,255,255,0.3);
+      box-shadow:0 6px 20px rgba(0,0,0,0.04),inset 0 1.5px 0 rgba(255,255,255,0.4);
+    }
+    .section-block + .section-block{margin-top:14px;}
+    .section-label{
+      font-size:15px;font-weight:700;color:var(--text-primary);
+      margin-bottom:12px;display:flex;align-items:center;gap:8px;
+    }
+    .section-label .auto-tag,.section-label .linked-tag{
+      font-size:11px;font-weight:600;padding:2px 10px;border-radius:10px;
+      background:rgba(59,155,219,0.14);border:0.5px solid rgba(59,155,219,0.22);
+      color:#1f6eb0;
+    }
+    body.dark .section-label .auto-tag,body.dark .section-label .linked-tag{
+      background:rgba(31,110,176,0.18);color:#5ba3db;border-color:rgba(91,163,219,0.2);
+    }
+    .form-row-3{
+      display:grid;grid-template-columns:2fr 1fr;gap:14px;
+    }
+    @media(max-width:640px){.form-row-3{grid-template-columns:1fr;}}
+    .form-row-3 .form-item{display:flex;flex-direction:column;gap:5px;}
+    .form-row-3 .form-item label{font-size:12.5px;font-weight:600;color:var(--text-secondary);}
+    .form-row-3 .form-item input,.form-row-3 .form-item select{width:100%;}
+    .code-desc-row{
+      display:flex;gap:16px;flex-wrap:wrap;
+      margin-top:8px;font-size:12.5px;color:var(--text-secondary);
+      line-height:1.5;
+    }
+    .code-desc-row .cd-label{color:var(--text-muted);font-weight:500;}
+    .code-desc-row .cd-value{color:var(--text-secondary);font-weight:500;}
+    .section-block .form-item{margin-top:8px;}
+    .section-block .form-item label{font-size:12.5px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;display:block;}
+    .section-block textarea{
+      width:100%;resize:vertical;min-height:44px;
+      font-size:13px;padding:8px 12px;
+    }
+    .auto-section{background:rgba(59,155,219,0.05);border-color:rgba(59,155,219,0.18);}
+    body.dark .auto-section{background:rgba(31,110,176,0.06);border-color:rgba(91,163,219,0.12);}
+    .linked-section{background:rgba(46,160,67,0.05);border-color:rgba(46,160,67,0.18);}
+    body.dark .linked-section{background:rgba(46,160,67,0.06);border-color:rgba(46,160,67,0.12);}
+    .auto-tip{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
+    .auto-item{
+      font-size:13px;color:var(--text-secondary);padding:6px 0;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .auto-item:last-child{border-bottom:none;}
+    body.dark .auto-item{border-bottom-color:rgba(255,255,255,0.06);}
+    .auto-value{font-weight:500;color:var(--text-primary);}
+    .dual-operator-row{margin-top:8px;}
+
+    /* 配置分支容器：去掉嵌套卡片背景，让 section-block 独立显示 */
+    #branch-single,#branch-multi{
+      background:transparent!important;border:none!important;box-shadow:none!important;
+      backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;
+    }
+
+    /* ── 配置页分组布局 ── */
+    .config-groups{display:flex;flex-direction:column;gap:20px;}
+    .config-group{}
+    .group-header{
+      font-size:13px;font-weight:700;color:var(--text-muted);
+      text-transform:uppercase;letter-spacing:1.5px;
+      margin-bottom:10px;padding-left:2px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .group-header::after{
+      content:'';flex:1;height:1px;
+      background:linear-gradient(90deg,rgba(255,255,255,0.18),transparent);
+    }
+    body.dark .group-header::after{background:linear-gradient(90deg,rgba(80,140,210,0.18),transparent);}
+    .group-header .group-icon{font-size:15px;opacity:0.7;}
+    .group-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+    }
+    @media(max-width:768px){.group-grid{grid-template-columns:1fr;}}
+    .group-grid .full-width{grid-column:1/-1;}
+    /* 分组内 section-block 间距更紧凑 */
+    .group-grid .section-block + .section-block{margin-top:0;}
+    .group-grid .section-block{padding:14px 18px;}
+    .group-grid .section-block .section-label{margin-bottom:8px;font-size:14px;}
+    .group-grid .section-block .code-desc-row{margin-top:6px;font-size:12px;}
+    .group-grid .section-block textarea{min-height:36px;font-size:12px;}
+    .group-grid .section-block .form-item{margin-top:4px;}
 
     /* ── 配置卡片 ── */
     .category-grid{display:flex;flex-direction:column;gap:10px;}
@@ -520,13 +625,13 @@
     }
     body.dark .sidebar-nav .nav-item:hover{background:rgba(59,155,219,0.12);}
     .sidebar-nav .nav-item.active{
-      background:rgba(31,110,176,0.18);
+      background:transparent;
       color:#1f6eb0;font-weight:700;
-      box-shadow:inset 3px 0 0 rgba(59,155,219,0.9),0 2px 12px rgba(31,110,176,0.1);
+      box-shadow:none;
     }
     body.dark .sidebar-nav .nav-item.active{
-      background:rgba(31,110,176,0.25);color:#5ba3db;
-      box-shadow:inset 3px 0 0 rgba(91,163,219,0.9);
+      background:transparent;color:#5ba3db;
+      box-shadow:none;
     }
     .nav-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
 
@@ -622,7 +727,7 @@
       box-shadow:var(--mx,0) var(--my,0) 20px rgba(0,0,0,0.06),inset 0 0.5px 0 rgba(255,255,255,0.6),0 0 0 3px rgba(59,155,219,0.06);
     }
     body.dark .search-box:focus-within{background:rgba(28,28,32,0.55);border-color:rgba(255,255,255,0.12);box-shadow:var(--mx,0) var(--my,0) 20px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1),0 0 0 3px rgba(59,155,219,0.06);}
-    .search-box input{flex:1;padding:10px 6px;border:none;background:transparent;font-size:16px;outline:none;color:var(--text-primary);box-shadow:none;}
+    .search-box input{flex:1;padding:10px 6px;border:none;background:transparent;font-size:16px;outline:none;color:var(--text-primary);box-shadow:none;position:relative;z-index:2;}
     .search-box input::placeholder{color:transparent;}
     /* 搜索提示浮层 —— 代替 placeholder 实现丝滑切换动画 */
     .search-hint-overlay{
@@ -630,10 +735,10 @@
       font-size:16px;color:rgba(100,130,170,0.55);font-weight:400;
       pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 80px);
       transition:opacity .3s ease,transform .3s ease;
-      opacity:1;
+      opacity:1;z-index:1;
     }
     .search-hint-overlay.hiding{opacity:0;transform:translateY(calc(-50% - 8px));}
-    .search-hint-overlay.hidden{opacity:0;pointer-events:none;}
+    .search-hint-overlay.hidden{opacity:0;pointer-events:none;visibility:hidden;}
     body.dark .search-hint-overlay{color:rgba(140,185,230,0.45);}
     .search-icon-btn{
       width:44px;height:44px;border-radius:14px;flex-shrink:0;
@@ -708,53 +813,103 @@
     /* 配置页 */
     .config-page main{max-width:none;margin:20px 24px 40px;display:flex;flex-direction:column;gap:20px;}
 
-    /* 首页 */
-    .home-page{padding:40px 48px 60px;}
-    .home-hero{text-align:center;padding:48px 20px 36px;}
-    .hero-icon{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 4px 16px rgba(59,155,219,0.35));}
-    .home-hero h2{font-size:32px;font-weight:800;color:var(--text-primary);margin-bottom:12px;}
-    .hero-desc{font-size:15px;color:var(--text-secondary);max-width:620px;margin:0 auto;line-height:1.7;}
-
-    /* 天气 + 励志文案条 */
-    .home-weather-quote{display:flex;gap:12px;max-width:760px;margin:0 auto 20px;flex-wrap:wrap;justify-content:center;}
-    .weather-bar{
-      display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:14px;
-      background:rgba(255,255,255,0.09);
-      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-      border:0.5px solid rgba(0,0,0,0.04);
-      box-shadow:0 2px 10px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
-      font-size:14px;color:var(--text-secondary);white-space:nowrap;
+    /* 首页 —— 液态玻璃风格 */
+    .home-page{padding:32px 40px 60px;}
+    .home-hero{
+      text-align:center;padding:40px 28px 32px;
+      max-width:640px;margin:0 auto 20px;
+      background:rgba(255,255,255,0.06);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 35%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(40px) saturate(140%);
+      -webkit-backdrop-filter:blur(40px) saturate(140%);
+      border:0.5px solid rgba(255,255,255,0.28);
+      border-radius:32px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.04),inset 0 1.5px 0 rgba(255,255,255,0.55);
     }
-    body.dark .weather-bar{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);color:rgba(200,210,230,0.7);box-shadow:0 2px 10px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    body.dark .home-hero{
+      background:rgba(255,255,255,0.04);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 35%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.14);
+      box-shadow:0 8px 32px rgba(0,0,0,0.15),inset 0 1.5px 0 rgba(255,255,255,0.1);
+    }
+    .hero-icon{font-size:52px;margin-bottom:14px;filter:drop-shadow(0 4px 16px rgba(59,155,219,0.3));}
+    .home-hero h2{font-size:30px;font-weight:800;color:var(--text-primary);margin-bottom:10px;}
+    .hero-desc{font-size:14.5px;color:var(--text-secondary);max-width:520px;margin:0 auto;line-height:1.7;}
+
+    /* 天气 + 励志文案条 —— 液态玻璃 */
+    .home-weather-quote{display:flex;gap:12px;max-width:720px;margin:0 auto 20px;flex-wrap:wrap;justify-content:center;}
+    .weather-bar{
+      display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:40px;
+      background:rgba(255,255,255,0.08);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(32px) saturate(130%);
+      -webkit-backdrop-filter:blur(32px) saturate(130%);
+      border:0.5px solid rgba(255,255,255,0.26);
+      box-shadow:0 4px 16px rgba(0,0,0,0.03),inset 0 1.5px 0 rgba(255,255,255,0.5);
+      font-size:14px;color:var(--text-secondary);white-space:nowrap;
+      overflow:hidden;position:relative;min-width:260px;justify-content:center;
+      transition:transform .35s ease;
+    }
+    .weather-scroll-wrap{position:relative;height:20px;overflow:hidden;min-width:200px;}
+    .weather-scroll-item{position:absolute;top:0;left:0;width:100%;text-align:center;opacity:0;transform:translateY(100%);transition:all .5s ease;white-space:nowrap;}
+    .weather-scroll-item.active{opacity:1;transform:translateY(0);}
+    .weather-scroll-item.exit{opacity:0;transform:translateY(-100%);}
+    body.dark .weather-bar{
+      background:rgba(255,255,255,0.05);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.16);
+      color:rgba(200,210,230,0.75);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12),inset 0 1.5px 0 rgba(255,255,255,0.08);
+    }
     .weather-icon{font-size:20px;}
     .weather-info{font-weight:500;}
     .quote-bar{
-      display:flex;align-items:center;padding:9px 18px;border-radius:14px;
-      background:rgba(255,255,255,0.09);
-      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-      border:0.5px solid rgba(0,0,0,0.04);
-      box-shadow:0 2px 10px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
+      display:flex;align-items:center;padding:10px 22px;border-radius:40px;
+      background:rgba(255,255,255,0.08);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(32px) saturate(130%);
+      -webkit-backdrop-filter:blur(32px) saturate(130%);
+      border:0.5px solid rgba(255,255,255,0.26);
+      box-shadow:0 4px 16px rgba(0,0,0,0.03),inset 0 1.5px 0 rgba(255,255,255,0.5);
       font-size:14px;color:var(--text-secondary);font-style:italic;
-      white-space:nowrap;transition:opacity .5s ease;
+      white-space:nowrap;transition:opacity .5s ease,transform .35s ease;
     }
-    body.dark .quote-bar{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 10px rgba(0,0,0,0.15),inset 0 0.5px 0 rgba(255,255,255,0.06);}
+    body.dark .quote-bar{
+      background:rgba(255,255,255,0.05);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.16);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12),inset 0 1.5px 0 rgba(255,255,255,0.08);
+    }
     .quote-text{opacity:1;transition:opacity .4s ease;}
     .quote-text.fade{opacity:0;}
 
-    .home-stats{display:flex;gap:16px;max-width:700px;margin:0 auto 48px;justify-content:center;flex-wrap:wrap;}
+    .home-stats{display:flex;gap:14px;max-width:680px;margin:0 auto 40px;justify-content:center;flex-wrap:wrap;}
     .stat-card{
-      background:rgba(255,255,255,0.10);
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
-      border:0.5px solid rgba(0,0,0,0.04);
-      border-radius:24px;padding:24px 32px;text-align:center;
-      box-shadow:0 2px 12px rgba(0,0,0,0.03),inset 0 0.5px 0 rgba(255,255,255,0.5);
-      transition:all .35s cubic-bezier(0.34,1.56,0.64,1);flex:1;min-width:140px;
+      background:rgba(255,255,255,0.07);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(28px) saturate(130%);
+      -webkit-backdrop-filter:blur(28px) saturate(130%);
+      border:0.5px solid rgba(255,255,255,0.24);
+      border-radius:28px;padding:22px 28px;text-align:center;
+      box-shadow:0 4px 16px rgba(0,0,0,0.03),inset 0 1.5px 0 rgba(255,255,255,0.45);
+      transition:all .35s cubic-bezier(0.34,1.56,0.64,1);flex:1;min-width:130px;
     }
-    body.dark .stat-card{background:rgba(28,28,32,0.4);border-color:rgba(255,255,255,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.18),inset 0 0.5px 0 rgba(255,255,255,0.06);}
-    .stat-card:hover{transform:translateY(-5px) scale(1.02);box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.08),inset 0 0.5px 0 rgba(255,255,255,0.6);}
-    body.dark .stat-card:hover{box-shadow:var(--mx,0) var(--my,0) 28px rgba(0,0,0,0.3),inset 0 0.5px 0 rgba(255,255,255,0.1);}
-    .stat-num{font-size:36px;font-weight:800;color:#1f6eb0;}
+    body.dark .stat-card{
+      background:rgba(255,255,255,0.04);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.14);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12),inset 0 1.5px 0 rgba(255,255,255,0.07);
+    }
+    .stat-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.06),inset 0 1.5px 0 rgba(255,255,255,0.5);}
+    body.dark .stat-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:var(--mx,0) var(--my,0) 24px rgba(0,0,0,0.2),inset 0 1.5px 0 rgba(255,255,255,0.1);}
+    /* ── 首页模块 hover 浮动 ── */
+    .home-hero:hover{transform:translateY(-4px);box-shadow:0 8px 36px rgba(0,0,0,0.08),inset 0 1.5px 0 rgba(255,255,255,0.6);}
+    body.dark .home-hero:hover{transform:translateY(-4px);box-shadow:0 8px 36px rgba(0,0,0,0.25),inset 0 1.5px 0 rgba(255,255,255,0.1);}
+    .weather-bar:hover,.quote-bar:hover{transform:translateY(-3px);}
+    body.dark .weather-bar:hover,body.dark .quote-bar:hover{transform:translateY(-3px);}
+    .tips-bar:hover{transform:translateY(-3px);}
+    body.dark .tips-bar:hover{transform:translateY(-3px);}
+    .stat-num{font-size:34px;font-weight:800;color:#1f6eb0;}
     body.dark .stat-num{color:#5ba3db;}
     .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
 
@@ -799,29 +954,35 @@
     .step-body h4{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;}
     .step-body p{font-size:13px;color:var(--text-secondary);line-height:1.6;}
 
-    /* ── 操作小技巧轮播 ── */
-    .tips-section{max-width:760px;margin:0 auto 24px;}
+    /* ── 操作小技巧轮播 —— 液态玻璃 ── */
+    .tips-section{max-width:720px;margin:0 auto 24px;}
     .tips-bar{
-      display:flex;align-items:center;gap:10px;padding:13px 18px;
-      border-radius:14px;
-      background:rgba(59,155,219,0.1);
-      backdrop-filter:blur(16px);
-      border:1px solid rgba(59,155,219,0.2);
-      min-height:50px;
-      box-shadow:0 3px 14px rgba(59,155,219,0.08),inset 0 1px 0 rgba(255,255,255,0.3);
-      transition:background .5s ease;
+      display:flex;align-items:center;gap:10px;padding:12px 20px;
+      border-radius:40px;
+      background:rgba(255,255,255,0.07);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%);
+      backdrop-filter:blur(28px) saturate(130%);
+      -webkit-backdrop-filter:blur(28px) saturate(130%);
+      border:0.5px solid rgba(255,255,255,0.24);
+      min-height:48px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.03),inset 0 1.5px 0 rgba(255,255,255,0.45);
+      transition:background .5s ease,transform .35s ease;
     }
-    body.dark .tips-bar{background:rgba(31,110,176,0.12);border-color:rgba(59,155,219,0.16);}
+    body.dark .tips-bar{
+      background:rgba(255,255,255,0.04);
+      background-image:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0) 100%);
+      border-color:rgba(255,255,255,0.14);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12),inset 0 1.5px 0 rgba(255,255,255,0.07);
+    }
     .tips-icon{font-size:22px;flex-shrink:0;}
-    .tips-text{font-size:13.5px;color:rgba(30,70,120,0.85);line-height:1.5;flex:1;}
-    body.dark .tips-text{color:rgba(140,190,235,0.85);}
+    .tips-text{font-size:13.5px;color:var(--text-secondary);line-height:1.5;flex:1;}
     .tips-tag{
-      font-size:11px;padding:3px 10px;border-radius:20px;
-      background:rgba(59,155,219,0.22);
-      border:1px solid rgba(59,155,219,0.3);
+      font-size:11px;padding:4px 12px;border-radius:20px;
+      background:rgba(59,155,219,0.15);
+      border:0.5px solid rgba(59,155,219,0.25);
       color:#1f6eb0;white-space:nowrap;flex-shrink:0;font-weight:600;
     }
-    body.dark .tips-tag{background:rgba(91,163,219,0.2);color:#5ba3db;}
+    body.dark .tips-tag{background:rgba(91,163,219,0.15);color:#5ba3db;border-color:rgba(91,163,219,0.2);}
     .back-to-top{
       position:fixed;right:28px;bottom:36px;z-index:200;
       width:56px;height:56px;border-radius:50%;
@@ -878,7 +1039,7 @@
     .rocket-fin{fill:url(#rocketFinGrad);}
     /* 火焰 */
     .rocket-flame{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:16px;height:22px;z-index:1;opacity:0;transition:opacity .3s ease,transform .3s ease;}
-    .back-to-top.visible .rocket-flame{opacity:.7;}
+    .back-to-top.visible .rocket-flame{opacity:0;}
     /* 点火：火焰爆发 */
     .back-to-top.visible:hover .rocket-flame{
       opacity:1;animation:flameIgnite .15s ease-in-out infinite alternate;
@@ -1124,9 +1285,11 @@
       </div>
       <!-- 天气 + 励志文案 -->
       <div class="home-weather-quote" data-reveal data-exit="fade-up" style="transition-delay:.08s">
-        <div class="weather-bar" id="weather-bar">
+        <div class="weather-bar" id="weather-bar" title="点击切换城市" style="cursor:pointer">
           <span class="weather-icon" id="weather-icon">☀️</span>
-          <span class="weather-info" id="weather-info">加载天气中…</span>
+          <div class="weather-scroll-wrap" id="weather-scroll-wrap">
+            <div class="weather-scroll-item active" id="weather-info">加载天气中…</div>
+          </div>
         </div>
         <div class="quote-bar" id="quote-bar">
           <span class="quote-text">"每一次努力，都是未来的你在向现在求救。"</span>
@@ -1137,34 +1300,7 @@
         <div class="stat-card"><div class="stat-num" id="stat-products">-</div><div class="stat-label">产品条目</div></div>
         <div class="stat-card"><div class="stat-num">1 键</div><div class="stat-label">Excel 导出</div></div>
       </div>
-      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.2s">
-        <div class="home-section-title">✨ 核心功能</div>
-        <div class="feature-grid">
-          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.24s"><div class="fc-icon">🔍</div><h4>快速搜索</h4><p>跨 18 个品类全文搜索，输入关键词即可查找产品编码、描述和备注信息，秒级响应。</p></div>
-          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.30s"><div class="fc-icon">📋</div><h4>非标需求表</h4><p>填写防逆流、抄表方式、汇流柜等需求，系统自动联动下方配置项，减少人工判断。</p></div>
-          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.36s"><div class="fc-icon">⚙️</div><h4>智能项目配置</h4><p>输入项目名称、单台容量和台数，自动生成单台/多台分支配置方案，支持并网功率动态匹配。</p></div>
-          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.26s"><div class="fc-icon">📊</div><h4>一键导出 Excel</h4><p>生成含需求表 + 配置表的双 Sheet Excel 文件，格式规范，可直接交付或存档。</p></div>
-          <div class="feature-card" data-reveal data-exit="slide-l" style="transition-delay:.32s"><div class="fc-icon">🛠</div><h4>管理员后台</h4><p>支持产品数据增删改查，品类管理，本地数据持久化，随时调整产品库。</p></div>
-          <div class="feature-card" data-reveal data-exit="slide-r" style="transition-delay:.38s"><div class="fc-icon">🌓</div><h4>暗/亮双主题</h4><p>深色/浅色一键切换，适配不同工作环境。</p></div>
-        </div>
-      </div>
-      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.32s">
-        <div class="home-section-title">📖 使用步骤</div>
-        <div class="step-list">
-          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.36s"><div class="step-badge">1</div><div class="step-body"><h4>填写非标需求表</h4><p>点击左侧 <b>项目配置</b>，确认防逆流需求、抄表方式、汇流柜配置。这些选项将自动联动下方产品配置，预选对应模块。</p></div></div>
-          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.42s"><div class="step-badge">2</div><div class="step-body"><h4>输入项目参数</h4><p>填写项目名称、单台储能柜容量（kW）、台数。台数=1 生成单台分支配置，台数≥2 生成多台分支配置。</p></div></div>
-          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.48s"><div class="step-badge">3</div><div class="step-body"><h4>选择产品配置</h4><p>根据自动预选结果调整各品类产品的数量、品牌和型号。灰色字段为系统自动计算，蓝色字段可手动修改。</p></div></div>
-          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.54s"><div class="step-badge">4</div><div class="step-body"><h4>导出 Excel 配置表</h4><p>点击 <b>生成 Excel</b>，一键输出含需求表和完整配置表的双 Sheet 文件，直接交付给工程团队或客户。</p></div></div>
-        </div>
-      </div>
-      <div class="home-section" data-reveal data-exit="fade-up" style="transition-delay:.56s">
-        <div class="home-section-title">💡 温馨提示</div>
-        <div class="step-list">
-          <div class="step-item" data-reveal data-exit="slide-l" style="transition-delay:.60s"><div class="step-badge" style="background:linear-gradient(135deg,#27AE60,#1a7a40)">⚡</div><div class="step-body"><h4>使用快速搜索查产品</h4><p>不确定某个产品的编码或描述？点击 <b>快速搜索</b>，输入关键词即可跨全部品类查找。</p></div></div>
-          <div class="step-item" data-reveal data-exit="slide-r" style="transition-delay:.66s"><div class="step-badge" style="background:linear-gradient(135deg,#E67E22,#b85e1a)">📝</div><div class="step-body"><h4>管理员可增删改产品</h4><p>管理员登录后点击顶栏 <b>🛠 管理员</b> 进入后台，可编辑品类、添加新产品、修改编码描述，数据自动保存到本地。</p></div></div>
-        </div>
-      </div>
-      <div class="tips-section" data-reveal data-exit="float" style="transition-delay:.70s">
+      <div class="tips-section" data-reveal data-exit="float" style="transition-delay:.32s">
         <div class="tips-bar" id="tips-bar">
           <span class="tips-icon" id="tips-icon">💡</span>
           <span class="tips-text" id="tips-text">配置完记得先预览再导出 Excel</span>
@@ -1279,6 +1415,7 @@
 <script src="lib/xlsx.full.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
+<script src="data/custom-config.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/form.js"></script>
 <script src="js/topo-data.js"></script>
@@ -1496,7 +1633,14 @@ function debouncedSearch() {
   clearTimeout(searchTimer);
   var input = document.getElementById('search-input');
   // 输入被清空时立即恢复 placeholder 轮换
-  if (!input.value.trim()) { searchProducts(); startSearchPlaceholderRotation(); return; }
+  if (!input.value.trim()) {
+    showHintOverlay();
+    searchProducts();
+    startSearchPlaceholderRotation();
+    return;
+  }
+  // 有内容时立即隐藏提示浮层
+  hideHintOverlay();
   searchTimer = setTimeout(function(){ searchProducts(); }, 200);
 }
 
@@ -1579,6 +1723,9 @@ function renderConfigPage() {
   var stepEl = document.getElementById("step1-container");
   if (reqEl) reqEl.innerHTML = UI.renderRequirements();
   if (stepEl) stepEl.innerHTML = UI.renderStep1();
+  // 初始化联动状态和项目信息汇总
+  if (UI.onReqChange) UI.onReqChange();
+  if (UI.refreshStep1Summary) UI.refreshStep1Summary();
 }
 
 // ── 设备检测 ───────────────────────────────────────────
@@ -1600,74 +1747,319 @@ window.addEventListener('resize', function(){
 document.addEventListener('DOMContentLoaded', detectDevice);
 
 // ── 天气获取（wttr.in 免费API + 浏览器定位）─────────────
+var weatherItems = [];
+var weatherScrollTimer = null;
+
+function windDirZh(dir) {
+  var map = {'N':'北','NNE':'北东北','NE':'东北','ENE':'东东北','E':'东','ESE':'东东南','SE':'东南','SSE':'南东南',
+    'S':'南','SSW':'南西南','SW':'西南','WSW':'西西南','W':'西','WNW':'西西北','NW':'西北','NNW':'北西北'};
+  return map[dir] || dir;
+}
+
+function startWeatherScroll() {
+  var wrap = document.getElementById('weather-scroll-wrap');
+  if (!wrap || weatherItems.length === 0) return;
+  // 初始化DOM
+  wrap.innerHTML = '';
+  weatherItems.forEach(function(text, i) {
+    var div = document.createElement('div');
+    div.className = 'weather-scroll-item' + (i === 0 ? ' active' : '');
+    div.textContent = text;
+    wrap.appendChild(div);
+  });
+  var idx = 0;
+  if (weatherScrollTimer) clearInterval(weatherScrollTimer);
+  weatherScrollTimer = setInterval(function() {
+    var items = wrap.querySelectorAll('.weather-scroll-item');
+    if (items.length <= 1) return;
+    items[idx].classList.remove('active');
+    items[idx].classList.add('exit');
+    setTimeout(function(){ items[idx].classList.remove('exit'); }, 500);
+    idx = (idx + 1) % items.length;
+    items[idx].classList.add('active');
+  }, 3500);
+}
+
 function fetchWeather() {
   var iconEl = document.getElementById('weather-icon');
-  var infoEl = document.getElementById('weather-info');
-  if (!iconEl || !infoEl) return;
+  var wrap = document.getElementById('weather-scroll-wrap');
+  if (!iconEl || !wrap) return;
+  // 清理超过30分钟的旧缓存，确保修改后能生效
+  var cachedRaw = localStorage.getItem('ess-weather-cache');
+  if (cachedRaw) {
+    try {
+      var cached = JSON.parse(cachedRaw);
+      if (!cached.t || (Date.now() - cached.t) > 30 * 60 * 1000) {
+        localStorage.removeItem('ess-weather-cache');
+      }
+    } catch(e) { localStorage.removeItem('ess-weather-cache'); }
+  }
+
+  // 英文天气描述 → 中文翻译表
+  // wttr.in 的 format=j1 模式下 lang_zh 字段也返回英文，必须自行翻译
+  var weatherDescZh = {
+    'Sunny':'晴','Clear':'晴','Partly cloudy':'多云','Partly Cloudy':'多云',
+    'Cloudy':'阴','Overcast':'阴',
+    'Mist':'薄雾','Fog':'雾','Freezing fog':'冻雾',
+    'Patchy rain possible':'局部小雨','Patchy rain nearby':'局部小雨',
+    'Patchy snow possible':'局部小雪','Patchy sleet possible':'局部雨夹雪',
+    'Patchy freezing drizzle possible':'局部冻雨','Thundery outbreaks possible':'局部雷暴',
+    'Blowing snow':'吹雪','Blizzard':'暴风雪','Foggy':'有雾',
+    'Patchy light drizzle':'局部毛毛雨','Light drizzle':'毛毛雨',
+    'Freezing drizzle':'冻雨','Heavy freezing drizzle':'大冻雨',
+    'Patchy light rain':'局部小雨','Light rain':'小雨',
+    'Moderate rain at times':'间歇中雨','Moderate rain':'中雨',
+    'Heavy rain at times':'间歇大雨','Heavy rain':'大雨',
+    'Light freezing rain':'小冻雨','Moderate or heavy freezing rain':'中到大冻雨',
+    'Light sleet':'小雨夹雪','Moderate or heavy sleet':'中到大雨夹雪',
+    'Patchy light snow':'局部小雪','Light snow':'小雪',
+    'Patchy moderate snow':'局部中雪','Moderate snow':'中雪',
+    'Patchy heavy snow':'局部大雪','Heavy snow':'大雪',
+    'Ice pellets':'冰粒','Light rain shower':'小阵雨',
+    'Light rain shower':'小阵雨',
+    'Moderate or heavy rain shower':'中到大阵雨','Torrential rain shower':'暴雨',
+    'Light sleet showers':'小雨夹雪','Moderate or heavy sleet showers':'中到大雨夹雪',
+    'Light snow showers':'小雪阵','Moderate or heavy snow showers':'中到大雪阵',
+    'Light showers of ice pellets':'小冰粒阵','Moderate or heavy showers of ice pellets':'中到大冰粒阵',
+    'Patchy light rain with thunder':'局部雷雨','Moderate or heavy rain with thunder':'中到大雷雨',
+    'Patchy light snow with thunder':'局部雷雪','Moderate or heavy snow with thunder':'中到大雷雪'
+  };
 
   function doFetch(city) {
-    var cityZh = {'Shenzhen':'深圳','Guangzhou':'广州','Beijing':'北京','Shanghai':'上海',
-      'Hangzhou':'杭州','Chengdu':'成都','Wuhan':'武汉','Nanjing':'南京','Chongqing':'重庆',
-      'Xian':'西安','Changsha':'长沙','Zhengzhou':'郑州','Jinan':'济南','Tianjin':'天津',
-      'Suzhou':'苏州','Dongguan':'东莞','Foshan':'佛山','Zhuhai':'珠海','Xiamen':'厦门',
-      'Qingdao':'青岛','Dalian':'大连','Kunming':'昆明','Guiyang':'贵阳','Fuzhou':'福州',
-      'Hefei':'合肥','Nanchang':'南昌','Taiyuan':'太原','Shijiazhuang':'石家庄',
-      'Shenyang':'沈阳','Changchun':'长春','Harbin':'哈尔滨'}[city] || city;
+    // 城市英文名→中文映射表（从动态城市列表构建 + 深圳区级兜底）
+    var cityZhMap = {};
+    var cityList = getWeatherCityList();
+    cityList.forEach(function(c){ cityZhMap[c.en] = c.zh; });
+    // 深圳区级/香港/台湾兜底
+    var areaFallback = {
+      'Shuitian':'水田','Ma Tso Lung':'深圳','Luohu':'深圳','Nanshan':'深圳',"Bao'an":'深圳',
+      'Longgang':'深圳','Longhua':'深圳','Futian':'深圳','Yantian':'深圳',
+      'Pingshan':'深圳','Guangming':'深圳','Dapeng':'深圳',
+      'Lo Wu':'深圳','Luo Hu':'深圳','Lok Ma Chau':'深圳','Heung Yuen Wai':'深圳',
+      'San Tin':'深圳','Ngau Tam Me':'深圳','Ta Kwu Ling':'深圳',
+      'Hong Kong':'中国香港','Macau':'中国澳门','Macao':'中国澳门',
+      'Taipei':'中国台北','Kaohsiung':'中国高雄','Taichung':'中国台中'
+    };
+    Object.keys(areaFallback).forEach(function(k){ if(!cityZhMap[k]) cityZhMap[k] = areaFallback[k]; });
     var url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
     fetch(url, { signal: AbortSignal.timeout(6000) })
       .then(function(r){ if (!r.ok) throw r.status; return r.json(); })
       .then(function(d){
         var w = d.current_condition[0];
+        var apiCity = '';
+        try { apiCity = (d.nearest_area[0].areaName[0].value || '').trim(); } catch(e) { apiCity = ''; }
+        // 如果 apiCity 不在映射表里，尝试用 savedCityZh；否则用 city 参数对应的中文；实在不行就显示"本地"
+        var savedCityZh = localStorage.getItem('ess-weather-city-zh') || '';
+        var displayCity = savedCityZh || cityZhMap[apiCity] || cityZhMap[city] || '本地';
+        // 验证：如果用户指定了城市但API返回了不同的城市，提示用户
+        if (savedCityZh && apiCity && cityZhMap[apiCity] && cityZhMap[apiCity] !== savedCityZh) {
+          var matchedZh = cityZhMap[apiCity];
+          if (savedCityZh !== matchedZh) {
+            showToast('⚠️ wttr.in 定位到：' + matchedZh + '，与选择不一致，请尝试英文名搜索');
+          }
+        }
         var code = w.weatherCode;
         var temp = w.temp_C + '°C';
         var hum = w.humidity + '%';
-        var desc = w.lang_zh ? w.lang_zh[0].value : w.weatherDesc[0].value;
-        var wind = w.winddir16Point + ' ' + w.windspeedKmph + 'km/h';
-        var nearest = d.nearest_area ? d.nearest_area[0] : null;
-        var areaName = nearest ? (nearest.areaName ? nearest.areaName[0].value : '') : '';
-        var regionName = nearest ? (nearest.region ? nearest.region[0].value : '') : '';
-        var displayCity = areaName || regionName || cityZh;
-        var map = {113:'☀️',116:'⛅',119:'☁️',122:'🌥️',143:'🌫️',176:'🌦️',179:'🌨️',182:'🌨️',185:'🌧️',200:'⛈️',227:'🌬️',230:'🌬️',248:'🌫️',260:'🌫️',263:'🌧️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',311:'🌧️',314:'🌧️',317:'🌧️',320:'🌧️',323:'🌨️',326:'🌨️',329:'🌨️',332:'🌨️',335:'🌨️',338:'🌨️',350:'🌨️',353:'🌧️',356:'🌧️',359:'🌧️',362:'🌨️',365:'🌨️',368:'🌨️',371:'🌨️',374:'🌧️',377:'🌧️',386:'⛈️',389:'⛈️',392:'⛈️',395:'🌨️'};
-        iconEl.textContent = map[code] || '🌤️';
-        infoEl.textContent = displayCity + ' ' + temp + '  ' + desc + '  💧' + hum + '  🌬' + wind;
-        localStorage.setItem('ess-weather-cache', JSON.stringify({icon:iconEl.textContent,text:infoEl.textContent,t:Date.now()}));
+        var rawDesc = (w.weatherDesc && w.weatherDesc[0] && w.weatherDesc[0].value) ? w.weatherDesc[0].value.trim() : '';
+        // wttr.in format=j1 下 lang_zh 字段也返回英文，完全不依赖它
+        var desc = weatherDescZh[rawDesc] || rawDesc;
+        var windDir = windDirZh(w.winddir16Point);
+        var windSpeed = w.windspeedKmph + 'km/h';
+        var feels = w.FeelsLikeC ? w.FeelsLikeC + '°C' : '';
+        var vis = w.visibility ? w.visibility + 'km' : '';
+        var uv = w.uvIndex ? w.uvIndex : '';
+        var iconMap = {113:'☀️',116:'⛅',119:'☁️',122:'🌥️',143:'🌫️',176:'🌦️',179:'🌨️',182:'🌨️',185:'🌧️',200:'⛈️',227:'🌬️',230:'🌬️',248:'🌫️',260:'🌫️',263:'🌧️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',311:'🌧️',314:'🌧️',317:'🌧️',320:'🌧️',323:'🌨️',326:'🌨️',329:'🌨️',332:'🌨️',335:'🌨️',338:'🌨️',350:'🌨️',353:'🌧️',356:'🌧️',359:'🌧️',362:'🌨️',365:'🌨️',368:'🌨️',371:'🌨️',374:'🌧️',377:'🌧️',386:'⛈️',389:'⛈️',392:'⛈️',395:'🌨️'};
+        iconEl.textContent = iconMap[code] || '🌤️';
+        weatherItems = [displayCity + ' ' + temp + ' ' + desc];
+        weatherItems.push('💧 湿度 ' + hum + '  🌬 ' + windDir + '风 ' + windSpeed);
+        if (feels) weatherItems.push('🌡 体感温度 ' + feels);
+        if (vis) weatherItems.push('👁 能见度 ' + vis);
+        if (uv) weatherItems.push('☀ UV指数 ' + uv);
+        startWeatherScroll();
       })
       .catch(function(){
-        var cached = localStorage.getItem('ess-weather-cache');
-        if (cached) {
-          try { var c = JSON.parse(cached); iconEl.textContent = c.icon; infoEl.textContent = c.text; } catch(e){}
-        } else {
-          iconEl.textContent = '🌤️'; infoEl.textContent = '天气加载失败';
-        }
+        iconEl.textContent = '🌤️';
+        weatherItems = ['天气加载失败，请稍后重试'];
+        startWeatherScroll();
       });
   }
 
-  // 优先浏览器定位
-  if ('geolocation' in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {
-        doFetch(pos.coords.latitude + ',' + pos.coords.longitude);
-      },
-      function() {
-        // 定位失败，用 IP 定位
-        fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
-          .then(function(r){ return r.json(); })
-          .then(function(d){ doFetch(d.city || d.region || 'Shenzhen'); })
-          .catch(function(){ doFetch('Shenzhen'); });
-      },
-      { timeout: 5000, maximumAge: 600000 }
-    );
+  // 优先使用用户手动选择的城市；否则自动定位
+  var savedCityEn = localStorage.getItem('ess-weather-city-en');
+  if (savedCityEn) {
+    doFetch(savedCityEn);
   } else {
-    // 不支持定位，用 IP
-    fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
-      .then(function(r){ return r.json(); })
-      .then(function(d){ doFetch(d.city || d.region || 'Shenzhen'); })
-      .catch(function(){ doFetch('Shenzhen'); });
+    // 自动定位
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        function(pos) { doFetch(pos.coords.latitude + ',' + pos.coords.longitude); },
+        function() { doFetch('Shenzhen'); },
+        { timeout: 5000, maximumAge: 600000 }
+      );
+    } else {
+      doFetch('Shenzhen');
+    }
   }
 }
 
+// ── 城市选择器（点击天气栏弹出）────────────────────────────
+var _defaultWeatherCities = [
+  {zh:'深圳',en:'Shenzhen'},{zh:'广州',en:'Guangzhou'},{zh:'北京',en:'Beijing'},
+  {zh:'上海',en:'Shanghai'},{zh:'杭州',en:'Hangzhou'},{zh:'成都',en:'Chengdu'},
+  {zh:'武汉',en:'Wuhan'},{zh:'南京',en:'Nanjing'},{zh:'重庆',en:'Chongqing'},
+  {zh:'西安',en:"Xi'an"},{zh:'长沙',en:'Changsha'},{zh:'郑州',en:'Zhengzhou'},
+  {zh:'济南',en:'Jinan'},{zh:'天津',en:'Tianjin'},{zh:'苏州',en:'Suzhou'},
+  {zh:'东莞',en:'Dongguan'},{zh:'佛山',en:'Foshan'},{zh:'珠海',en:'Zhuhai'},
+  {zh:'厦门',en:'Xiamen'},{zh:'青岛',en:'Qingdao'},{zh:'大连',en:'Dalian'},
+  {zh:'昆明',en:'Kunming'},{zh:'贵阳',en:'Guiyang'},{zh:'福州',en:'Fuzhou'},
+  {zh:'合肥',en:'Hefei'},{zh:'南昌',en:'Nanchang'},{zh:'太原',en:'Taiyuan'},
+  {zh:'石家庄',en:'Shijiazhuang'},{zh:'沈阳',en:'Shenyang'},
+  {zh:'长春',en:'Changchun'},{zh:'哈尔滨',en:'Harbin'}
+];
+function getWeatherCityList() {
+  var s = (typeof STORAGE !== 'undefined') ? (STORAGE.get('settings') || {}) : {};
+  var list = s.weatherCities;
+  if (Array.isArray(list) && list.length > 0) return list;
+  // 向后兼容：无配置时用默认列表
+  STORAGE.set('settings', Object.assign(s, { weatherCities: _defaultWeatherCities }));
+  return _defaultWeatherCities;
+}
+var WEATHER_CITY_LIST = getWeatherCityList();
+
+// ── 全局 Toast 通知 ──────────────────────────────────────
+var _toastTimer = null;
+function showToast(msg, duration) {
+  duration = duration || 2500;
+  var el = document.getElementById('global-toast');
+  if (!el) return;
+  if (_toastTimer) clearTimeout(_toastTimer);
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(-50%) translateY(0)';
+  _toastTimer = setTimeout(function(){
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(-50%) translateY(-8px)';
+    setTimeout(function(){ el.style.display = 'none'; }, 300);
+  }, duration);
+}
+
+function initCityPicker() {
+  var bar = document.getElementById('weather-bar');
+  var overlay = document.getElementById('city-picker-overlay');
+  var list = document.getElementById('city-picker-list');
+  var customInput = document.getElementById('city-custom-input');
+  var customBtn = document.getElementById('city-custom-btn');
+  var autoBtn = document.getElementById('city-auto-btn');
+  if (!bar || !overlay) return;
+
+  bar.style.cursor = 'pointer';
+  bar.title = '点击切换城市';
+
+  bar.addEventListener('click', function() {
+    // 每次打开刷新城市列表（支持admin后台修改）
+    WEATHER_CITY_LIST = getWeatherCityList();
+    renderCityBtns();
+    overlay.style.display = 'block';
+    // 高亮当前选中城市
+    var saved = localStorage.getItem('ess-weather-city-zh') || '';
+    var btns = list.querySelectorAll('button');
+    btns.forEach(function(b) {
+      b.style.background = (b.textContent === saved) ?
+        'linear-gradient(135deg,#4facfe,#00f2fe)' : 'rgba(255,255,255,0.08)';
+      b.style.color = (b.textContent === saved) ? '#fff' : '#e8eef6';
+      b.style.fontWeight = (b.textContent === saved) ? '500' : '400';
+      b.style.borderColor = (b.textContent === saved) ? 'transparent' : 'rgba(255,255,255,0.12)';
+    });
+  });
+
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.style.display = 'none'; });
+
+  // 渲染城市按钮 + datalist 搜索建议
+  function renderCityBtns() {
+    list.innerHTML = '';
+    var datalist = document.getElementById('city-datalist');
+    if (datalist) datalist.innerHTML = '';
+    WEATHER_CITY_LIST.forEach(function(c) {
+      var btn = document.createElement('button');
+      btn.textContent = c.zh;
+      btn.style.cssText = 'padding:6px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.08);color:#e8eef6;font-size:14px;cursor:pointer;transition:all .2s';
+      var saved = localStorage.getItem('ess-weather-city-zh');
+      if (saved === c.zh) {
+        btn.style.background = 'linear-gradient(135deg,#4facfe,#00f2fe)';
+        btn.style.color = '#fff';
+        btn.style.borderColor = 'transparent';
+        btn.style.fontWeight = '500';
+      }
+      btn.addEventListener('click', function() {
+        localStorage.setItem('ess-weather-city-en', c.en);
+        localStorage.setItem('ess-weather-city-zh', c.zh);
+        overlay.style.display = 'none';
+        showToast('✅ 已切换到：' + c.zh + '，正在获取天气…');
+        fetchWeather();
+      });
+      btn.addEventListener('mouseenter', function() { this.style.transform = 'scale(1.05)'; });
+      btn.addEventListener('mouseleave', function() { this.style.transform = 'scale(1)'; });
+      list.appendChild(btn);
+      // 添加到 datalist
+      if (datalist) {
+        var opt = document.createElement('option');
+        opt.value = c.zh;
+        datalist.appendChild(opt);
+      }
+    });
+  }
+  renderCityBtns();
+
+  customBtn.addEventListener('click', function() {
+    var val = customInput.value.trim();
+    if (!val) return;
+    // 尝试匹配已知城市
+    var matched = null;
+    var list = WEATHER_CITY_LIST;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].zh === val || list[i].en.toLowerCase() === val.toLowerCase()) {
+        matched = list[i]; break;
+      }
+    }
+    if (matched) {
+      localStorage.setItem('ess-weather-city-en', matched.en);
+      localStorage.setItem('ess-weather-city-zh', matched.zh);
+      overlay.style.display = 'none';
+      customInput.value = '';
+      showToast('✅ 已切换到：' + matched.zh + '，正在获取天气…');
+      fetchWeather();
+    } else {
+      // 用户自定义城市名，直接用输入值
+      localStorage.setItem('ess-weather-city-en', val);
+      localStorage.setItem('ess-weather-city-zh', val);
+      overlay.style.display = 'none';
+      customInput.value = '';
+      showToast('🔍 正在查询：' + val + '（如不准确请尝试英文名）');
+      fetchWeather();
+    }
+  });
+  customInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') customBtn.click(); });
+
+  autoBtn.addEventListener('click', function() {
+    localStorage.removeItem('ess-weather-city-en');
+    localStorage.removeItem('ess-weather-city-zh');
+    overlay.style.display = 'none';
+    showToast('📍 正在自动定位，获取本地天气…');
+    fetchWeather();
+  });
+}
+
+// 初始化城市选择器
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCityPicker);
+} else {
+  initCityPicker();
+}
+
 // ── 励志文案轮换 ─────────────────────────────────────────
-var quotes = [
+var _defaultQuotes = [
   '"每一次努力，都是未来的你在向现在求救。" 💪',
   '"储能不止于储能，更是为未来蓄力。" ⚡',
   '"只有极其努力，才能看起来毫不费力。" 🎯',
@@ -1698,7 +2090,6 @@ var quotes = [
   '"别怕犯错，怕的是不行动。" 🎬',
   '"这个行业，值得你全力以赴。" 💼',
   '"做自己的太阳，无需借谁的光。" ☀️',
-  // ── 新增：夸人 + 励志混合 ──
   '"你就是储能界的卷王，卷得漂亮！" 👑',
   '"这配置方案一看就是老手，稳如泰山。" ⛰️',
   '"储能圈最靓的仔，今天也要发光。" ✨',
@@ -1719,6 +2110,14 @@ var quotes = [
   '"储能人的浪漫：一度电，一份爱。" 💚',
   '"格局打开，储能未来可期。" 🔭'
 ];
+function getQuoteList() {
+  var s = (typeof STORAGE !== 'undefined') ? (STORAGE.get('settings') || {}) : {};
+  var list = s.quotes;
+  if (Array.isArray(list) && list.length > 0) return list;
+  STORAGE.set('settings', Object.assign(s, { quotes: _defaultQuotes }));
+  return _defaultQuotes;
+}
+var quotes = getQuoteList();
 var quoteIdx = 0;
 var quoteTimer = null;
 
@@ -1743,7 +2142,7 @@ function startQuoteRotation() {
 }
 
 // ── 操作小技巧轮换 ─────────────────────────────────────────
-var tipsList = [
+var _defaultTips = [
   { icon:'💡', text:'配置完记得先预览，确认无误再导出 Excel，省纸省心。' },
   { icon:'🔍', text:'快速搜索支持编码、描述、品牌多字段同时匹配，搜得越准配得越快。' },
   { icon:'📋', text:'需求表里选"不需要"的项，Excel 备注栏自动标注"不配置"，一目了然。' },
@@ -1760,6 +2159,14 @@ var tipsList = [
   { icon:'🧩', text:'EMS、BMS、PCS 等模块数量自动计算，灰色字段为系统联动，无需手动填。' },
   { icon:'🔔', text:'导出前检查"并网功率"是否在合理范围，避免配置方案不合规。' }
 ];
+function getTipsList() {
+  var s = (typeof STORAGE !== 'undefined') ? (STORAGE.get('settings') || {}) : {};
+  var list = s.tips;
+  if (Array.isArray(list) && list.length > 0) return list;
+  STORAGE.set('settings', Object.assign(s, { tips: _defaultTips }));
+  return _defaultTips;
+}
+var tipsList = getTipsList();
 var tipsIdx = 0;
 var tipsTimer = null;
 
@@ -1939,6 +2346,8 @@ function startSearchPlaceholderRotation() {
   if (!overlay || !input) return;
   // 清除旧定时器，防止叠加
   if (_hintTimer) { clearTimeout(_hintTimer); _hintTimer = null; }
+  // 有内容时不显示提示浮层
+  if ((input.value || '').trim()) { overlay.classList.add('hidden'); return; }
   overlay.classList.remove('hiding','hidden');
   // 打乱一次
   for (var i = _searchHints.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = _searchHints[i]; _searchHints[i] = _searchHints[j]; _searchHints[j] = t; }
@@ -1988,5 +2397,23 @@ if (typeof UI !== 'undefined') {
   };
 }
 </script>
+
+<!-- 城市选择弹窗（放在body层级，避免被data-reveal的transform影响fixed定位） -->
+<div id="city-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
+  <div id="city-picker-modal" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,18,35,0.78);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:18px;padding:28px 24px 20px;min-width:360px;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15)">
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;color:#e8eef6;text-align:center">📍 选择城市</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px" id="city-picker-list"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <input id="city-custom-input" list="city-datalist" placeholder="输入城市名搜索（如：杭州）" style="flex:1;padding:8px 12px;border:1px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;outline:none;background:rgba(255,255,255,0.06);color:#e8eef6" />
+      <datalist id="city-datalist"></datalist>
+      <button id="city-custom-btn" style="padding:8px 16px;border:none;border-radius:10px;background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff;font-size:14px;font-weight:500;cursor:pointer">确定</button>
+    </div>
+    <button id="city-auto-btn" style="margin-top:8px;width:100%;padding:8px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#a0aec0;font-size:13px;cursor:pointer;transition:all .2s">🔄 自动定位</button>
+  </div>
+</div>
+
+<!-- Toast 通知 -->
+<div id="global-toast" style="display:none;position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(10,18,35,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(100,180,255,0.3);border-radius:12px;padding:10px 24px;color:#e8eef6;font-size:14px;font-weight:500;box-shadow:0 4px 24px rgba(0,0,0,0.4);pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap"></div>
+
 </body>
 </html>

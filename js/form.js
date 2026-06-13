@@ -164,6 +164,16 @@ const FORM = (() => {
       remark: val("m-sts-remark"),
     } : null;
 
+    // 监控箱
+    const monitorShown = document.getElementById("block-monitor")?.style.display !== "none";
+    const monitor = monitorShown ? getItem("m-monitor-select", DATA.monitorCabinets) : null;
+    if (monitorShown && !monitor) return focusInvalid(errEl, "请选择监控箱产品型号", "m-monitor-select");
+    const monitorCabinet = monitorShown ? {
+      ...monitor,
+      qty:    parseInt(val("m-monitor-qty"), 10) || 0,
+      remark: val("m-monitor-remark"),
+    } : null;
+
     return {
       branch:          "multi",
       projectName:     window.AppState.name,
@@ -185,16 +195,37 @@ const FORM = (() => {
       dviCable:        { ...dvi, qty: dviQty },
       busCabinet,
       stsCabinet,
+      monitorCabinet,
       globalRemark:    val("m-global-remark"),
       reqData:         UI.collectReqData(),
       exportSheets,
     };
   }
 
+  // ── 将最终确认的所有产品编码记录到热门统计 ──────────────
+  function recordSelections(data) {
+    const hot = UI.HOT;
+    if (!hot) return;
+    if (data.storageCabinet)  hot.record(data.storageCabinet.code);
+    if (data.secondaryMeter)  hot.record(data.secondaryMeter.code);
+    if (data.primaryMeter)    hot.record(data.primaryMeter.code);
+    if (data.router)          hot.record(data.router.code);
+    if (data.switch_)         hot.record(data.switch_.code);
+    if (data.powerModule)     hot.record(data.powerModule.code);
+    if (data.ems)             hot.record(data.ems.code);
+    if (data.simCard)         hot.record(data.simCard.code);
+    if (data.simCard2)        hot.record(data.simCard2.code);
+    if (data.dviCable)        hot.record(data.dviCable.code);
+    if (data.busCabinet)      hot.record(data.busCabinet.code);
+    if (data.stsCabinet)      hot.record(data.stsCabinet.code);
+    if (data.monitorCabinet)  hot.record(data.monitorCabinet.code);
+  }
+
   function collectAndExport() {
     if (!window.AppState) return;
     const data = window.AppState.count === 1 ? collectSingle() : collectMulti();
     if (!data) return;
+    recordSelections(data);
     EXPORT.toExcel(data);
   }
 

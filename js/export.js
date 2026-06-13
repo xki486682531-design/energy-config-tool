@@ -216,6 +216,44 @@ const EXPORT = (() => {
     mergeRange(ws, row-1, 0, row-1, 6);
     row++;
 
+    // ── 项目摘要信息 ─────────────────────────────────────
+    const infoLabelSt = cs("E2F0E2", TEXT_DARK, true, false, "center");
+    const infoValueSt = cs("FFFFFF", TEXT_DARK, false, false, "left");
+    const infoValueC  = cs("FFFFFF", TEXT_DARK, false, false, "center");
+
+    // 项目名称
+    ws["A"+row] = makeCell("项目名称", infoLabelSt);
+    ws["B"+row] = makeCell(data.projectName || "", infoValueSt);
+    for (var ci = 2; ci <= 6; ci++) ws[cols[ci]+row] = makeCell("", infoValueSt);
+    mergeRange(ws, row-1, 1, row-1, 6);
+    row++;
+
+    // 产品型号
+    var modelText = "";
+    if (data.storageCabinet) {
+      modelText = (data.storageCabinet.code || "") + " " + (data.storageCabinet.desc || "");
+    }
+    ws["A"+row] = makeCell("产品型号", infoLabelSt);
+    ws["B"+row] = makeCell(modelText, infoValueSt);
+    for (var ci = 2; ci <= 6; ci++) ws[cols[ci]+row] = makeCell("", infoValueSt);
+    mergeRange(ws, row-1, 1, row-1, 6);
+    row++;
+
+    // 数量 / 汇流柜 / 拓扑类型
+    ws["A"+row] = makeCell("数量", infoLabelSt);
+    ws["B"+row] = makeCell((data.cabinetCount || "") + " 台", infoValueC);
+    ws["C"+row] = makeCell("汇流柜", infoLabelSt);
+    ws["D"+row] = makeCell(data.busCabinet ? "是" : "否", infoValueC);
+    ws["E"+row] = makeCell("拓扑类型", infoLabelSt);
+    ws["F"+row] = makeCell((data.reqData && data.reqData.scene) || "", infoValueC);
+    ws["G"+row] = makeCell("", infoValueC);
+    mergeRange(ws, row-1, 5, row-1, 6);
+    row++;
+
+    // 空行分隔
+    for (var ci = 0; ci <= 6; ci++) ws[cols[ci]+row] = makeCell("", cs("FFFFFF", TEXT_DARK, false, false, "center"));
+    row++;
+
     // 表头行
     var headers = ["选择","类别","物料编码","编码描述","数量","备注","项目信息"];
     headers.forEach(function(h,i){ ws[cols[i]+row] = makeCell(h, hdrSt); });
@@ -325,6 +363,12 @@ const EXPORT = (() => {
       if (data.stsCabinet && data.stsCabinet.code) {
         writeSection("STS柜（需求联动）");
         writeRow("STS柜", data.stsCabinet);
+      }
+
+      // 监控箱
+      if (data.monitorCabinet && data.monitorCabinet.code) {
+        writeSection("监控箱（需求联动）");
+        writeRow("监控箱", data.monitorCabinet);
       }
 
       // 串口服务器

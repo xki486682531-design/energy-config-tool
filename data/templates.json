@@ -1,0 +1,112 @@
+[
+  {
+    "id": "tpl_1780634174737_1l4xe",
+    "name": "标准储能方案",
+    "description": "",
+    "category": "高压并网方案",
+    "nodes": [
+      {
+        "id": "n1",
+        "compId": "grid",
+        "x": 300,
+        "y": 60,
+        "label": "电网 10kV"
+      },
+      {
+        "id": "n2",
+        "compId": "transformer",
+        "x": 290,
+        "y": 160,
+        "label": "变压器"
+      },
+      {
+        "id": "n3",
+        "compId": "hv-cabinet",
+        "x": 200,
+        "y": 280,
+        "label": "高压柜"
+      },
+      {
+        "id": "n4",
+        "compId": "pcs",
+        "x": 360,
+        "y": 280,
+        "label": "PCS"
+      },
+      {
+        "id": "n5",
+        "compId": "lv-cabinet",
+        "x": 200,
+        "y": 380,
+        "label": "低压柜"
+      },
+      {
+        "id": "n6",
+        "compId": "ess-cabinet",
+        "x": 360,
+        "y": 380,
+        "label": "储能柜"
+      },
+      {
+        "id": "n7",
+        "compId": "load",
+        "x": 200,
+        "y": 480,
+        "label": "负载"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "n1",
+        "to": "n2",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "power220v"
+      },
+      {
+        "id": "e2",
+        "from": "n2",
+        "to": "n3",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "power220v"
+      },
+      {
+        "id": "e3",
+        "from": "n2",
+        "to": "n4",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "power220v"
+      },
+      {
+        "id": "e4",
+        "from": "n3",
+        "to": "n5",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "ethernet"
+      },
+      {
+        "id": "e5",
+        "from": "n4",
+        "to": "n6",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "power220v"
+      },
+      {
+        "id": "e6",
+        "from": "n5",
+        "to": "n7",
+        "fromPort": "bottom",
+        "toPort": "top",
+        "cableType": "rs485"
+      }
+    ],
+    "layout": {},
+    "createdAt": "2026-06-05T04:36:14.737Z",
+    "updatedAt": "2026-06-05T04:36:14.737Z"
+  }
+]

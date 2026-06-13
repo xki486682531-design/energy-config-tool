@@ -105,7 +105,34 @@ body.light .complib-card-desc{color:#64748b;}
 body.light .complib-card-status.enabled{background:#d4edda;color:#155724;border-color:#c3e6cb;}
 body.light .complib-card-status.disabled{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;}
 
-/* ── 空状态 ── */
+/* ── 回收箱 ── */
+.complib-trash-section {
+  margin-top:20px; border-top:1px solid rgba(255,80,80,0.2);
+  padding-top:12px;
+}
+body.light .complib-trash-section { border-top-color:rgba(220,53,69,0.15); }
+.complib-trash-header {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; border-radius:10px;
+  background:rgba(255,80,80,0.06); border:1px solid rgba(255,80,80,0.12);
+  cursor:pointer; transition:background .2s;
+  font-size:13px; font-weight:600; color:rgba(255,180,180,0.8);
+  user-select:none;
+}
+.complib-trash-header:hover { background:rgba(255,80,80,0.12); }
+body.light .complib-trash-header { background:rgba(220,53,69,0.05); color:rgba(180,50,50,0.8); }
+body.light .complib-trash-header:hover { background:rgba(220,53,69,0.1); }
+.complib-trash-icon { font-size:18px; }
+.complib-trash-count { font-size:11px; color:rgba(255,180,180,0.5); }
+.complib-trash-arrow { margin-left:8px; font-size:11px; }
+.complib-trash-body { padding:8px 0; }
+.complib-trash-body .complib-comp-grid {
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;
+  display:grid;
+}
+.complib-trash-body .complib-card {
+  border-color:rgba(255,80,80,0.15);
+}
 .complib-empty{
   text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);font-size:14px;
 }
@@ -119,6 +146,29 @@ body.light .complib-empty{color:#94a3b8;}
 }
 .complib-svg-preview svg{max-width:130px;max-height:95px;}
 body.light .complib-svg-preview{background:rgba(0,0,0,.04);border-color:rgba(100,160,220,.15);}
+
+/* ── 模态框标题栏（固定悬浮） ── */
+.complib-modal-header {
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0 12px;
+  background:rgba(15,25,45,0.92);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+body.light .complib-modal-header {
+  background:rgba(240,245,252,0.92);
+  border-bottom-color:rgba(0,0,0,0.06);
+}
+.complib-modal-header .amodal-title {
+  margin-bottom:0; padding:0;
+}
+
+/* ── 元件编辑器右上角悬浮按钮 ── */
+.complib-editor-topbtns{
+  display:flex; gap:6px; flex-shrink:0;
+}
+.complib-editor-topbtns .btn-sm{padding:6px 16px; font-size:12px;}
 
 /* ── 连接点编辑器 ── */
 .complib-conn-points{
@@ -138,6 +188,79 @@ body.light .complib-conn-row input[type=number]{border-color:#c8d8ea;background:
 
 .complib-conn-custom{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-top:4px;}
 body.light .complib-conn-custom{border-top-color:#e2e8f0;}
+
+/* ── 连接点可视化编辑器 ── */
+.complib-viseditor-wrap{
+  display:flex;flex-direction:column;gap:8px;
+  padding:12px;background:rgba(0,0,0,.12);border-radius:12px;
+}
+body.light .complib-viseditor-wrap{background:rgba(0,0,0,.03);}
+
+.complib-viseditor{
+  position:relative;border:1px dashed rgba(100,180,255,.15);
+  border-radius:10px;overflow:hidden;
+  background:rgba(10,22,44,0.6);
+  cursor:default; user-select:none;
+  -webkit-user-select:none;
+}
+body.light .complib-viseditor{
+  background:rgba(240,245,252,.5);border-color:rgba(100,160,220,.15);
+}
+
+.complib-viseditor-bg{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:4px;
+  pointer-events:none;
+  opacity:0.85;
+}
+
+.complib-viseditor-overlay{
+  /* dots are absolutely positioned within */
+}
+
+.complib-vis-dot{
+  transition: box-shadow .15s, transform .1s;
+  z-index:10;
+}
+.complib-vis-dot:hover{
+  transform:scale(1.25);
+  box-shadow:0 0 12px rgba(100,180,255,.5) !important;
+  z-index:20;
+}
+/* 删除按钮（悬浮在连接点右上） */
+.complib-vis-del-btn {
+  position:absolute; top:-6px; right:-6px;
+  width:14px; height:14px; border-radius:50%;
+  background:rgba(255,80,80,0.85); color:#fff;
+  font-size:10px; font-weight:700; line-height:14px; text-align:center;
+  cursor:pointer; pointer-events:auto; z-index:30;
+  border:1px solid rgba(255,255,255,0.5);
+  box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  transition:transform .1s, background .15s;
+  display:none;
+}
+.complib-vis-dot:hover .complib-vis-del-btn,
+.complib-vis-dot:active .complib-vis-del-btn { display:block; }
+.complib-vis-del-btn:hover {
+  background:rgba(255,50,50,1);
+  transform:scale(1.2);
+}
+
+.complib-viseditor-toolbar{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;
+}
+.complib-viseditor-toolbar .btn-sm{font-size:11px;padding:4px 10px;}
+
+.complib-vis-legend{
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+  font-size:11px;color:rgba(255,255,255,.45);
+  margin-top:2px;
+}
+body.light .complib-vis-legend{color:rgba(0,0,0,.4);}
+
+.complib-viseditor-grid{
+  pointer-events:none;z-index:1;
+}
 
 /* ── 分类树（分类管理标签） ── */
 .complib-cat-tree{display:flex;flex-direction:column;gap:12px;}

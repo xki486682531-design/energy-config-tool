@@ -44,6 +44,24 @@ function extractPowerOptions() {
   return unique.map(v => v + 'kW');
 }
 
+// ── 从储能柜产品提取容量选项（单台容量下拉用）────────
+function extractCapacityOptions() {
+  const caps = DATA.storageCabinets.map(item => {
+    const parts = item.desc.split('\\');
+    // parts[3] = 容量字段，如 "215KWh"、"241"、"218KWh"
+    let raw = (parts[3] || '').replace(/[^0-9.]/g, '').trim();
+    let num = parseFloat(raw);
+    // 如果 parts[3] 提取不到有效数字，尝试从整个 desc 中搜索 xxxKWh
+    if (isNaN(num) || num <= 0) {
+      const m = item.desc.match(/(\d+(?:\.\d+)?)\s*[Kk][Ww][Hh]/);
+      if (m) num = parseFloat(m[1]);
+    }
+    return (isNaN(num) || num <= 0) ? null : num;
+  }).filter(v => v !== null);
+  const unique = [...new Set(caps)].sort((a, b) => a - b);
+  return unique.map(v => String(Math.round(v)));
+}
+
 const DATA = {
 
   // ── 储能柜（一体式储能系统）─────────────────────────────
@@ -233,12 +251,16 @@ const DATA = {
     monitorDemand:  ["需要", "不需要"],
     voltageLevel:   ["0.4kV", "10kV", "35kV"],
     powerLevel:     [],  // 动态生成，见下方
+    capacityLevel:  [],  // 动态生成，见下方
   },
 
 };
 
 // ── 从储能柜产品中提取并网功率选项 ────────────────
 DATA.reqOptions.powerLevel = ["请选择功率"].concat(extractPowerOptions());
+
+// ── 从储能柜产品中提取容量选项（单台容量下拉用）────
+DATA.reqOptions.capacityLevel = ["请选择容量"].concat(extractCapacityOptions());
 
 // ── 需求字段注册表（ui.js renderRequirements 用）─────────────
 DATA.reqFieldRegistry = [
@@ -247,7 +269,7 @@ DATA.reqFieldRegistry = [
   { id: "r-location", section: "A", label: "项目地区", type: "select", options: DATA.reqOptions.regions },
   { id: "r-voltage", section: "A", label: "并网电压", type: "select", options: DATA.reqOptions.voltageLevel, defaultValue: "0.4kV" },
   { id: "r-power", section: "A", label: "并网功率", type: "select", options: DATA.reqOptions.powerLevel },
-  { id: "r-capacity", section: "A", label: "单台容量(kWh)", type: "text" },
+  { id: "r-capacity", section: "A", label: "单台容量(kWh)", type: "select", options: DATA.reqOptions.capacityLevel },
   { id: "r-cabinetDemandQty", section: "A", label: "需求台数", type: "text", defaultValue: "1" },
   { id: "r-packCool", section: "A", label: "PACK冷却方式", type: "select", options: DATA.reqOptions.packCool },
   { id: "r-cellBrand", section: "A", label: "电芯品牌", type: "select", options: DATA.reqOptions.cellBrand },
@@ -272,7 +294,7 @@ DATA.reqFieldRegistry = [
   // C. 网络与监控
   { id: "r-network", section: "C", label: "网络方式", type: "select", options: DATA.reqOptions.network },
   { id: "r-simCard", section: "C", label: "流量卡", type: "select", options: DATA.reqOptions.simCard },
-  { id: "r-monitorCabinet", section: "C", label: "监控柜", type: "select", options: DATA.reqOptions.monitorCabinet },
+  { id: "r-monitorCabinet", section: "C", label: "监控柜", type: "select", options: DATA.reqOptions.monitorCabinet, linkedBlockId: "block-monitor", linkedCategory: "monitorCabinets", hiddenOn: "不需要", defaultValue: "不需要" },
   { id: "r-monitorDemand", section: "C", label: "监控需求", type: "select", options: DATA.reqOptions.monitorDemand },
   { id: "r-software", section: "C", label: "后台软件", type: "select", options: DATA.reqOptions.software },
   { id: "r-gridPoint", section: "C", label: "并网点", type: "text" },
